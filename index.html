@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campanha Natal Vencedor 2025 - Conceito</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Creepster:wght@400&family=Nosifer:wght@400&family=Butcherman:wght@400&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --christmas-red: #dc2626;
+            --christmas-green: #16a34a;
+            --christmas-gold: #fbbf24;
+            --christmas-white: #ffffff;
+            --christmas-dark-red: #991b1b;
+            --christmas-dark-green: #15803d;
+            --snow-white: #f8fafc;
+            --text-dark: #1f2937;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: linear-gradient(135deg, var(--christmas-red) 0%, var(--christmas-dark-red) 25%, var(--christmas-green) 50%, var(--christmas-dark-green) 75%, var(--christmas-red) 100%);
+            background-size: 400% 400%;
+            animation: christmasGradient 20s ease infinite;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        @keyframes christmasGradient {
+            0% { background-position: 0% 50%; }
+            25% { background-position: 100% 50%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Christmas Background Elements */
+        .christmas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .santa-sleigh {
+            position: absolute;
+            top: 20%;
+            right: -300px;
+            font-size: 4rem;
+            animation: santaFly 25s linear infinite;
+            z-index: 2;
+        }
+
+        @keyframes santaFly {
+            0% { right: -300px; }
+            100% { right: 100vw; }
+        }
+
+        .christmas-tree {
+            position: absolute;
+            font-size: 3rem;
+            color: var(--christmas-green);
+            animation: treeGlow 3s ease-in-out infinite alternate;
+        }
+
+        .tree-1 { top: 10%; left: 5%; animation-delay: 0s; }
+        .tree-2 { top: 60%; right: 8%; animation-delay: 1s; }
+        .tree-3 { bottom: 20%; left: 10%; animation-delay: 2s; }
+
+        @keyframes treeGlow {
+            from { filter: drop-shadow(0 0 10px var(--christmas-gold)); }
+            to { filter: drop-shadow(0 0 20px var(--christmas-gold)); }
+        }
+
+        .snow-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .snowflake {
+            position: absolute;
+            color: var(--snow-white);
+            user-select: none;
+            pointer-events: none;
+            animation: snowfall linear infinite;
+            text-shadow: 0 0 5px rgba(255,255,255,0.8);
+        }
+
+        @keyframes snowfall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Glass Card Base */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--christmas-gold), transparent);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: var(--christmas-gold);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 100px 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--christmas-gold);
+            padding: 15px 30px;
+            border-radius: 50px;
+            color: var(--christmas-white);
+            font-weight: 600;
+            margin-bottom: 30px;
+            animation: float 3s ease-in-out infinite;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .hero-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(3rem, 8vw, 8rem);
+            font-weight: 400;
+            color: var(--christmas-white);
+            margin-bottom: 20px;
+            text-shadow: 6px 6px 12px rgba(0,0,0,0.8), 0 0 30px var(--christmas-gold);
+            line-height: 1.1;
+            filter: drop-shadow(0 0 25px var(--christmas-gold));
+            letter-spacing: 2px;
+        }
+
+        .title-icon {
+            display: block;
+            font-size: 0.6em;
+            margin-bottom: 15px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-8px); }
+        }
+
+        .title-text {
+            display: block;
+            color: var(--christmas-gold);
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.7);
+        }
+
+        .title-highlight {
+            display: block;
+            font-size: 1.2em;
+            color: var(--christmas-white);
+            text-shadow: 4px 4px 8px rgba(220, 38, 38, 0.8);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 20px var(--christmas-red)); }
+            to { filter: drop-shadow(0 0 40px var(--christmas-red)); }
+        }
+
+        .hero-subtitle {
+            font-size: 1.8rem;
+            color: var(--christmas-white);
+            margin-bottom: 50px;
+            font-weight: 500;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .guerra-natal-card {
+            position: relative;
+            display: inline-block;
+            margin-top: 40px;
+        }
+
+        .guerra-natal-card .glass-card {
+            padding: 25px 40px;
+            background: linear-gradient(135deg, var(--christmas-red), var(--christmas-dark-red));
+            border: 3px solid var(--christmas-gold);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(220, 38, 38, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
+
+        .card-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--christmas-white);
+            font-weight: 700;
+        }
+
+        .badge-text {
+            font-size: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .badge-highlight {
+            font-size: 1.4rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Section Styling */
+        .campaign-overview, .collections-section, .conditions-section {
+            padding: 100px 0;
+            position: relative;
+            z-index: 10;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .section-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            font-weight: 400;
+            color: var(--christmas-white);
+            margin-bottom: 20px;
+            text-shadow: 6px 6px 12px rgba(0,0,0,0.8), 0 0 25px var(--christmas-gold);
+            filter: drop-shadow(0 0 20px var(--christmas-gold));
+            letter-spacing: 1px;
+        }
+
+        .section-line {
+            width: 120px;
+            height: 6px;
+            background: linear-gradient(90deg, var(--christmas-red), var(--christmas-gold), var(--christmas-green));
+            margin: 0 auto 20px;
+            border-radius: 3px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .section-subtitle {
+            font-size: 1.3rem;
+            color: var(--christmas-white);
+            font-weight: 500;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+        }
+
+        .info-card {
+            padding: 40px 25px;
+            text-align: center;
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .info-card.featured {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, var(--christmas-gold), #f59e0b);
+            color: var(--text-dark);
+            border: 3px solid var(--christmas-white);
+        }
+
+        .card-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            color: var(--christmas-white);
+            filter: drop-shadow(0 0 10px var(--christmas-gold));
+        }
+
+        .info-card.featured .card-icon {
+            color: var(--text-dark);
+        }
+
+        .info-card h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--christmas-white);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            white-space: nowrap;
+        }
+
+        .info-card.featured h3 {
+            color: var(--text-dark);
+            text-shadow: none;
+        }
+
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .card-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--christmas-white);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            white-space: nowrap;
+        }
+
+        .card-value-large {
+            font-size: 2.4rem;
+            font-weight: 900;
+            color: var(--text-dark);
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.3);
+            white-space: nowrap;
+        }
+
+        .card-year {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--christmas-white);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .info-card.featured .card-year {
+            color: var(--text-dark);
+            text-shadow: none;
+        }
+
+        /* Collections */
+        .collection-block {
+            margin-bottom: 80px;
+        }
+
+        .collection-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .collection-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: 2.8rem;
+            font-weight: 400;
+            color: var(--christmas-white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            text-shadow: 6px 6px 12px rgba(0,0,0,0.8), 0 0 25px var(--christmas-gold);
+            filter: drop-shadow(0 0 20px var(--christmas-gold));
+            letter-spacing: 1px;
+        }
+
+        .collection-icon {
+            font-size: 1.2em;
+            animation: rotate 4s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .product-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .product-item {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .product-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(251, 191, 36, 0.2), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .product-item:hover::before {
+            opacity: 1;
+        }
+
+        .product-item:hover {
+            transform: translateY(-15px) scale(1.03);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+            border-color: var(--christmas-gold);
+        }
+
+        .product-item img {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .product-item:hover img {
+            transform: scale(1.1);
+        }
+
+        .product-info {
+            padding: 25px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .product-info h4 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--christmas-white);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Conditions Section */
+        .conditions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 80px;
+        }
+
+        .condition-card {
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .condition-card.highlight {
+            background: linear-gradient(135deg, var(--christmas-red), var(--christmas-dark-red));
+            transform: scale(1.05);
+            color: var(--christmas-white);
+            border: 3px solid var(--christmas-gold);
+        }
+
+        .condition-card.special {
+            background: linear-gradient(135deg, var(--christmas-gold), #f59e0b);
+            color: var(--text-dark);
+            border: 3px solid var(--christmas-white);
+        }
+
+        .condition-card .card-header {
+            margin-bottom: 25px;
+        }
+
+        .condition-card .card-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: var(--christmas-white);
+        }
+
+        .condition-card.special .card-icon {
+            color: var(--text-dark);
+        }
+
+        .condition-card h3 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--christmas-white);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .condition-card.special h3 {
+            color: var(--text-dark);
+            text-shadow: none;
+        }
+
+        .big-number {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            color: var(--christmas-white);
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+            filter: drop-shadow(0 0 10px var(--christmas-gold));
+        }
+
+        .condition-card.special .big-number {
+            color: var(--text-dark);
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.3);
+        }
+
+        .condition-card p {
+            color: var(--christmas-white);
+            font-weight: 500;
+            font-size: 1.1rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .condition-card.special p {
+            color: var(--text-dark);
+            text-shadow: none;
+        }
+
+        /* Premio Section */
+        .premio-section, .desconto-section, .prazo-section {
+            margin-bottom: 60px;
+        }
+
+        .subsection-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: 2.5rem;
+            font-weight: 400;
+            color: var(--christmas-white);
+            text-align: center;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            text-shadow: 6px 6px 12px rgba(0,0,0,0.8), 0 0 25px var(--christmas-gold);
+            filter: drop-shadow(0 0 20px var(--christmas-gold));
+            letter-spacing: 1px;
+        }
+
+        .premio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+        }
+
+        .premio-card {
+            padding: 35px 25px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .premio-card.super {
+            background: linear-gradient(135deg, var(--christmas-red), var(--christmas-dark-red));
+            transform: scale(1.1);
+            color: var(--christmas-white);
+            border: 3px solid var(--christmas-gold);
+        }
+
+        .premio-level {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            color: var(--christmas-white);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .premio-value {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            color: var(--christmas-white);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            filter: drop-shadow(0 0 8px var(--christmas-gold));
+        }
+
+        .premio-badge {
+            font-size: 1rem;
+            font-weight: 600;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            color: var(--christmas-white);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .super-badge {
+            background: var(--christmas-gold) !important;
+            color: var(--text-dark) !important;
+            font-weight: 800;
+            text-shadow: none !important;
+        }
+
+        /* Desconto Table */
+        .desconto-table {
+            padding: 0;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: linear-gradient(135deg, var(--christmas-green), var(--christmas-dark-green));
+            color: var(--christmas-white);
+            font-weight: 800;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .table-row.highlight {
+            background: linear-gradient(135deg, var(--christmas-red), var(--christmas-dark-red));
+            color: var(--christmas-white);
+            font-weight: 700;
+        }
+
+        .table-cell {
+            padding: 25px 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            color: var(--christmas-white);
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .discount {
+            font-weight: 800;
+            color: var(--christmas-gold);
+            filter: drop-shadow(0 0 5px var(--christmas-gold));
+        }
+
+        .discount-highlight {
+            font-weight: 900;
+            color: var(--christmas-white);
+            font-size: 1.5rem;
+            filter: drop-shadow(0 0 8px var(--christmas-gold));
+        }
+
+        /* Prazo Card */
+        .prazo-card {
+            padding: 40px;
+            text-align: center;
+            background: linear-gradient(135deg, var(--christmas-green), var(--christmas-dark-green));
+            color: var(--christmas-white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 25px;
+            max-width: 700px;
+            margin: 0 auto;
+            border: 3px solid var(--christmas-gold);
+        }
+
+        .prazo-card .card-icon {
+            font-size: 3.5rem;
+            color: var(--christmas-white);
+            filter: drop-shadow(0 0 10px var(--christmas-gold));
+        }
+
+        .prazo-card h3 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: var(--christmas-white);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .prazo-card p {
+            font-size: 1.3rem;
+            color: var(--christmas-white);
+            font-weight: 500;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        /* Footer */
+        .footer-section {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            padding: 60px 0 30px;
+            border-top: 3px solid var(--christmas-gold);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .footer-logo h3 {
+            font-family: 'Fredoka One', cursive;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--christmas-white);
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .footer-logo p, .footer-message p {
+            color: var(--christmas-white);
+            font-weight: 500;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .footer-message h4 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--christmas-gold);
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .footer-bottom p {
+            color: var(--christmas-white);
+            font-weight: 500;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-content-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 50px;
+        }
+
+        .modal-image {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 15px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+            border: 3px solid var(--christmas-gold);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: var(--christmas-white);
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            z-index: 1001;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+
+        .modal-close:hover {
+            color: var(--christmas-red);
+        }
+
+        .modal-caption {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--christmas-white);
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px 40px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--christmas-gold);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 3.5rem;
+            }
+            
+            .section-title {
+                font-size: 2.8rem;
+            }
+            
+            .collection-title {
+                font-size: 2.2rem;
+            }
+            
+            .info-grid,
+            .conditions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .product-gallery {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 20px;
+            }
+            
+            .premio-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+            
+            .table-header,
+            .table-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .table-cell {
+                padding: 20px 15px;
+                border-bottom: 2px solid rgba(255,255,255,0.2);
+            }
+
+            .prazo-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+
+            .santa-sleigh {
+                font-size: 2.5rem;
+                top: 15%;
+            }
+
+            .christmas-tree {
+                font-size: 2rem;
+            }
+        }
+
+        /* Animation Classes */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Christmas Background Elements -->
+    <div class="christmas-bg">
+        <div class="santa-sleigh">🎅🦌🦌🛷</div>
+        <div class="christmas-tree tree-1">🎄</div>
+        <div class="christmas-tree tree-2">🎄</div>
+        <div class="christmas-tree tree-3">🎄</div>
+    </div>
+    <div class="snow-container"></div>
+
+    <!-- Header -->
+    <header class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-crown"></i>
+                    <span>Apresentação Executiva</span>
+                </div>
+                <h1 class="hero-title">
+                    <span class="title-icon">🎄</span>
+                    <span class="title-text">CAMPANHA NATAL</span>
+                    <span class="title-highlight">VENCEDOR 2025</span>
+                </h1>
+                <p class="hero-subtitle"></p>
+                
+                <div class="guerra-natal-card">
+                    <div class="glass-card">
+                        <div class="card-content">
+                            <i class="fas fa-fire"></i>
+                            <span class="badge-text">NOVO NOME DO GRUPO:</span>
+                            <span class="badge-highlight">"GUERRA DO NATAL"</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Campaign Info -->
+    <section class="campaign-overview">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Visão Geral da Campanha</h2>
+                <div class="section-line"></div>
+            </div>
+            
+            <div class="info-grid">
+                <div class="glass-card info-card fade-in">
+                    <div class="card-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Período</h3>
+                        <p class="card-value">Agosto a Dezembro</p>
+                        <p class="card-year">2025</p>
+                    </div>
+                </div>
+
+                <div class="glass-card info-card featured fade-in">
+                    <div class="card-icon">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Meta de Vendas</h3>
+                        <p class="card-value-large">R$ 8.064.426</p>
+                    </div>
+                </div>
+
+                <div class="glass-card info-card fade-in">
+                    <div class="card-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Força de Vendas</h3>
+                        <p class="card-value">Condições</p>
+                        <p class="card-year">Definitivas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Collections -->
+    <section class="collections-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Nossas Coleções Exclusivas</h2>
+                <div class="section-line"></div>
+                <p class="section-subtitle">Produtos cuidadosamente selecionados para o Natal 2025</p>
+            </div>
+            
+            <!-- Coleção Virtude -->
+            <div class="collection-block">
+                <div class="collection-header">
+                    <h3 class="collection-title">
+                        <span class="collection-icon">✨</span>
+                        Coleção Virtude
+                    </h3>
+                </div>
+                <div class="product-gallery" id="virtude-gallery"></div>
+            </div>
+
+            <!-- Coleção Guirlanda -->
+            <div class="collection-block">
+                <div class="collection-header">
+                    <h3 class="collection-title">
+                        <span class="collection-icon">🎀</span>
+                        Coleção Guirlanda
+                    </h3>
+                </div>
+                <div class="product-gallery" id="guirlanda-gallery"></div>
+            </div>
+
+            <!-- Coleção Nobre -->
+            <div class="collection-block">
+                <div class="collection-header">
+                    <h3 class="collection-title">
+                        <span class="collection-icon">👑</span>
+                        Coleção Nobre
+                    </h3>
+                </div>
+                <div class="product-gallery" id="nobre-gallery"></div>
+            </div>
+
+            <!-- Estrela de Belém -->
+            <div class="collection-block">
+                <div class="collection-header">
+                    <h3 class="collection-title">
+                        <span class="collection-icon">⭐</span>
+                        Estrela de Belém
+                    </h3>
+                </div>
+                <div class="product-gallery" id="estrela-gallery"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Conditions -->
+    <section class="conditions-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-star"></i>
+                    Condições da Força de Vendas
+                </h2>
+                <div class="section-line"></div>
+            </div>
+            
+            <div class="conditions-grid">
+                <div class="glass-card condition-card highlight fade-in">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <h3>Comissão Exclusiva</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="big-number">10%</div>
+                        <p>em pedidos fechados até 30/09</p>
+                    </div>
+                </div>
+
+                <div class="glass-card condition-card fade-in">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <h3>Bônus SKU Natal</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="big-number">R$ 800</div>
+                        <p>fixos por representante</p>
+                    </div>
+                </div>
+
+                <div class="glass-card condition-card special fade-in">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <h3>Oferta Especial</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="big-number">7%</div>
+                        <p>desconto na linha de papel cartão para pedidos até 30/09</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Premiação Escalonada -->
+            <div class="premio-section">
+                <div class="section-header">
+                    <h3 class="subsection-title">
+                        <i class="fas fa-trophy"></i>
+                        Premiação Escalonada
+                    </h3>
+                </div>
+                <div class="premio-grid">
+                    <div class="glass-card premio-card fade-in">
+                        <div class="premio-level">100%</div>
+                        <div class="premio-value">R$ 500</div>
+                        <div class="premio-badge">Meta Base</div>
+                    </div>
+                    <div class="glass-card premio-card fade-in">
+                        <div class="premio-level">110%</div>
+                        <div class="premio-value">R$ 1.000</div>
+                        <div class="premio-badge">Bom Desempenho</div>
+                    </div>
+                    <div class="glass-card premio-card fade-in">
+                        <div class="premio-level">120%</div>
+                        <div class="premio-value">R$ 1.500</div>
+                        <div class="premio-badge">Excelente</div>
+                    </div>
+                    <div class="glass-card premio-card super fade-in">
+                        <div class="premio-level">150%</div>
+                        <div class="premio-value">R$ 2.500</div>
+                        <div class="premio-badge super-badge">SUPER BÔNUS</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Descontos Progressivos -->
+            <div class="desconto-section">
+                <div class="section-header">
+                    <h3 class="subsection-title">
+                        <i class="fas fa-chart-line"></i>
+                        Descontos Progressivos por Volume
+                    </h3>
+                </div>
+                <div class="glass-card desconto-table fade-in">
+                    <div class="table-header">
+                        <div class="table-cell">Faixa de Pedido</div>
+                        <div class="table-cell">Desconto Adicional</div>
+                    </div>
+                    <div class="table-row">
+                        <div class="table-cell">Acima de R$ 5.000</div>
+                        <div class="table-cell discount">+3%</div>
+                    </div>
+                    <div class="table-row">
+                        <div class="table-cell">Acima de R$ 7.000</div>
+                        <div class="table-cell discount">+5%</div>
+                    </div>
+                    <div class="table-row">
+                        <div class="table-cell">Acima de R$ 15.000</div>
+                        <div class="table-cell discount">+7%</div>
+                    </div>
+                    <div class="table-row highlight">
+                        <div class="table-cell">Acima de R$ 25.000</div>
+                        <div class="table-cell discount-highlight">+10%</div>
+                    </div>
+                </div>
+
+(Desconto progressivo não somará ao desconto de 7% para pedidos antecipados até 30/09)
+
+            </div>
+
+
+            <!-- Prazo Estendido -->
+            <div class="prazo-section">
+                <div class="glass-card prazo-card fade-in">
+                    <div class="card-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Prazo Estendido</h3>
+                        <p>Até 90 dias para grandes valores (conforme análise)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer-section">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <h3>Conceito</h3>
+                    <p>Campanha Natal Vencedor 2025</p>
+                </div>
+                <div class="footer-message">
+                    <h4>Guerra do Natal</h4>
+                    <p>Juntos Venceremos!</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Conceito - Todos os direitos reservados</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal -->
+    <div id="imageModal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content-wrapper">
+            <span class="modal-close">&times;</span>
+            <img class="modal-image" id="modalImage">
+            <div class="modal-caption" id="caption"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuração das coleções e suas imagens
+        const collections = {
+            virtude: [
+                { src: 'imagens/virtude/Virtude-01.jpg', name: 'Caixa para Chocotone 500g Com Visor' },
+                { src: 'imagens/virtude/Virtude-02.jpg', name: 'Sacola Presente com visor' },
+                { src: 'imagens/virtude/Virtude-03.jpg', name: 'Caixa para Chocotone 100g' },
+                { src: 'imagens/virtude/Virtude-05.jpg', name: 'Sacola Quadrada' },
+                { src: 'imagens/virtude/Virtude-06.jpg', name: 'Cesta Aberta M' },
+                { src: 'imagens/virtude/Virtude-07.jpg', name: 'Caixa Presente' },
+                { src: 'imagens/virtude/Virtude-08.jpg', name: 'Caixa para Chocotone 500g com Alça' },
+                { src: 'imagens/virtude/Virtude-09.jpg', name: 'Caixa Casinha' },
+                { src: 'imagens/virtude/Virtude-10.jpg', name: 'Caixa Arvore para 11 Doces' },
+                { src: 'imagens/virtude/Virtude-11.jpg', name: 'Caixa gaveta para 4 doces' }
+            ],
+            guirlanda: [
+                { src: 'imagens/guirlanda/Guirlanda-04.jpg', name: 'Sacola Presente com visor' },
+                { src: 'imagens/guirlanda/Guirlanda-05.jpg', name: 'Sacola Quadrada' },
+                { src: 'imagens/guirlanda/Guirlanda-08.jpg', name: 'Caixa para Chocotone 500g com Alça' },
+                { src: 'imagens/guirlanda/Guirlanda-10.jpg', name: 'Caixa para Chocotone 500g Com Visor' },
+                { src: 'imagens/guirlanda/Guirlanda-13-2.jpg', name: 'Caixa Correio para mini Chocotone' },
+                { src: 'imagens/guirlanda/Guirlanda-01.jpg', name: 'Caixa Cartão para Biscoitos' },
+                { src: 'imagens/guirlanda/Guirlanda-02.jpg', name: 'Caixa par 4 Doces com Visor' },
+                { src: 'imagens/guirlanda/Guirlanda-03.jpg', name: 'Caixa Caneca e Presente' },
+                { src: 'imagens/guirlanda/Guirlanda-06.jpg', name: 'Caixa para Bolo no Palito' },
+                { src: 'imagens/guirlanda/Guirlanda-07.jpg', name: 'Caixa Barra' }
+            ],
+            nobre: [
+                { src: 'imagens/nobre/Nobre-02.jpg', name: 'Caixa para Panetone 500g' },
+                { src: 'imagens/nobre/Nobre-03.jpg', name: 'Sacola Presente com visor' },
+                { src: 'imagens/nobre/Nobre-05.jpg', name: 'Caixa para Chocotone 500g Com Visor' },
+                { src: 'imagens/nobre/Nobre-09.jpg', name: 'Caixa para Chocotone 500g com Alça' },
+                { src: 'imagens/nobre/Nobre-11.jpg', name: 'Caixa para Chocotone 100g Com Visor' },
+                { src: 'imagens/nobre/Nobre-17.jpg', name: 'Caixa gaveta para 4 doces' },
+                { src: 'imagens/nobre/Nobre-01.jpg', name: 'Caixa para Bolo no Palito' },
+                { src: 'imagens/nobre/Nobre-04.jpg', name: 'Caixa Barra' },
+                { src: 'imagens/nobre/Nobre-06.jpg', name: 'Caixa para Bolo no Palito' },
+                { src: 'imagens/nobre/Nobre-07.jpg', name: 'Caixa para 6 Doces' }
+            ],
+            estrela: [
+                { src: 'imagens/Estrela de belem/Sacolaquadradacomvisor.jpg', name: 'Sacola Quadrada com Visor' },
+                { src: 'imagens/Estrela de belem/Caixamilk.jpg', name: 'Caixa Milk' },
+                { src: 'imagens/Estrela de belem/Panetone500gecintaajustavel.jpg', name: 'Panetone 500g - Cinta Ajustável' },
+                { src: 'imagens/Estrela de belem/Caxai4docescomvisor.jpg', name: 'Caixa 4 Doces com Visor' },
+                { src: 'imagens/Estrela de belem/Caxai6docescomvisor.jpg', name: 'Caixa 6 Doces com Visor' },
+                { src: 'imagens/Estrela de belem/Caixacasinha.jpg', name: 'Caixa Casinha' },
+                { src: 'imagens/Estrela de belem/Panetone100g.jpg', name: 'Panetone 100g' }
+            ]
+        };
+
+        // Função para criar elemento de produto
+        function createProductElement(product) {
+            const productDiv = document.createElement('div');
+            productDiv.className = 'product-item fade-in';
+            productDiv.innerHTML = `
+                <img src="${product.src}" alt="${product.name}" loading="lazy" onerror="this.style.display='none'">
+                <div class="product-info">
+                    <h4>${product.name}</h4>
+                </div>
+            `;
+            
+            // Adicionar evento de clique para abrir modal
+            productDiv.addEventListener('click', () => openModal(product.src, product.name));
+            
+            return productDiv;
+        }
+
+        // Função para carregar produtos de uma coleção
+        function loadCollection(collectionName, containerId) {
+            const container = document.getElementById(containerId);
+            const products = collections[collectionName];
+            
+            if (container && products) {
+                products.forEach((product, index) => {
+                    const productElement = createProductElement(product);
+                    productElement.style.animationDelay = `${index * 0.1}s`;
+                    container.appendChild(productElement);
+                });
+            }
+        }
+
+        // Função para abrir modal
+        function openModal(imageSrc, imageName) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            const caption = document.getElementById('caption');
+            
+            modal.style.display = 'block';
+            modalImg.src = imageSrc;
+            caption.innerHTML = imageName;
+            
+            // Adicionar animação de entrada
+            setTimeout(() => {
+                modalImg.style.transform = 'scale(1)';
+                modalImg.style.opacity = '1';
+            }, 10);
+        }
+
+        // Função para fechar modal
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            
+            modalImg.style.transform = 'scale(0.8)';
+            modalImg.style.opacity = '0';
+            
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        // Função para criar efeito de neve
+        function createSnowEffect() {
+            const snowContainer = document.querySelector('.snow-container');
+            
+            function createSnowflake() {
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.innerHTML = ['❄', '❅', '❆', '⛄', '🎄'][Math.floor(Math.random() * 5)];
+                snowflake.style.left = Math.random() * 100 + '%';
+                snowflake.style.fontSize = Math.random() * 15 + 10 + 'px';
+                snowflake.style.animationDuration = Math.random() * 4 + 3 + 's';
+                snowflake.style.opacity = Math.random() * 0.8 + 0.2;
+                
+                snowContainer.appendChild(snowflake);
+                
+                setTimeout(() => {
+                    if (snowflake.parentNode) {
+                        snowflake.remove();
+                    }
+                }, 7000);
+            }
+            
+            // Criar flocos de neve periodicamente
+            setInterval(createSnowflake, 150);
+        }
+
+        // Função para animações de scroll
+        function addScrollAnimations() {
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, observerOptions);
+            
+            // Observar elementos que devem aparecer com animação
+            const animatedElements = document.querySelectorAll('.fade-in');
+            animatedElements.forEach(el => {
+                observer.observe(el);
+            });
+        }
+
+        // Inicialização quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carregar todas as coleções
+            loadCollection('virtude', 'virtude-gallery');
+            loadCollection('guirlanda', 'guirlanda-gallery');
+            loadCollection('nobre', 'nobre-gallery');
+            loadCollection('estrela', 'estrela-gallery');
+            
+            // Configurar modal
+            const modal = document.getElementById('imageModal');
+            const closeBtn = document.querySelector('.modal-close');
+            const backdrop = document.querySelector('.modal-backdrop');
+            
+            closeBtn.addEventListener('click', closeModal);
+            backdrop.addEventListener('click', closeModal);
+            
+            // Fechar modal com ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+            
+            // Adicionar efeitos e animações
+            setTimeout(() => {
+                addScrollAnimations();
+                createSnowEffect();
+            }, 100);
+            
+            // Adicionar efeito de hover nos cards
+            const cards = document.querySelectorAll('.glass-card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-10px) scale(1.02)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+
+            // Adicionar loading para imagens
+            const images = document.querySelectorAll('img');
+            images.forEach(img => {
+                img.addEventListener('load', function() {
+                    this.style.opacity = '1';
+                });
+                
+                img.addEventListener('error', function() {
+                    console.log('Erro ao carregar imagem:', this.src);
+                    this.style.display = 'none';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
