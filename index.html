@@ -1367,13 +1367,13 @@ function buildCompactItem(order){
                 const aPriority = statusPriority[a.status] || 2; // Status desconhecido vai para o final
                 const bPriority = statusPriority[b.status] || 2;
                 
-                // Primeiro critério: ordenar por status
+                // Primeiro critério: ordenar por status (Em Andamento primeiro)
                 if (aPriority !== bPriority) {
-                    return aPriority - bPriority;
+                    return aPriority - bPriority; // Menor valor = maior prioridade
                 }
                 
                 // Segundo critério: dentro do mesmo status, ordenar por ID (mais recentes primeiro)
-                return b.id.localeCompare(a.id, undefined, {numeric: true});
+                return b.id.localeCompare(a.id, undefined, {numeric: true, sensitivity: 'base'});
             });
             
             const modeDescription = window.viewMode === 'list' 
