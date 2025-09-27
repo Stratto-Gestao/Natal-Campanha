@@ -683,41 +683,324 @@
     <!-- Notificações -->
     <div id="notification" class="notification"></div>
 
+    <!-- Firebase Integration -->
+    <script type="module">
+        // Firebase SDKs (versão modular via CDN)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+        import { 
+            getAuth, signInAnonymously, onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+        import { 
+            getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, enableIndexedDbPersistence 
+        } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+        // Config do seu projeto Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBy0RGYoK3oFdFVnoVhG3dNva3BKbvCeUs",
+            authDomain: "sistema-de-ordem-de-producao.firebaseapp.com",
+            projectId: "sistema-de-ordem-de-producao",
+            storageBucket: "sistema-de-ordem-de-producao.firebasestorage.app",
+            messagingSenderId: "681409177091",
+            appId: "1:681409177091:web:84fda4b78d4e4893dd9036"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Cache offline (ignora se já estiver ativo em outro tab)
+        enableIndexedDbPersistence(db).catch(()=>{});
+
+        // Controle de readiness
+        let APP_READY = false;
+        const readyCallbacks = [];
+
+        function onAppReady(cb) {
+            if (APP_READY) cb(); else readyCallbacks.push(cb);
+        }
+
+        function fireReady() {
+            APP_READY = true;
+            while (readyCallbacks.length) readyCallbacks.shift()();
+        }
+
+        // Autenticação anônima
+        function initAuth() {
+            return new Promise((resolve, reject) => {
+                onAuthStateChanged(auth, user => {
+                    if (user) resolve(user);
+                    else signInAnonymously(auth).catch(reject);
+                }, reject);
+            });
+        }
+
+        // Wrapper de armazenamento (key-value)
+        const CloudStorage = (() => {
+            let uid = null;
+            const mem = new Map();
+            const listeners = new Map();
+
+            async function ensureAuth() {
+                if (uid) return uid;
+                const user = await initAuth();
+                uid = user.uid;
+                return uid;
+            }
+
+            function keyDoc(key) {
+                return doc(db, "users", uid, "kv", key);
+            }
+
+            async function get(key) {
+                await ensureAuth();
+                if (mem.has(key)) return mem.get(key);
+                try {
+                    const snap = await getDoc(keyDoc(key));
+                    if (!snap.exists()) return null;
+                    const val = snap.data().value;
+                    mem.set(key, val);
+                    return val;
+                } catch (e) {
+                    console.error("CloudStorage get error:", e);
+                    return null;
+                }
+            }
+
+            async function set(key, value) {
+                await ensureAuth();
+                try {
+                    await setDoc(keyDoc(key), { value, updatedAt: Date.now() });
+                    mem.set(key, value);
+                    return true;
+                } catch (e) {
+                    console.error("CloudStorage set error:", e);
+                    return false;
+                }
+            }
+
+            async function remove(key) {
+                await ensureAuth();
+                try {
+                    await deleteDoc(keyDoc(key));
+                    mem.delete(key);
+                } catch (e) {
+                    console.error("CloudStorage remove error:", e);
+                }
+            }
+
+            function onChange(key, cb) {
+                if (listeners.has(key)) return listeners.get(key);
+                const unsub = onSnapshot(keyDoc(key), snap => {
+                    if (snap.exists()) {
+                        const val = snap.data().value;
+                        mem.set(key, val);
+                        cb(val);
+                    } else {
+                        mem.delete(key);
+                        cb(null);
+                    }
+                });
+                listeners.set(key, unsub);
+                return unsub;
+            }
+
+            return { get, set, remove, onChange };
+        })();
+
+        // Migração automática do localStorage (1ª vez)
+        async function migrateLocalStorage() {
+            try {
+                await CloudStorage.get("__migrated__");
+                const already = await CloudStorage.get("__migrated__");
+                if (already) {
+                    console.log("[Migração] Já executada anteriormente.");
+                    return;
+                }
+                
+                const keys = Object.keys(localStorage);
+                for (const k of keys) {
+                    if (k === "__migrated__") continue;
+                    try {
+                        const raw = localStorage.getItem(k);
+                        let parsed = raw;
+                        if (raw && (raw.startsWith("{") || raw.startsWith("["))) {
+                            try { parsed = JSON.parse(raw); } catch {}
+                        }
+                        const existsRemote = await CloudStorage.get(k);
+                        if (existsRemote == null) {
+                            await CloudStorage.set(k, parsed);
+                            console.log("[Migração] Key migrada:", k);
+                        }
+                    } catch (e) {
+                        console.warn("[Migração] Falhou key:", k, e);
+                    }
+                }
+                await CloudStorage.set("__migrated__", true);
+                console.log("[Migração] Concluída.");
+            } catch (e) {
+                console.error("[Migração] Erro:", e);
+            }
+        }
+
+        // Expor para uso global
+        window.cloudStorage = CloudStorage;
+        window.onAppReady = onAppReady;
+
+        // Adapter de compatibilidade
+        window.storageAsync = {
+            getJson: async (k, fallback=null) => {
+                const v = await CloudStorage.get(k);
+                return (v == null) ? fallback : v;
+            },
+            setJson: async (k, obj) => CloudStorage.set(k, obj),
+            remove: async (k) => CloudStorage.remove(k)
+        };
+
+        // Função bootstrap
+        async function bootstrapApplication() {
+            try {
+                await initAuth();
+                await migrateLocalStorage();
+                fireReady();
+                console.log("[App] Firebase integrado e pronto.");
+            } catch (e) {
+                console.error("[Bootstrap] Erro:", e);
+                // Fallback para localStorage se Firebase falhar
+                fireReady();
+            }
+        }
+
+        // Inicializar
+        bootstrapApplication();
+    </script>
+
     <script>
         
-// Storage com fallback para iOS/Android (Private Mode, restrições, etc.)
+// Storage híbrido com fallback para iOS/Android + Firebase
 const storage = (function(){
-    try {
-        const testKey = '__t__';
-        localStorage.setItem(testKey, '1');
-        localStorage.removeItem(testKey);
-        return localStorage;
-    } catch (e) {
-        // Fallback em memória
-        const mem = {};
-        return {
-            getItem: (k) => (k in mem ? mem[k] : null),
-            setItem: (k, v) => { mem[k] = String(v); },
-            removeItem: (k) => { delete mem[k]; }
-        };
-    }
+    let useFirebase = false;
+    
+    // Testa localStorage tradicional
+    const localStorageWorks = (function(){
+        try {
+            const testKey = '__t__';
+            localStorage.setItem(testKey, '1');
+            localStorage.removeItem(testKey);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    })();
+
+    // Fallback em memória se localStorage não funcionar
+    const memStorage = {};
+    const fallbackStorage = {
+        getItem: (k) => (k in memStorage ? memStorage[k] : null),
+        setItem: (k, v) => { memStorage[k] = String(v); },
+        removeItem: (k) => { delete memStorage[k]; }
+    };
+
+    return {
+        getItem: async (key) => {
+            if (useFirebase && window.cloudStorage) {
+                try {
+                    const value = await window.cloudStorage.get(key);
+                    if (value !== null) {
+                        return typeof value === 'string' ? value : JSON.stringify(value);
+                    }
+                    return null;
+                } catch (e) {
+                    console.warn("Firebase get failed, using localStorage:", e);
+                }
+            }
+            
+            if (localStorageWorks) {
+                return localStorage.getItem(key);
+            }
+            return fallbackStorage.getItem(key);
+        },
+        
+        setItem: async (key, value) => {
+            if (useFirebase && window.cloudStorage) {
+                try {
+                    let parsed = value;
+                    if (typeof value === 'string') {
+                        try { parsed = JSON.parse(value); } catch { /* keep as string */ }
+                    }
+                    await window.cloudStorage.set(key, parsed);
+                    return;
+                } catch (e) {
+                    console.warn("Firebase set failed, using localStorage:", e);
+                }
+            }
+            
+            if (localStorageWorks) {
+                try {
+                    localStorage.setItem(key, value);
+                } catch (e) {
+                    console.warn("localStorage.setItem failed:", e);
+                }
+            } else {
+                fallbackStorage.setItem(key, value);
+            }
+        },
+        
+        removeItem: async (key) => {
+            if (useFirebase && window.cloudStorage) {
+                try {
+                    await window.cloudStorage.remove(key);
+                    return;
+                } catch (e) {
+                    console.warn("Firebase remove failed, using localStorage:", e);
+                }
+            }
+            
+            if (localStorageWorks) {
+                localStorage.removeItem(key);
+            } else {
+                fallbackStorage.removeItem(key);
+            }
+        },
+        
+        enableFirebase: () => { useFirebase = true; }
+    };
 })();
 
-function getJSON(key, fallback){
+async function getJSON(key, fallback){
     try {
-        const v = storage.getItem(key);
+        const v = await storage.getItem(key);
         return v ? JSON.parse(v) : fallback;
     } catch(e){
         return fallback;
     }
 }
-function setJSON(key, value){
-    try { storage.setItem(key, JSON.stringify(value)); } catch(e){}
+
+async function setJSON(key, value){
+    try { 
+        await storage.setItem(key, JSON.stringify(value)); 
+    } catch(e){
+        console.error("setJSON error:", e);
+    }
 }
 
-let orders = getJSON('productionOrders', []);
-let orderIdCounter = parseInt(storage.getItem('orderIdCounter')) || 1;
-let productTemplates = getJSON('productTemplates', []);
+// Variáveis globais - serão carregadas do Firebase
+let orders = [];
+let orderIdCounter = 1;
+let productTemplates = [];
+
+// Função para carregar dados iniciais
+async function loadInitialData() {
+    try {
+        orders = await getJSON('productionOrders', []);
+        orderIdCounter = parseInt((await storage.getItem('orderIdCounter')) || '1');
+        productTemplates = await getJSON('productTemplates', []);
+    } catch (e) {
+        console.error("Erro carregando dados:", e);
+        orders = [];
+        orderIdCounter = 1;
+        productTemplates = [];
+    }
+}
 // === Seleção de OPs para Envio à Gráfica ===
 let selectedOrderIds = new Set();
 function toggleSelectOrder(orderId, checked){
@@ -982,7 +1265,7 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
 
 
         function showNotification(message,type='success'){const n=document.getElementById('notification');n.textContent=message;n.className=`notification ${type}`;n.classList.add('show');setTimeout(()=>n.classList.remove('show'),3000);}
-        function generateOrderId(){const id=orderIdCounter;orderIdCounter++;storage.setItem('orderIdCounter', orderIdCounter);return `OP-${String(id).padStart(4,'0')}`;}
+        async function generateOrderId(){const id=orderIdCounter;orderIdCounter++;await storage.setItem('orderIdCounter', orderIdCounter.toString());return `OP-${String(id).padStart(4,'0')}`;}
         function updateStats(){const total=orders.length;const emAndamento=orders.filter(o=>o.status==='Em Andamento').length;const finalizadas=orders.filter(o=>o.status==='Finalizado').length;const unicos=new Set(orders.map(o=>o.nomeTemplate)).size;document.getElementById('totalOrders').textContent=total;document.getElementById('inProgressOrders').textContent=emAndamento;document.getElementById('completedOrders').textContent=finalizadas;document.getElementById('totalProducts').textContent=unicos;}
 
         function showProductHistory(){
@@ -1016,14 +1299,14 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
         function clearSelection(){selectedTemplate=null;document.querySelectorAll('.product-item').forEach(it=>it.classList.remove('selected'));document.getElementById('productList').style.display='none';document.getElementById('clearSelectionBtn').style.display='none';}
         function clearForm(){document.getElementById('orderForm').reset();document.getElementById('previewFaca').style.display='none';document.getElementById('previewArte').style.display='none';clearSelection();showNotification('Formulário limpo!','info');}
 
-        function saveAsTemplate(){
+        async function saveAsTemplate(){
             const nome=document.getElementById('nomeTemplate').value.trim();
             if(!nome){showNotification('Digite o nome do produto antes de salvar como modelo.','error');return;}
             const t={nomeTemplate:nome,medidasFolha:document.getElementById('medidasFolha').value,fornecedor:document.getElementById('fornecedor').value,tipoPapel:document.getElementById('tipoPapel').value,gramatura:document.getElementById('gramatura').value,impressao:document.getElementById('impressao').value,prioridade:document.getElementById('prioridade').value,folhasResma:document.getElementById('folhasResma').value,acabamento:document.getElementById('acabamento').value,descricaoEmbalagens:document.getElementById('descricaoEmbalagens').value,formato:document.getElementById('formato').value,codigoFaca:document.getElementById('codigoFaca').value,resmasUsadas:document.getElementById('resmasUsadas').value,imagemFaca:document.getElementById('previewFaca').src||null,imagemArte:document.getElementById('previewArte').src||null,dataCriacao:new Date().toLocaleDateString('pt-BR'),vezesCriado:1};
             const idx=productTemplates.findIndex(x=>x.nomeTemplate===nome);
             if(idx!==-1){if(confirm(`Já existe um modelo com o nome "${nome}". Deseja atualizar?`)){productTemplates[idx]={...t,vezesCriado:productTemplates[idx].vezesCriado+1};showNotification(`Modelo "${nome}" atualizado!`,'success');}}
             else{productTemplates.push(t);showNotification(`Modelo "${nome}" salvo no histórico!`,'success');}
-            setJSON('productTemplates', productTemplates);
+            await setJSON('productTemplates', productTemplates);
         }
 
         function manageTemplates(){
@@ -1052,7 +1335,7 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
             document.getElementById('templatesModal').style.display='block';
         }
         function useTemplate(i){fillFormWithTemplate(productTemplates[i]);closeTemplatesModal();showNotification(`Modelo "${productTemplates[i].nomeTemplate}" carregado!`,'success');}
-        function deleteTemplate(i){const t=productTemplates[i];if(confirm(`Tem certeza que deseja excluir o modelo "${t.nomeTemplate}"?`)){productTemplates.splice(i,1);setJSON('productTemplates', productTemplates);manageTemplates();showNotification(`Modelo "${t.nomeTemplate}" excluído!`,'info');}}
+        async function deleteTemplate(i){const t=productTemplates[i];if(confirm(`Tem certeza que deseja excluir o modelo "${t.nomeTemplate}"?`)){productTemplates.splice(i,1);await setJSON('productTemplates', productTemplates);manageTemplates();showNotification(`Modelo "${t.nomeTemplate}" excluído!`,'info');}}
         function closeTemplatesModal(){document.getElementById('templatesModal').style.display='none';}
 
         function imageToBase64(file,cb){const r=new FileReader();r.onload=e=>cb(e.target.result);r.readAsDataURL(file);}
@@ -1076,7 +1359,7 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
             if(imgF){ try{ imgFData = await compressFileToDataURL(imgF, 1280, 0.8);}catch(_){ /* fallback handled below */ } }
             if(imgA){ try{ imgAData = await compressFileToDataURL(imgA, 1280, 0.8);}catch(_){ /* fallback handled below */ } }
             const order={
-                id:generateOrderId(),
+                id:await generateOrderId(),
                 medidasFolha:document.getElementById('medidasFolha').value,
                 quantidade:document.getElementById('quantidade').value,
                 folhasResma:document.getElementById('folhasResma').value,
@@ -1103,10 +1386,10 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
                 imagemArte:imgAData
             };
             let processed=0;const total=(imgF?1:0)+(imgA?1:0);
-            function saveOrder(){orders.push(order);setJSON('productionOrders', orders);saveAsTemplate();displayOrders();updateStats();document.getElementById('orderForm').reset();document.getElementById('previewFaca').style.display='none';document.getElementById('previewArte').style.display='none';clearSelection();showNotification('✅ Ordem de produção criada com sucesso!','success');}
-            if(total===0){saveOrder();return;}
-            if(imgF){imageToBase64(imgF,b64=>{order.imagemFaca=b64;processed++;if(processed===total)saveOrder();});}
-            if(imgA){imageToBase64(imgA,b64=>{order.imagemArte=b64;processed++;if(processed===total)saveOrder();});}
+            async function saveOrder(){orders.push(order);await setJSON('productionOrders', orders);await saveAsTemplate();displayOrders();updateStats();document.getElementById('orderForm').reset();document.getElementById('previewFaca').style.display='none';document.getElementById('previewArte').style.display='none';clearSelection();showNotification('✅ Ordem de produção criada com sucesso!','success');}
+            if(total===0){await saveOrder();return;}
+            if(imgF){imageToBase64(imgF,async b64=>{order.imagemFaca=b64;processed++;if(processed===total)await saveOrder();});}
+            if(imgA){imageToBase64(imgA,async b64=>{order.imagemArte=b64;processed++;if(processed===total)await saveOrder();});}
         });
 
         // Editar OP
@@ -1140,10 +1423,10 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
             order.lastModified=new Date().toLocaleDateString('pt-BR')+' às '+new Date().toLocaleTimeString('pt-BR');
 
             let processed=0;const total=(imgF?1:0)+(imgA?1:0);
-            function finish(){orders[idx]=order;setJSON('productionOrders', orders);displayOrders();updateStats();closeEditModal();showNotification(`✅ Ordem ${id} atualizada com sucesso!`,'success');}
-            if(total===0){finish();return;}
-            if(imgF){imageToBase64(imgF,b64=>{order.imagemFaca=b64;processed++;if(processed===total)finish();});}
-            if(imgA){imageToBase64(imgA,b64=>{order.imagemArte=b64;processed++;if(processed===total)finish();});}
+            async function finish(){orders[idx]=order;await setJSON('productionOrders', orders);displayOrders();updateStats();closeEditModal();showNotification(`✅ Ordem ${id} atualizada com sucesso!`,'success');}
+            if(total===0){await finish();return;}
+            if(imgF){imageToBase64(imgF,async b64=>{order.imagemFaca=b64;processed++;if(processed===total)await finish();});}
+            if(imgA){imageToBase64(imgA,async b64=>{order.imagemArte=b64;processed++;if(processed===total)await finish();});}
         });
 
         function editOrder(orderId){
@@ -1392,20 +1675,20 @@ function buildCompactItem(order){
             document.querySelector('.main-content-new').scrollIntoView({behavior:'smooth'});
         }
 
-        function advanceStep(orderId){
+        async function advanceStep(orderId){
             const order=orders.find(o=>o.id===orderId);
             if(order&&order.currentStep<4){
                 order.currentStep++;
                 if(order.currentStep===4){order.status='Finalizado';}
-                setJSON('productionOrders', orders);
+                await setJSON('productionOrders', orders);
                 displayOrders();updateStats();
                 showNotification(`Ordem ${orderId} avançou para a próxima etapa!`,'success');
             }
         }
-        function deleteOrder(orderId){
+        async function deleteOrder(orderId){
             if(confirm('Tem certeza que deseja excluir esta ordem de produção?')){
                 orders=orders.filter(o=>o.id!==orderId);
-                setJSON('productionOrders', orders);
+                await setJSON('productionOrders', orders);
                 displayOrders();updateStats();
                 showNotification(`Ordem ${orderId} excluída com sucesso!`,'info');
             }
@@ -1505,39 +1788,66 @@ function buildCompactItem(order){
         
 
 
-function handleImport(ev){
+        async function handleImport(ev){
             const file=ev.target.files[0];if(!file)return;
             const r=new FileReader();
-            r.onload=e=>{
+            r.onload=async e=>{
                 try{
                     const imported=JSON.parse(e.target.result);
                     if(imported.orders&&Array.isArray(imported.orders)){
                         orders=imported.orders;
-                        if(imported.productTemplates&&Array.isArray(imported.productTemplates)){productTemplates=imported.productTemplates;setJSON('productTemplates', productTemplates);}
-                        setJSON('productionOrders', orders);displayOrders();updateStats();showNotification('Dados importados com sucesso!','success');
+                        if(imported.productTemplates&&Array.isArray(imported.productTemplates)){productTemplates=imported.productTemplates;await setJSON('productTemplates', productTemplates);}
+                        await setJSON('productionOrders', orders);displayOrders();updateStats();showNotification('Dados importados com sucesso!','success');
                     }else if(Array.isArray(imported)){
-                        orders=imported;setJSON('productionOrders', orders);displayOrders();updateStats();showNotification('Dados importados com sucesso!','success');
+                        orders=imported;await setJSON('productionOrders', orders);displayOrders();updateStats();showNotification('Dados importados com sucesso!','success');
                     }else{throw new Error('Formato inválido');}
                 }catch(err){showNotification('Erro ao importar dados. Verifique o formato do arquivo.','error');}
             };
             r.readAsText(file);
         }
 
-        function clearAllData(){
+        async function clearAllData(){
             if(confirm('ATENÇÃO: Isso irá excluir TODAS as ordens de produção E modelos salvos. Esta ação não pode ser desfeita. Deseja continuar?')){
                 orders=[];productTemplates=[];orderIdCounter=1;
+                // Limpa tanto localStorage quanto Firebase
                 localStorage.removeItem('productionOrders');localStorage.removeItem('productTemplates');localStorage.removeItem('orderIdCounter');
+                if(window.cloudStorage){
+                    try{
+                        await window.cloudStorage.remove('productionOrders');
+                        await window.cloudStorage.remove('productTemplates');
+                        await window.cloudStorage.remove('orderIdCounter');
+                    }catch(e){console.warn('Erro limpando Firebase:', e);}
+                }
                 displayOrders();updateStats();showNotification('Todos os dados foram removidos.','info');
             }
         }
 
-        // Aguardar DOM estar pronto antes da inicialização
-        document.addEventListener('DOMContentLoaded', function(){
-            setViewMode(viewMode);
-            displayOrders();
-            updateStats();
-            migrateAndCompactOrdersIfNeeded();
-        });
+        // Inicialização principal da aplicação
+        async function initializeApp() {
+            try {
+                await loadInitialData();
+                setViewMode(viewMode);
+                displayOrders();
+                updateStats();
+                await migrateAndCompactOrdersIfNeeded();
+                
+                // Habilita Firebase após carregamento inicial
+                storage.enableFirebase();
+                
+                showNotification('Sistema carregado com sucesso!', 'success');
+            } catch (e) {
+                console.error('Erro na inicialização:', e);
+                showNotification('Erro ao carregar dados. Usando modo offline.', 'warning');
+            }
+        }
+
+        // Aguardar Firebase estar pronto antes da inicialização
+        if (window.onAppReady) {
+            window.onAppReady(initializeApp);
+        } else {
+            // Fallback se Firebase não carregar
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        }
 
         // Fechar modais ao clicar fora
         window.onclick=function(e){
@@ -1549,8 +1859,15 @@ function handleImport(ev){
             if(e.target===tm)closeTemplatesModal();
         }
 
-        // Auto-salvar
-        setInterval(()=>{if(orders.length>0)setJSON('productionOrders', orders);if(productTemplates.length>0)setJSON('productTemplates', productTemplates);},30000);
+        // Auto-salvar assíncrono
+        setInterval(async ()=>{
+            try{
+                if(orders.length>0) await setJSON('productionOrders', orders);
+                if(productTemplates.length>0) await setJSON('productTemplates', productTemplates);
+            } catch(e) {
+                console.warn('Auto-save error:', e);
+            }
+        }, 30000);
 
         // Listeners de impressão
         window.addEventListener('beforeprint',function(){const pc=document.getElementById('printContent');if(pc){pc.style.display='block !important';pc.style.visibility='visible !important';}});
@@ -1626,3 +1943,30 @@ window.addEventListener('error', function(e){ try{ if(typeof showNotification===
     
 </body>
 </html>
+
+<!--
+CONFIGURAÇÃO FIRESTORE RULES:
+Copie e cole no Console Firebase > Firestore Database > Rules:
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/kv/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+
+COMO USAR:
+1. Acesse https://console.firebase.google.com
+2. Vá em seu projeto > Firestore Database > Rules
+3. Cole as regras acima e publique
+4. Vá em Authentication > Sign-in method > Ativar "Anonymous"
+5. Seu sistema estará funcionando com sincronização em nuvem!
+
+ESTRUTURA DOS DADOS NO FIRESTORE:
+users/{uid}/kv/productionOrders = array de ordens
+users/{uid}/kv/productTemplates = array de templates
+users/{uid}/kv/orderIdCounter = número
+users/{uid}/kv/__migrated__ = boolean (controle interno)
+-->
