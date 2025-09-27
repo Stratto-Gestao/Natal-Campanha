@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Sistema de Ordem de Produção - Embalagens (Firebase)</title>
+    <title>Sistema de Ordem de Produção - Embalagens</title>
 <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;color:#333}
@@ -11,12 +11,6 @@
         .header{background:rgba(255,255,255,.95);padding:20px;border-radius:15px;margin-bottom:30px;box-shadow:0 10px 30px rgba(0,0,0,.1);text-align:center}
         .header h1{color:#2c3e50;font-size:2.5em;margin-bottom:10px;font-weight:700}
         .header p{color:#7f8c8d;font-size:1.2em}
-        
-        /* Firebase Status Indicator */
-        .firebase-status{position:absolute;top:10px;right:10px;padding:8px 12px;border-radius:20px;font-size:12px;font-weight:bold;color:white;}
-        .firebase-status.connected{background:#28a745;}
-        .firebase-status.disconnected{background:#dc3545;}
-        .firebase-status.loading{background:#ffc107;color:#000;}
 
         .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:30px}
         .stat-card{background:rgba(255,255,255,.9);padding:20px;border-radius:10px;text-align:center;box-shadow:0 5px 20px rgba(0,0,0,.1)}
@@ -24,7 +18,7 @@
         .stat-label{color:#6c757d;font-size:.9em;text-transform:uppercase}
 
         /* === Novos Estilos para Interface Reorganizada === */
-        .top-actions{background:rgba(255,255,255,.95);padding:15px 20px;border-radius:12px;margin-bottom:20px;box-shadow:0 5px 20px rgba(0,0,0,.1);position:relative;}
+        .top-actions{background:rgba(255,255,255,.95);padding:15px 20px;border-radius:12px;margin-bottom:20px;box-shadow:0 5px 20px rgba(0,0,0,.1);}
         .action-buttons{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
         .action-buttons .btn{padding:10px 18px;font-size:14px;}
         
@@ -54,247 +48,633 @@
         .process-flow-compact .process-step{padding:6px 12px;background:#e9ecef;border-radius:15px;font-size:12px;color:#495057;}
         
         /* Botão de Criar Melhorado */
-        .create-order-btn{background:linear-gradient(135deg,#28a745 0%,#20c997 100%);color:white;border:none;padding:15px 30px;font-size:16px;font-weight:bold;border-radius:25px;cursor:pointer;margin:20px 0;box-shadow:0 8px 25px rgba(40,167,69,.3);transition:all 0.3s ease;width:100%;}
-        .create-order-btn:hover{transform:translateY(-2px);box-shadow:0 12px 35px rgba(40,167,69,.4);}
-        .create-order-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;box-shadow:none;}
+        .btn-create{width:100%;margin-top:25px;padding:15px;font-size:18px;font-weight:700;background:linear-gradient(135deg,#28a745 0%,#20c997 100%);border:none;border-radius:10px;color:white;box-shadow:0 8px 25px rgba(40,167,69,.3);transition:all 0.3s ease;}
+        .btn-create:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(40,167,69,.4);}
         
-        /* Campos de Entrada Melhorados */
-        .form-group{margin-bottom:20px;}
-        .form-group label{display:block;margin-bottom:8px;font-weight:600;color:#2c3e50;}
-        .form-group input[type="text"],.form-group input[type="number"],.form-group select,.form-group textarea{width:100%;padding:12px 15px;border:2px solid #e9ecef;border-radius:8px;font-size:14px;transition:all 0.3s ease;background:#fff;}
-        .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,.1);}
-        
-        /* Grid Responsivo para Form */
-        .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
-        .form-grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;}
-        
-        /* Botões Gerais */
-        .btn{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;padding:12px 20px;border-radius:8px;cursor:pointer;font-weight:600;transition:all 0.3s ease;text-decoration:none;display:inline-block;text-align:center;font-size:14px;}
-        .btn:hover{transform:translateY(-1px);box-shadow:0 8px 25px rgba(102,126,234,.3);}
-        .btn.btn-danger{background:linear-gradient(135deg,#dc3545 0%,#c82333 100%);}
-        .btn.btn-success{background:linear-gradient(135deg,#28a745 0%,#20c997 100%);}
-        .btn.btn-warning{background:linear-gradient(135deg,#ffc107 0%,#e0a800 100%);color:#000;}
-        .btn.btn-secondary{background:linear-gradient(135deg,#6c757d 0%,#545b62 100%);}
-        .btn.btn-info{background:linear-gradient(135deg,#17a2b8 0%,#138496 100%);}
-        
-        /* Lista de Ordens Melhorada */
-        .orders-grid{display:grid;gap:20px;margin-top:30px;}
-        .order-card{background:white;border-radius:12px;overflow:hidden;box-shadow:0 5px 20px rgba(0,0,0,.1);transition:all 0.3s ease;}
-        .order-card:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.15);}
-        .order-header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;}
-        .order-id{font-size:18px;font-weight:bold;}
-        .order-status{padding:4px 12px;background:rgba(255,255,255,.2);border-radius:15px;font-size:12px;}
-        .order-body{padding:20px;}
-        .order-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px;}
-        .info-item{display:flex;flex-direction:column;}
-        .info-label{font-size:12px;color:#6c757d;margin-bottom:4px;font-weight:600;text-transform:uppercase;}
-        .info-value{font-size:14px;color:#2c3e50;font-weight:500;}
-        .order-actions{display:flex;gap:10px;flex-wrap:wrap;}
-        .order-actions .btn{padding:8px 15px;font-size:12px;}
-        
-        /* Processo de Produção Visual */
-        .production-process{background:#f8f9fa;border-radius:8px;padding:15px;margin:15px 0;}
-        .process-steps{display:flex;gap:10px;overflow-x:auto;padding:10px 0;}
-        .process-step{background:#e9ecef;padding:8px 15px;border-radius:20px;white-space:nowrap;font-size:12px;font-weight:500;color:#495057;flex-shrink:0;}
-        .process-step.completed{background:#28a745;color:white;}
-        .process-step.current{background:#ffc107;color:#000;}
-        
-        /* Modal Melhorado */
-        .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:none;z-index:1000;justify-content:center;align-items:center;}
-        .modal.active{display:flex;}
-        .modal-content{background:white;border-radius:15px;max-width:90vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
-        .modal-header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:20px;border-radius:15px 15px 0 0;}
-        .modal-header h2{margin:0;font-size:24px;}
-        .modal-body{padding:25px;}
-        .modal-footer{padding:20px;border-top:1px solid #e9ecef;display:flex;gap:10px;justify-content:flex-end;}
-        
-        /* Notificações */
-        .notification{position:fixed;top:20px;right:20px;padding:15px 20px;border-radius:8px;color:white;font-weight:500;z-index:2000;transform:translateX(400px);transition:all 0.3s ease;max-width:350px;}
-        .notification.show{transform:translateX(0);}
-        .notification.success{background:#28a745;}
-        .notification.error{background:#dc3545;}
-        .notification.info{background:#17a2b8;}
-        .notification.warning{background:#ffc107;color:#000;}
-        
-        /* Responsivo */
-        @media (max-width: 768px) {
-            .container{padding:10px;}
-            .header h1{font-size:2em;}
-            .form-grid{grid-template-columns:1fr;}
-            .order-info{grid-template-columns:1fr;}
+        /* Layout Responsivo para Abas */
+        @media (max-width:768px){
+            .form-tabs{flex-direction:column;}
+            .tab-btn{text-align:center;}
             .action-buttons{justify-content:stretch;}
             .action-buttons .btn{flex:1;}
-            .form-tabs{flex-direction:column;}
-            .tab-btn{border-radius:8px;margin-bottom:4px;}
-            .process-steps{flex-direction:column;}
-            .order-actions{flex-direction:column;}
-            .modal-content{margin:10px;max-width:calc(100vw - 20px);}
+            .process-checkboxes{grid-template-columns:1fr;}
         }
+        .card{background:rgba(255,255,255,.95);padding:25px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+        .card h2{color:#2c3e50;margin-bottom:20px;font-size:1.8em;display:flex;align-items:center;gap:10px}
+
+        .form-group{margin-bottom:20px}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+        .form-group label{display:block;margin-bottom:8px;font-weight:600;color:#34495e}
+        .form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 15px;border:2px solid #e0e6ed;border-radius:8px;font-size:16px;transition:all .3s ease;background:#f8f9fa}
+        .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#667eea;background:#fff;box-shadow:0 0 0 3px rgba(102,126,234,.1)}
+        .form-group textarea{height:100px;resize:vertical}
+
+        .image-upload{border:3px dashed #ddd;border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .3s ease;background:#f8f9fa}
+        .image-upload:hover{border-color:#667eea;background:#f0f4ff}
+        .image-upload.dragover{border-color:#667eea;background:#e8f2ff}
+        .image-preview{max-width:100%;max-height:200px;border-radius:8px;margin-top:10px;box-shadow:0 4px 15px rgba(0,0,0,.1)}
+
+        .product-selector{background:#e8f4fd;border:2px solid #74b9ff;border-radius:10px;padding:15px;margin-bottom:20px}
+        .product-selector h3{color:#2c3e50;margin-bottom:15px;display:flex;align-items:center;gap:10px}
+        .product-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;max-height:200px;overflow-y:auto}
+        .product-item{background:#fff;border:2px solid #e0e6ed;border-radius:8px;padding:12px;cursor:pointer;transition:all .3s ease}
+        .product-item:hover{border-color:#667eea;background:#f8f9ff}
+        .product-item.selected{border-color:#667eea;background:#e8f2ff}
+
+        .template-actions{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+        .btn{padding:12px 25px;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;transition:all .3s ease;text-transform:uppercase;letter-spacing:.5px}
+        .btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(102,126,234,.3)}
+        .btn-success{background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);color:#fff}
+        .btn-warning{background:linear-gradient(135deg,#ffeaa7 0%,#fab1a0 100%);color:#2d3436}
+        .btn-danger{background:linear-gradient(135deg,#fd79a8 0%,#e84393 100%);color:#fff}
+        .btn-info{background:linear-gradient(135deg,#74b9ff 0%,#0984e3 100%);color:#fff}
+        .btn-secondary{background:linear-gradient(135deg,#636e72 0%,#2d3436 100%);color:#fff}
+        .btn-small{padding:8px 15px;font-size:14px}
+
+        .orders-list{grid-column:1 / -1}
+        .list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:15px}
+        .filter-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+        .filter-controls select,.filter-controls input{padding:8px 12px;border:2px solid #e0e6ed;border-radius:6px;font-size:14px}
+
+        .view-toggle{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+        .view-toggle .btn{padding:8px 14px;font-size:14px;}
+        .view-toggle .btn.active{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%) !important;color:white !important;}
+
+        .order-item{background:#fff;padding:20px;margin-bottom:15px;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,.08);border-left:5px solid #667eea}
+        .order-item.priority-high{border-left-color:#e74c3c}
+        .order-item.priority-medium{border-left-color:#f39c12}
+        .order-item.priority-low{border-left-color:#27ae60}
+        .order-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px}
+        .order-id{font-weight:bold;color:#2c3e50;font-size:1.2em}
+        .status{padding:5px 15px;border-radius:20px;font-weight:600;text-transform:uppercase;font-size:12px}
+        .status.em-andamento{background:#ffeaa7;color:#2d3436}
+        .status.finalizado{background:#55efc4;color:#2d3436}
+        .priority{padding:3px 8px;border-radius:15px;font-size:11px;font-weight:600;text-transform:uppercase}
+        .priority.alta{background:#ffebee;color:#c62828}
+        .priority.media{background:#fff8e1;color:#f57c00}
+        .priority.baixa{background:#e8f5e8;color:#2e7d32}
+
+        .process-flow{display:flex;gap:10px;margin:10px 0;flex-wrap:wrap}
+        .process-step{padding:6px 12px;background:#f8f9fa;border-radius:20px;font-size:13px;border:2px solid #e9ecef}
+        .process-step.completed{background:#d4edda;border-color:#c3e6cb;color:#155724}
+        .process-step.current{background:#fff3cd;border-color:#ffeaa7;color:#856404}
+
+        .order-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:15px 0}
+        .detail-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}
+        .detail-label{font-weight:600;color:#6c757d}
+
+        .order-images{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:15px 0}
+        .order-image{text-align:center}
+        .order-image img{max-width:100%;max-height:150px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.1)}
+
+        .order-actions{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}
+        .compact-item{padding:14px 16px;background:#fff;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,.06);border-left:5px solid #667eea;margin-bottom:8px;transition:all 0.3s ease;position:relative;}
+        .compact-item:hover{box-shadow:0 8px 25px rgba(0,0,0,.12);transform:translateY(-1px);}
         
-        /* Animações */
-        @keyframes slideIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
-        .order-card{animation:slideIn 0.3s ease;}
+        /* === SISTEMA DE CORES POR STATUS === */
+        /* Status: Finalizado - VERDE */
+        .compact-item.status-finalizado{border-left:5px solid #28a745;background:linear-gradient(135deg, rgba(40,167,69,0.05) 0%, rgba(32,201,151,0.08) 100%);}
+        .compact-item.status-finalizado:hover{box-shadow:0 8px 25px rgba(40,167,69,.25);}
         
-        /* Melhorias Visuais Extras */
-        .highlight{background:linear-gradient(135deg,#fff3cd 0%,#ffeaa7 100%);border:1px solid #ffc107;border-radius:8px;padding:15px;margin:15px 0;}
-        .divider{height:1px;background:linear-gradient(90deg,transparent,#e9ecef,transparent);margin:30px 0;}
+        /* Status: Em Andamento - LARANJA */
+        .compact-item.status-em-andamento{border-left:5px solid #fd7e14;background:linear-gradient(135deg, rgba(253,126,20,0.05) 0%, rgba(255,193,7,0.08) 100%);}
+        .compact-item.status-em-andamento:hover{box-shadow:0 8px 25px rgba(253,126,20,.25);}
         
-        /* Lista Compacta Toggle */
-        .compact-view .order-card{padding:10px;margin-bottom:10px;}
-        .compact-view .order-header{padding:10px 15px;}
-        .compact-view .order-body{padding:15px;display:flex;justify-content:space-between;align-items:center;}
-        .compact-view .order-info{display:none;}
-        .compact-view .production-process{display:none;}
-</style>
+        /* Selos de Status */
+        .status-badge{position:absolute;top:10px;right:10px;padding:4px 12px;border-radius:15px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;z-index:10;}
+        .status-badge.finalizado{background:linear-gradient(135deg,#28a745 0%,#20c997 100%);color:white;box-shadow:0 3px 10px rgba(40,167,69,.3);}
+        .status-badge.em-andamento{background:linear-gradient(135deg,#fd7e14 0%,#ffc107 100%);color:white;box-shadow:0 3px 10px rgba(253,126,20,.3);}
+        
+        /* Para cartões detalhados também */
+        .order-card.status-finalizado{border:2px solid #28a745;background:linear-gradient(135deg, rgba(40,167,69,0.03) 0%, rgba(32,201,151,0.05) 100%);}
+        .order-card.status-em-andamento{border:2px solid #fd7e14;background:linear-gradient(135deg, rgba(253,126,20,0.03) 0%, rgba(255,193,7,0.05) 100%);}
+        
+        /* Status visual na meta-informação */
+        .compact-meta .status-text.finalizado{color:#28a745;font-weight:700;}
+        .compact-meta .status-text.em-andamento{color:#fd7e14;font-weight:700;}
+        .compact-title{display:flex;gap:8px;align-items:center;font-weight:600;color:#2c3e50;}
+        .compact-meta{font-size:12px;color:#6c757d;margin-top:4px;}
+        .compact-expanded{margin-top:12px;border-top:1px dashed #e0e6ed;padding-top:12px;background:#f8f9ff;padding:15px;border-radius:8px;}
+
+        .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,.5)}
+        .modal-content{background:#fff;margin:5% auto;padding:20px;border-radius:15px;width:90%;max-width:600px;max-height:80vh;overflow-y:auto}
+        .modal-content.large{max-width:900px}
+        .close{color:#aaa;float:right;font-size:28px;font-weight:bold;cursor:pointer}
+        .close:hover{color:#000}
+
+        .print-preview{background:#fff;padding:30px;border-radius:10px;box-shadow:0 0 20px rgba(0,0,0,.1)}
+        .print-header{text-align:center;margin-bottom:20px;border-bottom:3px solid #667eea;padding-bottom:12px}
+        .print-images{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:18px 0}
+        .print-image{text-align:center}
+        .print-image img{max-width:100%;max-height:300px;border:2px solid #ddd;border-radius:10px}
+
+        .edit-form{background:#fff;padding:30px;border-radius:15px}
+        .edit-form h2{color:#2c3e50;margin-bottom:25px;font-size:1.8em;text-align:center;border-bottom:2px solid #667eea;padding-bottom:15px}
+        .edit-actions{display:flex;gap:15px;justify-content:center;margin-top:30px;padding-top:20px;border-top:1px solid #eee}
+        .current-image-preview{max-width:150px;max-height:150px;border-radius:8px;margin:10px 0;border:2px solid #ddd}
+
+        @media print{
+            @page{size:A4 portrait;margin:10mm}
+            *{-webkit-print-color-adjust:exact !important;color-adjust:exact !important;print-color-adjust:exact !important}
+            body{background:#fff !important}
+            .container,.header,.stats-row,.main-content,.orders-list,.modal-content>div:last-child{display:none !important}
+            .modal{display:block !important;position:static !important;background:#fff !important;width:100% !important;height:auto !important}
+            .modal-content{margin:0 !important;padding:0 !important;width:100% !important;max-width:100% !important;max-height:none !important;background:#fff !important;box-shadow:none !important;border-radius:0 !important}
+            .print-preview{display:block !important;visibility:visible !important;padding:10px !important;margin:0 !important;background:#fff !important;box-shadow:none !important;border-radius:0 !important}
+            .print-header h1,.print-header h2,.print-header p{color:#000 !important;margin:4px 0 !important}
+            .print-preview,.print-preview *{break-inside:avoid-page !important;page-break-inside:avoid !important}
+            .print-preview{font-size:13px !important;line-height:1.35 !important}
+            .print-images img{max-height:220px !important}
+            .print-images{gap:10px !important;margin:10px 0 !important}
+            .close{display:none !important}
+            .print-preview table{border-collapse:collapse !important;width:100% !important}
+            .print-preview td{border-bottom:1px solid #ddd !important;padding:6px 0 !important}
+        }
+
+        @media (max-width:768px){
+            .main-content-new{padding:0 10px;}
+            .form-tabs{flex-direction:column;}
+            .tab-btn{text-align:center;}
+            .action-buttons{justify-content:stretch;flex-direction:column;}
+            .action-buttons .btn{flex:1;margin-bottom:8px;}
+            .process-checkboxes{grid-template-columns:1fr;}
+            .form-row{grid-template-columns:1fr}
+            .order-details{grid-template-columns:1fr}
+            .order-images{grid-template-columns:1fr}
+            .print-images{grid-template-columns:1fr}
+            .stats-row{grid-template-columns:repeat(2,1fr)}
+            .filter-controls{justify-content:center}
+            .edit-actions{flex-direction:column;align-items:center}
+            .product-list{grid-template-columns:1fr}
+            .template-actions{justify-content:center}
+        }
+
+        .notification{position:fixed;top:20px;right:20px;padding:15px 20px;border-radius:8px;color:#fff;font-weight:600;z-index:2000;transform:translateX(400px);transition:transform .3s ease}
+        .notification.show{transform:translateX(0)}
+        .notification.success{background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%)}
+        .notification.error{background:linear-gradient(135deg,#fd79a8 0%,#e84393 100%)}
+        .notification.info{background:linear-gradient(135deg,#74b9ff 0%,#0984e3 100%)}
+    
+        /* === Botão Flutuante (Topo/Ordens) === */
+        :root{ --safe-bottom: env(safe-area-inset-bottom); }
+        .fab{
+            position:fixed; right:20px; bottom:calc(20px + var(--safe-bottom));
+            width:56px; height:56px; border-radius:50%; border:none;
+            background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            color:#fff; font-size:22px; font-weight:700;
+            display:flex; align-items:center; justify-content:center;
+            box-shadow:0 12px 30px rgba(0,0,0,.25);
+            cursor:pointer; z-index:2500;
+            transition:transform .2s ease, box-shadow .2s ease, opacity .25s ease;
+        }
+        .fab:focus{outline:none; box-shadow:0 0 0 4px rgba(102,126,234,.25), 0 12px 30px rgba(0,0,0,.25)}
+        @media (hover:hover){
+            .fab:hover{transform:translateY(-3px); box-shadow:0 16px 32px rgba(0,0,0,.3)}
+        }
+        .fab.hide{opacity:0; pointer-events:none; transform:translateY(20px)}
+        /* Ajustes mobile extras */
+        html,body{-webkit-text-size-adjust:100%}
+        .btn{min-height:44px}
+        @media (max-width:480px){
+            .container{padding:12px}
+            .header h1{font-size:1.8em}
+            .header p{font-size:1em}
+            .btn{width:100%}
+            .view-toggle{width:100%; justify-content:center}
+        }
+
+    </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header com status do Firebase -->
         <div class="header">
-            <div class="firebase-status loading" id="firebase-status">Conectando Firebase...</div>
-            <h1>Sistema de Ordem de Produção</h1>
-            <p>Gestão de Embalagens com Firebase</p>
+            <h1>🏭 Sistema de Ordem de Produção</h1>
+            <p>Gestão Completa de Embalagens em Papel Cartão</p>
         </div>
 
         <!-- Estatísticas -->
         <div class="stats-row">
-            <div class="stat-card">
-                <div class="stat-number" id="total-orders">0</div>
-                <div class="stat-label">Total de OPs</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="pending-orders">0</div>
-                <div class="stat-label">Pendentes</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="in-progress-orders">0</div>
-                <div class="stat-label">Em Produção</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="completed-orders">0</div>
-                <div class="stat-label">Finalizadas</div>
-            </div>
+            <div class="stat-card"><div class="stat-number" style="color:#667eea;" id="totalOrders">0</div><div class="stat-label">Total de Ordens</div></div>
+            <div class="stat-card"><div class="stat-number" style="color:#f39c12;" id="inProgressOrders">0</div><div class="stat-label">Em Andamento</div></div>
+            <div class="stat-card"><div class="stat-number" style="color:#27ae60;" id="completedOrders">0</div><div class="stat-label">Finalizadas</div></div>
+            <div class="stat-card"><div class="stat-number" style="color:#e74c3c;" id="totalProducts">0</div><div class="stat-label">Produtos Únicos</div></div>
         </div>
 
-        <!-- Ações Principais -->
+        <!-- Botões de Ação Rápida no Topo -->
         <div class="top-actions">
             <div class="action-buttons">
-                <button class="btn" onclick="showTab('create')">Nova OP</button>
-                <button class="btn btn-info" onclick="showTab('templates')">Modelos</button>
-                <button class="btn btn-secondary" onclick="toggleViewMode()">Alternar Visualização</button>
-                <button class="btn btn-success" onclick="exportData()">Exportar</button>
-                <button class="btn btn-warning" onclick="importData()">Importar</button>
-                <button class="btn btn-danger" onclick="clearAllData()">Limpar Dados</button>
+                <button class="btn btn-info" onclick="exportData()">📅 Exportar Dados</button>
+                <button class="btn btn-warning" onclick="importData()">📅 Importar Dados</button>
+                <button class="btn btn-danger" onclick="clearAllData()">🗑️ Limpar Tudo</button>
+                <button class="btn btn-secondary" onclick="manageTemplates()">🗊 Gerenciar Modelos</button>
             </div>
+            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="handleImport(event)">
         </div>
 
-        <!-- Conteúdo Principal -->
         <div class="main-content-new">
-            <div class="form-card">
-                <!-- Abas -->
+            <div class="card form-card">
+                <h2>📝 Nova Ordem de Produção</h2>
+
+                <!-- Abas do Formulário -->
                 <div class="form-tabs">
-                    <button class="tab-btn active" onclick="showTab('list')">Lista de OPs</button>
-                    <button class="tab-btn" onclick="showTab('create')">Criar OP</button>
-                    <button class="tab-btn" onclick="showTab('templates')">Modelos</button>
+                    <button class="tab-btn active" onclick="switchTab('basico')" type="button">1. 📄 Informações Básicas</button>
+                    <button class="tab-btn" onclick="switchTab('especificacoes')" type="button">2. 📀 Especificações</button>
+                    <button class="tab-btn" onclick="switchTab('producao')" type="button">3. 🏭 Produção</button>
+                    <button class="tab-btn" onclick="switchTab('imagens')" type="button">4. 🗺 Imagens & Descrições</button>
                 </div>
 
-                <!-- Aba: Lista de OPs -->
-                <div id="tab-list" class="tab-content active">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                        <h3>Ordens de Produção</h3>
-                        <div>
-                            <input type="checkbox" onclick="toggleSelectAll()" style="margin-right:5px;">
-                            <span style="font-size:14px;color:#6c757d;">Selecionar Todas</span>
+                <form id="orderForm">
+                    <!-- Aba 1: Informações Básicas -->
+                    <div id="tab-basico" class="tab-content active">
+                        <div class="product-selector">
+                            <h3>🗂️ Produtos Anteriores</h3>
+                            <div class="template-actions">
+                                <button type="button" class="btn btn-info btn-small" onclick="showProductHistory()">📋 Ver Histórico</button>
+                                <button type="button" class="btn btn-warning btn-small" onclick="clearForm()">🗑️ Limpar Formulário</button>
+                                <button type="button" class="btn btn-secondary btn-small" onclick="saveAsTemplate()">💾 Salvar como Modelo</button>
+                            </div>
+                            <div id="productList" class="product-list" style="display:none;"></div>
+                            <button type="button" id="clearSelectionBtn" class="clear-selection" onclick="clearSelection()" style="display:none;">❌ Limpar Seleção</button>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nomeTemplate">Nome do Produto (para histórico)</label>
+                            <input type="text" id="nomeTemplate" placeholder="Ex: Caixa Pizza Grande, Sacola Kraft, etc." required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="medidasFolha">Medidas da Folha de Impressão</label>
+                                <input type="text" id="medidasFolha" placeholder="Ex: 70x100cm" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="quantidade">Quantidade de Impressão</label>
+                                <input type="number" id="quantidade" placeholder="1000" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <select id="status" required>
+                                    <option value="Em Andamento">Em Andamento</option>
+                                    <option value="Finalizado">Finalizado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="prioridade">Prioridade</label>
+                                <select id="prioridade" required>
+                                    <option value="Média">Média</option>
+                                    <option value="Alta">Alta</option>
+                                    <option value="Baixa">Baixa</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-                    <div id="orders-list" class="orders-grid">
-                        <!-- OPs serão carregadas aqui -->
+
+                    <!-- Aba 2: Especificações -->
+                    <div id="tab-especificacoes" class="tab-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="formato">FORMATO</label>
+                                <input type="text" id="formato" placeholder="">
+                            </div>
+                            <div class="form-group">
+                                <label for="codigoFaca">Código da Faca</label>
+                                <input type="text" id="codigoFaca" placeholder="Ex: FAC-1234">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="tipoPapel">Tipo de Papel</label>
+                                <select id="tipoPapel" required>
+                                    <option value="">Selecione...</option>
+                                    <option>Papel Kraft 66x96</option>
+                                    <option>Papel Kraft 77x113</option>
+                                    <option>papel duplex 66x96</option>
+                                    <option>papel duplex 77x113</option>
+                                    <option>papel triplex 66x96</option>
+                                    <option>papel triplex 77x113</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="gramatura">Gramatura do Papel</label>
+                                <select id="gramatura" required>
+                                    <option value="">Selecione...</option>
+                                    <option>190g</option>
+                                    <option>220g</option>
+                                    <option>225g</option>
+                                    <option>240g</option>
+                                    <option>250g</option>
+                                    <option>300g</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="impressao">Tipo de Impressão</label>
+                                <select id="impressao" required>
+                                    <option value="Frente 4x0">Frente 4x0</option>
+                                    <option value="Frente e Verso 4x4">Frente e Verso 4x4</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="fornecedor">Fornecedor (Terceirização)</label>
+                                <input type="text" id="fornecedor" placeholder="Nome do fornecedor">
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Aba: Criar OP -->
-                <div id="tab-create" class="tab-content">
-                    <h3 style="margin-bottom:25px;">Criar Nova Ordem de Produção</h3>
-                    
-                    <form id="production-form" onsubmit="createOrder(event)">
-                        <div class="form-grid">
+                    <!-- Aba 3: Produção -->
+                    <div id="tab-producao" class="tab-content">
+                        <div class="form-row">
                             <div class="form-group">
-                                <label>Nome do Produto/Template</label>
-                                <input type="text" id="nomeTemplate" required placeholder="Ex: Caixa de Pizza Grande">
+                                <label for="folhasResma">Quantidade de folhas</label>
+                                <input type="text" id="folhasResma" placeholder="Ex: 500 folhas (2 remas com 250)">
                             </div>
                             <div class="form-group">
-                                <label>Quantidade</label>
-                                <input type="number" id="quantidade" required placeholder="1000">
-                            </div>
-                            <div class="form-group">
-                                <label>Cliente</label>
-                                <input type="text" id="cliente" placeholder="Nome do Cliente">
-                            </div>
-                        </div>
-
-                        <div class="form-grid-3">
-                            <div class="form-group">
-                                <label>Tipo de Papel</label>
-                                <input type="text" id="tipoPapel" placeholder="Kraft, Offset, etc.">
-                            </div>
-                            <div class="form-group">
-                                <label>Gramatura</label>
-                                <input type="text" id="gramatura" placeholder="180g, 250g, etc.">
-                            </div>
-                            <div class="form-group">
-                                <label>Fornecedor</label>
-                                <input type="text" id="fornecedor" placeholder="Nome do Fornecedor">
-                            </div>
-                        </div>
-
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Resmas Usadas</label>
-                                <input type="number" step="0.01" id="resmasUsadas" placeholder="0.00">
-                            </div>
-                            <div class="form-group">
-                                <label>Observações</label>
-                                <textarea id="observacoes" placeholder="Informações adicionais" rows="3"></textarea>
+                                <label for="resmasUsadas">Resmas utilizadas nesta ordem</label>
+                                <input type="number" id="resmasUsadas" placeholder="Ex: 2" min="0" step="0.01">
                             </div>
                         </div>
 
                         <!-- Status de Produção -->
                         <div class="production-status">
-                            <h4>Status de Produção</h4>
+                            <h4>🔄 Status da Produção</h4>
                             <div class="process-checkboxes">
                                 <label class="checkbox-label">
-                                    <input type="checkbox" name="processo" value="Corte/Vinco"> Corte/Vinco
+                                    <input type="checkbox" id="enviadoFaca">
+                                    <span>Enviado para produção da faca</span>
                                 </label>
                                 <label class="checkbox-label">
-                                    <input type="checkbox" name="processo" value="Impressão"> Impressão
+                                    <input type="checkbox" id="enviadoChapa">
+                                    <span>Enviado para gravar chapa</span>
                                 </label>
                                 <label class="checkbox-label">
-                                    <input type="checkbox" name="processo" value="Colagem"> Colagem
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" name="processo" value="Acabamento"> Acabamento
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" name="processo" value="Embalagem"> Embalagem
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" name="processo" value="Expedição"> Expedição
+                                    <input type="checkbox" id="enviadoImpressao">
+                                    <span>Enviado para impressão</span>
                                 </label>
                             </div>
                         </div>
-
-                        <button type="submit" class="create-order-btn">
-                            🚀 Criar Ordem de Produção
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Aba: Modelos -->
-                <div id="tab-templates" class="tab-content">
-                    <h3 style="margin-bottom:25px;">Modelos de Produtos</h3>
-                    <div id="templates-list">
-                        <!-- Modelos serão carregados aqui -->
                     </div>
+
+                    <!-- Aba 4: Imagens & Descrições -->
+                    <div id="tab-imagens" class="tab-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Imagem da Faca</label>
+                                <div class="image-upload" onclick="document.getElementById('imagemFaca').click()">
+                                    <input type="file" id="imagemFaca" accept="image/*" style="display:none;">
+                                    <p>📁 Clique para selecionar a imagem da faca</p>
+                                    <img id="previewFaca" class="image-preview" style="display:none;">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Imagem da Montagem da Arte</label>
+                                <div class="image-upload" onclick="document.getElementById('imagemArte').click()">
+                                    <input type="file" id="imagemArte" accept="image/*" style="display:none;">
+                                    <p>🎨 Clique para selecionar a imagem da arte</p>
+                                    <img id="previewArte" class="image-preview" style="display:none;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="acabamento">Acabamento</label>
+                            <textarea id="acabamento" placeholder="Descreva os acabamentos (quebras de linha serão preservadas no PDF)" required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="descricaoEmbalagens">Descrição das Embalagens na Faca</label>
+                            <textarea id="descricaoEmbalagens" placeholder="Descreva as embalagens que estão na faca (formatação preservada no PDF)" required></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-create">✅ Criar Ordem de Produção</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Espaçamento entre seções -->
+        <div style="margin: 40px 0;"></div>
+
+        <div class="card orders-list">>
+            <div class="list-header">
+                <h2>📋 Ordens de Produção</h2>
+                <div class="view-toggle">
+                    <button class="btn btn-secondary btn-small" id="btnLista" onclick="setViewMode('list')">Modo Lista</button>
+                    <button class="btn btn-secondary btn-small" id="btnDetalhado" onclick="setViewMode('detailed')">Modo Detalhado</button>
+                </div>
+            <div class="template-actions">
+                <button class="btn btn-info btn-small" onclick="openSendToGraficaModal()">📦 Enviar à Gráfica</button>
+                <button class="btn btn-secondary btn-small" onclick="toggleSelectAll()">☑️ Selecionar Todos</button>
+            </div>
+        
+                <div class="filter-controls">
+                    <select id="filterStatus" onchange="filterOrders()">
+                        <option value="">Todos os Status</option>
+                        <option value="Em Andamento">Em Andamento</option>
+                        <option value="Finalizado">Finalizado</option>
+                    </select>
+                    <select id="filterPriority" onchange="filterOrders()">
+                        <option value="">Todas as Prioridades</option>
+                        <option value="Alta">Alta</option>
+                        <option value="Média">Média</option>
+                        <option value="Baixa">Baixa</option>
+                    </select>
+                    <input type="text" id="searchOrders" placeholder="Buscar..." onkeyup="filterOrders()">
+                </div>
+            </div>
+            <div id="ordersList"></div>
+        </div>
+    </div>
+
+    <!-- Modal para impressão -->
+    <div id="printModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closePrintModal()">&times;</span>
+            <div id="printContent" class="print-preview"></div>
+            <div style="text-align:center;margin-top:20px;padding-top:20px;border-top:1px solid #ddd;">
+                <button class="btn btn-primary" onclick="printOrder()">🖨️ Imprimir Ordem</button>
+                <button class="btn btn-warning" onclick="closePrintModal()">❌ Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para edição -->
+    <div id="editModal" class="modal">
+        <div class="modal-content large">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <div class="edit-form">
+                <h2>✏️ Editar Ordem de Produção</h2>
+                <form id="editForm">
+                    <input type="hidden" id="editOrderId">
+
+                    <div class="form-group">
+                        <label for="editNomeTemplate">Nome do Produto</label>
+                        <input type="text" id="editNomeTemplate" placeholder="Nome do produto" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editMedidasFolha">Medidas da Folha de Impressão</label>
+                            <input type="text" id="editMedidasFolha" placeholder="Ex: 70x100cm" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editQuantidade">Quantidade de Impressão</label>
+                            <input type="number" id="editQuantidade" placeholder="1000" required>
+                        </div>
+                    </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="editFormato">FORMATO</label>
+                <input type="text" id="editFormato" placeholder="Ex: Tampa e Base, Gaveta, Sacola, etc.">
+            </div>
+            <div class="form-group">
+                <label for="editCodigoFaca">Código da Faca</label>
+                <input type="text" id="editCodigoFaca" placeholder="Ex: FAC-1234">
+            </div>
+        </div>
+
+                    <div class="form-row">
+                        <div class="form-group" style="grid-column:1 / -1;">
+                            <label for="editFolhasResma">Quantidade de folhas/resma</label>
+                            <input type="text" id="editFolhasResma" placeholder="Ex: 500 folhas (2 remas com 250)">
+                        </div>
+                    </div>
+        <div class="form-row">
+            <div class="form-group" style="grid-column:1 / -1;">
+                <label for="editResmasUsadas">Resmas utilizadas nesta ordem</label>
+                <input type="number" id="editResmasUsadas" placeholder="Ex: 2" min="0" step="0.01">
+            </div>
+        </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editFornecedor">Fornecedor (Terceirização)</label>
+                            <input type="text" id="editFornecedor" placeholder="Nome do fornecedor">
+                        </div>
+                        <div class="form-group">
+                            <label for="editStatus">Status</label>
+                            <select id="editStatus" required>
+                                <option value="Em Andamento">Em Andamento</option>
+                                <option value="Finalizado">Finalizado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editTipoPapel">Tipo de Papel</label>
+                            <select id="editTipoPapel" required>
+                <option value="">Selecione...</option>
+                <option>Papel Kraft 66x96</option>
+                <option>Papel Kraft 77x113</option>
+                <option>papel duplex 66x96</option>
+                <option>papel duplex 77x113</option>
+                <option>papel triplex 66x96</option>
+                <option>papel triplex 77x113</option>
+            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editGramatura">Gramatura do Papel</label>
+                            <select id="editGramatura" required>
+                <option value="">Selecione...</option>
+                <option>190g</option>
+                <option>220g</option>
+                <option>225g</option>
+                <option>240g</option>
+                <option>250g</option>
+                <option>300g</option>
+            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editImpressao">Tipo de Impressão</label>
+                            <select id="editImpressao" required>
+                                <option value="Frente 4x0">Frente 4x0</option>
+                                <option value="Frente e Verso 4x4">Frente e Verso 4x4</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPrioridade">Prioridade</label>
+                            <select id="editPrioridade" required>
+                                <option value="Média">Média</option>
+                                <option value="Alta">Alta</option>
+                                <option value="Baixa">Baixa</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Pré-produção (edição) -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><input type="checkbox" id="editEnviadoFaca"> Enviado para produção da faca</label>
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" id="editEnviadoChapa"> Enviado para gravar chapa</label>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="grid-column:1 / -1;">
+                            <label><input type="checkbox" id="editEnviadoImpressao"> Enviado para impressão</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editAcabamento">Acabamento</label>
+                        <textarea id="editAcabamento" placeholder="Descreva os acabamentos necessários" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editDescricaoEmbalagens">Descrição das Embalagens na Faca</label>
+                        <textarea id="editDescricaoEmbalagens" placeholder="Descreva as embalagens que estão na faca" required></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Imagem da Faca</label>
+                            <div id="currentImageFaca" style="text-align:center;margin:10px 0;"></div>
+                            <div class="image-upload" onclick="document.getElementById('editImagemFaca').click()">
+                                <input type="file" id="editImagemFaca" accept="image/*" style="display:none;">
+                                <p>📁 Clique para alterar a imagem da faca</p>
+                                <img id="editPreviewFaca" class="image-preview" style="display:none;">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Imagem da Montagem da Arte</label>
+                            <div id="currentImageArte" style="text-align:center;margin:10px 0;"></div>
+                            <div class="image-upload" onclick="document.getElementById('editImagemArte').click()">
+                                <input type="file" id="editImagemArte" accept="image/*" style="display:none;">
+                                <p>🎨 Clique para alterar a imagem da arte</p>
+                                <img id="editPreviewArte" class="image-preview" style="display:none;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="edit-actions">
+                        <button type="submit" class="btn btn-success">💾 Salvar Alterações</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeEditModal()">❌ Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para gerenciar modelos -->
+    <div id="templatesModal" class="modal">
+        <div class="modal-content large">
+            <span class="close" onclick="closeTemplatesModal()">&times;</span>
+            <div style="padding:20px;">
+                <h2 style="text-align:center;margin-bottom:30px;">🗂️ Gerenciar Modelos de Produtos</h2>
+                <div id="templatesContent"></div>
+                <div style="text-align:center;margin-top:20px;">
+                    <button class="btn btn-warning" onclick="closeTemplatesModal()">❌ Fechar</button>
                 </div>
             </div>
         </div>
@@ -303,698 +683,946 @@
     <!-- Notificações -->
     <div id="notification" class="notification"></div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        // Import Firebase
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
-
-        // Configuração do Firebase - VOCÊ PRECISA SUBSTITUIR ESTAS INFORMAÇÕES PELAS SUAS
-        const firebaseConfig = {
-            apiKey: "AIzaSyBy0RGYoK3oFdFVnoVhG3dNva3BKbvCeUs",
-            authDomain: "sistema-de-ordem-de-producao.firebaseapp.com", 
-            projectId: "sistema-de-ordem-de-producao",
-            storageBucket: "sistema-de-ordem-de-producao.firebasestorage.app",
-            messagingSenderId: "681409177091789",
-            appId: "1:681409177091:web:84fda4b78d4e4893dd9036
-
-        // Inicializar Firebase
-        let app, db;
-        let isFirebaseConnected = false;
+    <script>
         
-        try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            isFirebaseConnected = true;
-            updateFirebaseStatus('connected', 'Firebase Conectado');
-            
-            // Inicializar dados
-            initializeApp();
-            
-        } catch (error) {
-            console.error('Erro ao conectar com Firebase:', error);
-            updateFirebaseStatus('disconnected', 'Firebase Desconectado');
-            
-            // Fallback para localStorage
-            initializeWithLocalStorage();
-        }
-
-        // Atualizar status do Firebase
-        function updateFirebaseStatus(status, message) {
-            const statusEl = document.getElementById('firebase-status');
-            statusEl.className = `firebase-status ${status}`;
-            statusEl.textContent = message;
-        }
-
-        // ===== FIREBASE DATA OPERATIONS =====
-        
-        // Coleções do Firebase
-        const COLLECTIONS = {
-            ORDERS: 'production_orders',
-            TEMPLATES: 'product_templates',
-            SETTINGS: 'app_settings'
+// Storage com fallback para iOS/Android (Private Mode, restrições, etc.)
+const storage = (function(){
+    try {
+        const testKey = '__t__';
+        localStorage.setItem(testKey, '1');
+        localStorage.removeItem(testKey);
+        return localStorage;
+    } catch (e) {
+        // Fallback em memória
+        const mem = {};
+        return {
+            getItem: (k) => (k in mem ? mem[k] : null),
+            setItem: (k, v) => { mem[k] = String(v); },
+            removeItem: (k) => { delete mem[k]; }
         };
+    }
+})();
 
-        // Variáveis globais
-        window.orders = [];
-        window.productTemplates = [];
-        window.orderIdCounter = 1;
-        window.selectedOrderIds = new Set();
-        
-        // Inicializar aplicação
-        async function initializeApp() {
-            if (isFirebaseConnected) {
-                await loadDataFromFirebase();
-                setupFirebaseListeners();
-            } else {
-                initializeWithLocalStorage();
-            }
-            updateUI();
-        }
+function getJSON(key, fallback){
+    try {
+        const v = storage.getItem(key);
+        return v ? JSON.parse(v) : fallback;
+    } catch(e){
+        return fallback;
+    }
+}
+function setJSON(key, value){
+    try { storage.setItem(key, JSON.stringify(value)); } catch(e){}
+}
 
-        // Carregar dados do Firebase
-        async function loadDataFromFirebase() {
-            try {
-                // Carregar ordens
-                const ordersSnapshot = await getDocs(query(collection(db, COLLECTIONS.ORDERS), orderBy('createdAt', 'desc')));
-                window.orders = ordersSnapshot.docs.map(doc => ({
-                    firebaseId: doc.id,
-                    ...doc.data()
-                }));
+let orders = getJSON('productionOrders', []);
+let orderIdCounter = parseInt(storage.getItem('orderIdCounter')) || 1;
+let productTemplates = getJSON('productTemplates', []);
+// === Seleção de OPs para Envio à Gráfica ===
+let selectedOrderIds = new Set();
+function toggleSelectOrder(orderId, checked){
+    if(checked){ selectedOrderIds.add(orderId); } else { selectedOrderIds.delete(orderId); }
+}
+function isSelected(orderId){ return selectedOrderIds.has(orderId); }
+function toggleSelectAll(){
+    const list = document.querySelectorAll('input.select-order');
+    const anyUnchecked = Array.from(list).some(cb => !cb.checked);
+    Array.from(list).forEach(cb=>{
+        cb.checked = anyUnchecked;
+        const id = cb.getAttribute('data-order-id');
+        toggleSelectOrder(id, anyUnchecked);
+    });
+    showNotification(anyUnchecked ? 'Todas as OPs visíveis selecionadas.' : 'Seleção limpa.', 'info');
+}
+function openSendToGraficaModal(){
+    if(selectedOrderIds.size===0){ showNotification('Selecione pelo menos uma OP.', 'error'); return; }
+    const selected = orders.filter(o => selectedOrderIds.has(o.id));
+    document.getElementById('graficaMeta').textContent = `Total de ordens selecionadas: ${selected.length}`;
+    const rows = selected.map(o=>{
+    const resmas = parseFloat(o.resmasUsadas||0)||0;
+    const forn = (o.fornecedor||'').trim();
+    return `<tr>
+        <td style="padding:6px;border-bottom:1px solid #eee;">${o.id}</td>
+        <td style="padding:6px;border-bottom:1px solid #eee;">${o.nomeTemplate||''}</td>
+        <td style="padding:6px;border-bottom:1px solid #eee;">${forn}</td>
+        <td style="padding:6px;border-bottom:1px solid #eee;">${o.tipoPapel||''}</td>
+        <td style="padding:6px;border-bottom:1px solid #eee;">${o.gramatura||''}</td>
+        <td style="padding:6px;border-bottom:1px solid #eee;text-align:right;">${resmas.toLocaleString('pt-BR')}</td>
+    </tr>`;
+}).join('');
+    document.getElementById('graficaOrders').innerHTML = `
+        <h3 style="margin:10px 0;color:#2c3e50;">📋 Ordens Selecionadas</h3>
+        <table style="width:100%;border-collapse:collapse;">
+            <thead><tr>
+                <th style="text-align:left;border-bottom:2px solid #333;padding:6px;">OP</th>
+                <th style="text-align:left;border-bottom:2px solid #333;padding:6px;">Produto</th>
+                <th style="text-align:left;border-bottom:2px solid #333;padding:6px;">Fornecedor</th><th style="text-align:left;border-bottom:2px solid #333;padding:6px;">Papel</th>
+                <th style="text-align:left;border-bottom:2px solid #333;padding:6px;">Gramatura</th>
+                <th style="text-align:right;border-bottom:2px solid #333;padding:6px;">Resmas</th>
+            </tr></thead>
+            <tbody>${rows || '<tr><td colspan="5" style="padding:8px;">(sem dados)</td></tr>'}</tbody>
+        </table>
+    `;
+    const mapa = {};
+for(const o of selected){
+    const forn = (o.fornecedor||'').trim();
+    const key = `${forn} | ${(o.tipoPapel||'').trim()} | ${(o.gramatura||'').trim()}`;
+        const val = parseFloat(o.resmasUsadas||0)||0;
+        mapa[key] = (mapa[key]||0) + val;
+    }
+    const totalRows = Object.entries(mapa).map(([k,v])=>`
+        <tr>
+            <td style="padding:6px;border-bottom:1px solid #eee;">${k}</td>
+            <td style="padding:6px;border-bottom:1px solid #eee;text-align:right;">${v.toLocaleString('pt-BR')}</td>
+        </tr>`).join('');
+    const totalConsolidado = Object.values(mapa).reduce((a,b)=>a+b,0);
+    document.getElementById('graficaTotais').innerHTML = `
+        <h3 style="margin:16px 0;color:#2c3e50;">🧮 Totais Consolidados</h3>
+        <table style="width:100%;border-collapse:collapse;">
+            <thead><tr>
+                <th style="text-align:left;border-bottom:2px solid #333;padding:6px;">Fornecedor | Papel | Gramatura</th>
+                <th style="text-align:right;border-bottom:2px solid #333;padding:6px;">Resmas</th>
+            </tr></thead>
+            <tbody>
+                ${totalRows || '<tr><td colspan="2" style="padding:8px;">(sem dados)</td></tr>'}
+                <tr>
+                    <td style="padding:8px;font-weight:700;border-top:2px solid #333;">TOTAL GERAL</td>
+                    <td style="padding:8px;font-weight:700;text-align:right;border-top:2px solid #333;">${totalConsolidado.toLocaleString('pt-BR')}</td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+    document.getElementById('graficaModal').style.display='block';
+}
+function closeGraficaModal(){ document.getElementById('graficaModal').style.display='none'; }
+function printGraficaReport(){
+    const m = document.getElementById('graficaModal');
+    if(!m) return;
+    const w = window.open('', 'PRINT', 'height=800,width=1000');
+    const content = m.querySelector('.print-preview').outerHTML;
+    w.document.write('<html><head><title>Relatório de Envio à Gráfica</title><meta charset="utf-8"></head><body>');
+    w.document.write('<style>body{font-family:Segoe UI,Tahoma,Arial,sans-serif;padding:20px;} table{width:100%;border-collapse:collapse;} th,td{font-size:12px;} .print-header{text-align:center;margin-bottom:10px;border-bottom:2px solid #667eea;padding-bottom:8px;}</style>');
+    w.document.write(content);
+    w.document.write('</body></html>');
+    w.document.close(); w.focus(); w.print(); w.close();
+}
 
-                // Carregar templates
-                const templatesSnapshot = await getDocs(collection(db, COLLECTIONS.TEMPLATES));
-                window.productTemplates = templatesSnapshot.docs.map(doc => ({
-                    firebaseId: doc.id,
-                    ...doc.data()
-                }));
 
-                // Carregar configurações
-                const settingsSnapshot = await getDocs(collection(db, COLLECTIONS.SETTINGS));
-                const settings = settingsSnapshot.docs.find(doc => doc.id === 'app_config');
-                if (settings) {
-                    window.orderIdCounter = settings.data().orderIdCounter || 1;
-                }
+// ===== Utils: Quota-safe storage & image compression =====
+function estimateBytesFromDataURL(dataURL){
+    try{
+        const base64 = dataURL.split(',')[1] || '';
+        // 4/3 base64 expansion; approximate
+        return Math.ceil((base64.length * 3) / 4);
+    }catch(e){ return 0; }
+}
 
-                console.log('Dados carregados do Firebase:', {
-                    orders: window.orders.length,
-                    templates: window.productTemplates.length,
-                    counter: window.orderIdCounter
-                });
-
-            } catch (error) {
-                console.error('Erro ao carregar dados do Firebase:', error);
-                showNotification('Erro ao carregar dados do servidor', 'error');
-            }
-        }
-
-        // Configurar listeners em tempo real
-        function setupFirebaseListeners() {
-            // Listener para ordens
-            onSnapshot(query(collection(db, COLLECTIONS.ORDERS), orderBy('createdAt', 'desc')), (snapshot) => {
-                window.orders = snapshot.docs.map(doc => ({
-                    firebaseId: doc.id,
-                    ...doc.data()
-                }));
-                updateUI();
-            });
-
-            // Listener para templates
-            onSnapshot(collection(db, COLLECTIONS.TEMPLATES), (snapshot) => {
-                window.productTemplates = snapshot.docs.map(doc => ({
-                    firebaseId: doc.id,
-                    ...doc.data()
-                }));
-                loadTemplatesList();
-            });
-        }
-
-        // Salvar ordem no Firebase
-        async function saveOrderToFirebase(orderData) {
-            try {
-                const docRef = await addDoc(collection(db, COLLECTIONS.ORDERS), {
-                    ...orderData,
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
-                });
-                
-                // Atualizar contador
-                await updateOrderCounter();
-                
-                return docRef.id;
-            } catch (error) {
-                console.error('Erro ao salvar ordem:', error);
-                throw error;
-            }
-        }
-
-        // Atualizar ordem no Firebase  
-        async function updateOrderInFirebase(firebaseId, updateData) {
-            try {
-                await updateDoc(doc(db, COLLECTIONS.ORDERS, firebaseId), {
-                    ...updateData,
-                    updatedAt: serverTimestamp()
-                });
-            } catch (error) {
-                console.error('Erro ao atualizar ordem:', error);
-                throw error;
-            }
-        }
-
-        // Deletar ordem do Firebase
-        async function deleteOrderFromFirebase(firebaseId) {
-            try {
-                await deleteDoc(doc(db, COLLECTIONS.ORDERS, firebaseId));
-            } catch (error) {
-                console.error('Erro ao deletar ordem:', error);
-                throw error;
-            }
-        }
-
-        // Salvar template no Firebase
-        async function saveTemplateToFirebase(templateData) {
-            try {
-                const docRef = await addDoc(collection(db, COLLECTIONS.TEMPLATES), {
-                    ...templateData,
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
-                });
-                return docRef.id;
-            } catch (error) {
-                console.error('Erro ao salvar template:', error);
-                throw error;
-            }
-        }
-
-        // Atualizar contador de IDs
-        async function updateOrderCounter() {
-            try {
-                const settingsRef = doc(db, COLLECTIONS.SETTINGS, 'app_config');
-                await updateDoc(settingsRef, {
-                    orderIdCounter: window.orderIdCounter,
-                    updatedAt: serverTimestamp()
-                });
-            } catch (error) {
-                // Se não existir, criar
-                await addDoc(collection(db, COLLECTIONS.SETTINGS), {
-                    orderIdCounter: window.orderIdCounter,
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
-                });
-            }
-        }
-
-        // ===== FALLBACK LOCALSTORAGE =====
-        
-        function initializeWithLocalStorage() {
-            console.log('Usando localStorage como fallback');
-            
-            // Storage com fallback para iOS/Android (Private Mode, restrições, etc.)
-            const storage = (function(){
-                try {
-                    const testKey = '__t__';
-                    localStorage.setItem(testKey, '1');
-                    localStorage.removeItem(testKey);
-                    return localStorage;
-                } catch (e) {
-                    // Fallback em memória
-                    const mem = {};
-                    return {
-                        getItem: (k) => (k in mem ? mem[k] : null),
-                        setItem: (k, v) => { mem[k] = String(v); },
-                        removeItem: (k) => { delete mem[k]; }
-                    };
-                }
-            })();
-
-            function getJSON(key, fallback){
-                try {
-                    const v = storage.getItem(key);
-                    return v ? JSON.parse(v) : fallback;
-                } catch(e){
-                    return fallback;
-                }
-            }
-            
-            function setJSON(key, value){
-                try { storage.setItem(key, JSON.stringify(value)); } catch(e){}
-            }
-
-            window.orders = getJSON('productionOrders', []);
-            window.orderIdCounter = parseInt(storage.getItem('orderIdCounter')) || 1;
-            window.productTemplates = getJSON('productTemplates', []);
-            
-            // Funções globais para localStorage
-            window.saveToLocalStorage = function() {
-                setJSON('productionOrders', window.orders);
-                setJSON('productTemplates', window.productTemplates);
-                storage.setItem('orderIdCounter', window.orderIdCounter);
+function compressFileToDataURL(file, maxDim=1280, quality=0.8){
+    return new Promise((resolve,reject)=>{
+        try{
+            const img = new Image();
+            const reader = new FileReader();
+            reader.onload = ev => {
+                img.onload = ()=>{
+                    try{
+                        const canvas = document.createElement('canvas');
+                        let {width, height} = img;
+                        const scale = Math.min(1, maxDim/Math.max(width, height));
+                        width = Math.round(width*scale); height = Math.round(height*scale);
+                        canvas.width = width; canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        // Prefer JPEG to reduce size
+                        let out = canvas.toDataURL('image/jpeg', quality);
+                        resolve(out);
+                    }catch(err){ reject(err); }
+                };
+                img.onerror = reject;
+                img.src = ev.target.result;
             };
-            
-            updateUI();
-        }
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        }catch(err){ reject(err); }
+    });
+}
 
-        // ===== FUNÇÕES PRINCIPAIS =====
-
-        // Gerar ID da ordem
-        window.generateOrderId = function() {
-            const id = window.orderIdCounter;
-            window.orderIdCounter++;
-            
-            if (isFirebaseConnected) {
-                updateOrderCounter();
-            } else if (window.saveToLocalStorage) {
-                window.saveToLocalStorage();
-            }
-            
-            return `OP-${String(id).padStart(4, '0')}`;
-        };
-
-        // Criar nova ordem
-        window.createOrder = async function(event) {
-            event.preventDefault();
-            
-            const form = event.target;
-            const formData = new FormData(form);
-            
-            // Coletar dados do formulário
-            const orderData = {
-                id: generateOrderId(),
-                nomeTemplate: document.getElementById('nomeTemplate').value,
-                quantidade: parseInt(document.getElementById('quantidade').value),
-                cliente: document.getElementById('cliente').value,
-                tipoPapel: document.getElementById('tipoPapel').value,
-                gramatura: document.getElementById('gramatura').value,
-                fornecedor: document.getElementById('fornecedor').value,
-                resmasUsadas: parseFloat(document.getElementById('resmasUsadas').value) || 0,
-                observacoes: document.getElementById('observacoes').value,
-                status: 'Pendente',
-                processosCompletos: [],
-                dataCreation: new Date().toLocaleDateString('pt-BR'),
-                horaCreation: new Date().toLocaleTimeString('pt-BR')
+function compressDataURL(dataURL, maxDim=1280, quality=0.8){
+    return new Promise((resolve,reject)=>{
+        try{
+            const img = new Image();
+            img.onload = ()=>{
+                try{
+                    const canvas = document.createElement('canvas');
+                    let {width, height} = img;
+                    const scale = Math.min(1, maxDim/Math.max(width, height));
+                    width = Math.round(width*scale); height = Math.round(height*scale);
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const out = canvas.toDataURL('image/jpeg', quality);
+                    resolve(out);
+                }catch(err){ reject(err); }
             };
+            img.onerror = reject;
+            img.src = dataURL;
+        }catch(err){ reject(err); }
+    });
+}
 
-            // Coletar processos marcados
-            const processoCheckboxes = document.querySelectorAll('input[name="processo"]:checked');
-            orderData.processosCompletos = Array.from(processoCheckboxes).map(cb => cb.value);
-            
-            // Determinar status baseado nos processos
-            if (orderData.processosCompletos.length === 0) {
-                orderData.status = 'Pendente';
-            } else if (orderData.processosCompletos.length === 6) {
-                orderData.status = 'Finalizada';
-            } else {
-                orderData.status = 'Em Produção';
+// setJSON com retry ao atingir cota: tenta reduzir qualidade de imagens grandes
+async function setJSONRetry(key, value, onQuota){
+    try{
+        setJSON(key, value);
+        return true;
+    }catch(e){
+        // Alguns navegadores lançam QuotaExceededError sem permitir catch aqui; então usamos try interno do setJSON.
+        return true;
+    }
+}
+
+// Migração: comprime imagens existentes muito grandes (executa na inicialização, sem alterar fluxo do usuário)
+async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
+    try{
+        let changed = false;
+        const ordersLocal = getJSON('productionOrders', []);
+        // Estima tamanho atual da string JSON + imagens
+        let approx = JSON.stringify(ordersLocal).length;
+        if(approx < maxTotalBytes) return; // rápido
+        for (let i=0; i<ordersLocal.length; i++){
+            const o = ordersLocal[i];
+            for (const k of ['imagemFaca','imagemArte']){
+                if(o && o[k] && estimateBytesFromDataURL(o[k]) > 500*1024){
+                    // comprime de forma agressiva
+                    try{
+                        o[k] = await compressDataURL(o[k], 1024, 0.7);
+                        changed = true;
+                    }catch(_){/* ignore */}
+                }
             }
+            approx = JSON.stringify(ordersLocal).length;
+            if(approx < maxTotalBytes) break;
+        }
+        if(changed){
+            setJSON('productionOrders', ordersLocal);
+        }
+    }catch(_){/* ignore */}
+}
 
+
+        let isEditing = false;
+        let selectedTemplate = null;
+        let viewMode = localStorage.getItem('ordersViewMode') || 'detailed';
+        window.viewMode = viewMode; // 'list' | 'detailed'
+        
+        // Função para trocar abas
+        function switchTab(tabName) {
             try {
-                if (isFirebaseConnected) {
-                    // Salvar no Firebase
-                    const firebaseId = await saveOrderToFirebase(orderData);
-                    orderData.firebaseId = firebaseId;
+                // Remove active de todas as abas e conteúdos
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                // Ativa a aba clicada
+                if(event && event.target) {
+                    event.target.classList.add('active');
+                }
+                
+                // Ativa o conteúdo da aba
+                const tabContent = document.getElementById('tab-' + tabName);
+                if(tabContent) {
+                    tabContent.classList.add('active');
                 } else {
-                    // Salvar no localStorage
-                    window.orders.push(orderData);
-                    if (window.saveToLocalStorage) {
-                        window.saveToLocalStorage();
-                    }
+                    console.error('Tab content not found:', 'tab-' + tabName);
+                    return;
                 }
-
-                // Salvar como template se não existir
-                await saveAsTemplate(orderData);
                 
-                showNotification(`OP ${orderData.id} criada com sucesso!`, 'success');
-                form.reset();
-                showTab('list');
-                
-                if (!isFirebaseConnected) {
-                    updateUI(); // Atualizar UI manualmente se não tiver listeners
-                }
-
-            } catch (error) {
-                console.error('Erro ao criar ordem:', error);
-                showNotification('Erro ao criar ordem de produção', 'error');
-            }
-        };
-
-        // Salvar como template
-        async function saveAsTemplate(orderData) {
-            const templateData = {
-                nomeTemplate: orderData.nomeTemplate,
-                tipoPapel: orderData.tipoPapel,
-                gramatura: orderData.gramatura,
-                fornecedor: orderData.fornecedor,
-                observacoes: orderData.observacoes,
-                vezesCriado: 1,
-                ultimaVez: new Date().toLocaleDateString('pt-BR')
-            };
-
-            const existingIndex = window.productTemplates.findIndex(t => t.nomeTemplate === templateData.nomeTemplate);
-            
-            if (existingIndex !== -1) {
-                // Atualizar template existente
-                window.productTemplates[existingIndex].vezesCriado++;
-                window.productTemplates[existingIndex].ultimaVez = templateData.ultimaVez;
-                
-                if (isFirebaseConnected && window.productTemplates[existingIndex].firebaseId) {
-                    await updateDoc(doc(db, COLLECTIONS.TEMPLATES, window.productTemplates[existingIndex].firebaseId), {
-                        vezesCriado: window.productTemplates[existingIndex].vezesCriado,
-                        ultimaVez: templateData.ultimaVez,
-                        updatedAt: serverTimestamp()
-                    });
-                }
-            } else {
-                // Criar novo template
-                try {
-                    if (isFirebaseConnected) {
-                        const firebaseId = await saveTemplateToFirebase(templateData);
-                        templateData.firebaseId = firebaseId;
-                    } else {
-                        window.productTemplates.push(templateData);
-                    }
-                } catch (error) {
-                    console.error('Erro ao salvar template:', error);
-                }
-            }
-            
-            if (!isFirebaseConnected && window.saveToLocalStorage) {
-                window.saveToLocalStorage();
+                // Feedback para o usuário
+                const tabNames = {
+                    'basico': 'Informações Básicas',
+                    'especificacoes': 'Especificações',
+                    'producao': 'Produção',
+                    'imagens': 'Imagens & Descrições'
+                };
+                showNotification(`Aba: ${tabNames[tabName]}`, 'info');
+            } catch(error) {
+                console.error('Erro na função switchTab:', error);
+                showNotification('Erro ao trocar aba. Tente novamente.', 'error');
             }
         }
 
-        // Atualizar UI
-        function updateUI() {
+        function setViewMode(mode){
+            try {
+                window.viewMode = mode;
+                localStorage.setItem('ordersViewMode', mode);
+                
+                const bList = document.getElementById('btnLista');
+                const bDet = document.getElementById('btnDetalhado');
+                
+                if(bList) {
+                    bList.className = 'btn btn-secondary btn-small';
+                    if(mode === 'list') bList.classList.add('active');
+                }
+                if(bDet) {
+                    bDet.className = 'btn btn-secondary btn-small';
+                    if(mode === 'detailed') bDet.classList.add('active');
+                }
+                
+                // Feedback para o usuário
+                const modeText = mode === 'list' ? 'Lista Compacta' : 'Detalhado Completo';
+                showNotification(`Modo de visualização: ${modeText}`, 'info');
+                
+            } catch(e) { 
+                console && console.warn && console.warn('setViewMode warn:', e); 
+            }
+            try { 
+                displayOrders(); 
+            } catch(e) { 
+                console && console.error && console.error('displayOrders err:', e); 
+            }
+        }
+
+
+        function showNotification(message,type='success'){const n=document.getElementById('notification');n.textContent=message;n.className=`notification ${type}`;n.classList.add('show');setTimeout(()=>n.classList.remove('show'),3000);}
+        function generateOrderId(){const id=orderIdCounter;orderIdCounter++;storage.setItem('orderIdCounter', orderIdCounter);return `OP-${String(id).padStart(4,'0')}`;}
+        function updateStats(){const total=orders.length;const emAndamento=orders.filter(o=>o.status==='Em Andamento').length;const finalizadas=orders.filter(o=>o.status==='Finalizado').length;const unicos=new Set(orders.map(o=>o.nomeTemplate)).size;document.getElementById('totalOrders').textContent=total;document.getElementById('inProgressOrders').textContent=emAndamento;document.getElementById('completedOrders').textContent=finalizadas;document.getElementById('totalProducts').textContent=unicos;}
+
+        function showProductHistory(){
+            const list=document.getElementById('productList');
+            if(productTemplates.length===0){showNotification('Nenhum produto salvo no histórico ainda.','info');return;}
+            list.innerHTML=productTemplates.map((t,i)=>`
+                <div class="product-item" onclick="selectTemplate(${i})">
+                    <div class="product-name">${t.nomeTemplate}</div>
+                    <div class="product-details">${t.tipoPapel} | ${t.gramatura} | ${t.impressao}</div>
+                </div>`).join('');
+            list.style.display='grid';document.getElementById('clearSelectionBtn').style.display='block';
+        }
+        function selectTemplate(i){selectedTemplate=productTemplates[i];document.querySelectorAll('.product-item').forEach(it=>it.classList.remove('selected'));document.querySelectorAll('.product-item')[i].classList.add('selected');fillFormWithTemplate(selectedTemplate);showNotification(`Produto "${selectedTemplate.nomeTemplate}" carregado!`,'success');}
+        function fillFormWithTemplate(t){
+            document.getElementById('medidasFolha').value=t.medidasFolha||'';
+            document.getElementById('fornecedor').value=t.fornecedor||'';
+            document.getElementById('tipoPapel').value=t.tipoPapel||'';
+            document.getElementById('gramatura').value=t.gramatura||'';
+            document.getElementById('impressao').value=t.impressao||'Frente 4x0';
+            document.getElementById('prioridade').value=t.prioridade||'Média';
+            document.getElementById('nomeTemplate').value=t.nomeTemplate||'';
+            document.getElementById('folhasResma').value=t.folhasResma||'';
+            document.getElementById('acabamento').value=t.acabamento||'';
+            document.getElementById('descricaoEmbalagens').value=t.descricaoEmbalagens||'';
+            document.getElementById('formato').value=t.formato||'';
+            document.getElementById('codigoFaca').value=t.codigoFaca||'';
+            document.getElementById('resmasUsadas').value=t.resmasUsadas||'';
+            if(t.imagemFaca){const p=document.getElementById('previewFaca');p.src=t.imagemFaca;p.style.display='block';}
+            if(t.imagemArte){const p=document.getElementById('previewArte');p.src=t.imagemArte;p.style.display='block';}
+        }
+        function clearSelection(){selectedTemplate=null;document.querySelectorAll('.product-item').forEach(it=>it.classList.remove('selected'));document.getElementById('productList').style.display='none';document.getElementById('clearSelectionBtn').style.display='none';}
+        function clearForm(){document.getElementById('orderForm').reset();document.getElementById('previewFaca').style.display='none';document.getElementById('previewArte').style.display='none';clearSelection();showNotification('Formulário limpo!','info');}
+
+        function saveAsTemplate(){
+            const nome=document.getElementById('nomeTemplate').value.trim();
+            if(!nome){showNotification('Digite o nome do produto antes de salvar como modelo.','error');return;}
+            const t={nomeTemplate:nome,medidasFolha:document.getElementById('medidasFolha').value,fornecedor:document.getElementById('fornecedor').value,tipoPapel:document.getElementById('tipoPapel').value,gramatura:document.getElementById('gramatura').value,impressao:document.getElementById('impressao').value,prioridade:document.getElementById('prioridade').value,folhasResma:document.getElementById('folhasResma').value,acabamento:document.getElementById('acabamento').value,descricaoEmbalagens:document.getElementById('descricaoEmbalagens').value,formato:document.getElementById('formato').value,codigoFaca:document.getElementById('codigoFaca').value,resmasUsadas:document.getElementById('resmasUsadas').value,imagemFaca:document.getElementById('previewFaca').src||null,imagemArte:document.getElementById('previewArte').src||null,dataCriacao:new Date().toLocaleDateString('pt-BR'),vezesCriado:1};
+            const idx=productTemplates.findIndex(x=>x.nomeTemplate===nome);
+            if(idx!==-1){if(confirm(`Já existe um modelo com o nome "${nome}". Deseja atualizar?`)){productTemplates[idx]={...t,vezesCriado:productTemplates[idx].vezesCriado+1};showNotification(`Modelo "${nome}" atualizado!`,'success');}}
+            else{productTemplates.push(t);showNotification(`Modelo "${nome}" salvo no histórico!`,'success');}
+            setJSON('productTemplates', productTemplates);
+        }
+
+        function manageTemplates(){
+            const el=document.getElementById('templatesContent');
+            if(productTemplates.length===0){el.innerHTML='<p style="text-align:center;padding:40px;color:#6c757d;">Nenhum modelo salvo ainda.</p>';}
+            else{
+                el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:15px;">${
+                    productTemplates.map((t,i)=>`
+                        <div style="background:#f8f9fa;border:2px solid #e9ecef;border-radius:10px;padding:15px;">
+                            <h4 style="color:#2c3e50;margin-bottom:10px;">${t.nomeTemplate}</h4>
+                            <p style="font-size:14px;color:#6c757d;margin-bottom:10px;">
+                                <strong>Papel:</strong> ${t.tipoPapel}<br>
+                                <strong>Gramatura:</strong> ${t.gramatura}<br>
+                                <strong>Impressão:</strong> ${t.impressao}<br>
+                                ${t.folhasResma?`<strong>Folhas/Resma:</strong> ${t.folhasResma}<br>`:''}
+                                <strong>Criado:</strong> ${t.dataCriacao}<br>
+                                <strong>Usado:</strong> ${t.vezesCriado} vez(es)
+                            </p>
+                            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                                <button class="btn btn-info btn-small" onclick="useTemplate(${i})">🔄 Usar</button>
+                                <button class="btn btn-danger btn-small" onclick="deleteTemplate(${i})">🗑️ Excluir</button>
+                            </div>
+                        </div>`).join('')
+                }</div>`;
+            }
+            document.getElementById('templatesModal').style.display='block';
+        }
+        function useTemplate(i){fillFormWithTemplate(productTemplates[i]);closeTemplatesModal();showNotification(`Modelo "${productTemplates[i].nomeTemplate}" carregado!`,'success');}
+        function deleteTemplate(i){const t=productTemplates[i];if(confirm(`Tem certeza que deseja excluir o modelo "${t.nomeTemplate}"?`)){productTemplates.splice(i,1);setJSON('productTemplates', productTemplates);manageTemplates();showNotification(`Modelo "${t.nomeTemplate}" excluído!`,'info');}}
+        function closeTemplatesModal(){document.getElementById('templatesModal').style.display='none';}
+
+        function imageToBase64(file,cb){const r=new FileReader();r.onload=e=>cb(e.target.result);r.readAsDataURL(file);}
+        document.getElementById('imagemFaca').addEventListener('change',e=>{const f=e.target.files[0];const p=document.getElementById('previewFaca');if(f){const r=new FileReader();r.onload=ev=>{p.src=ev.target.result;p.style.display='block';};r.readAsDataURL(f);}});
+        document.getElementById('imagemArte').addEventListener('change',e=>{const f=e.target.files[0];const p=document.getElementById('previewArte');if(f){const r=new FileReader();r.onload=ev=>{p.src=ev.target.result;p.style.display='block';};r.readAsDataURL(f);}});
+        document.getElementById('editImagemFaca').addEventListener('change',e=>{const f=e.target.files[0];const p=document.getElementById('editPreviewFaca');if(f){const r=new FileReader();r.onload=ev=>{p.src=ev.target.result;p.style.display='block';};r.readAsDataURL(f);}});
+        document.getElementById('editImagemArte').addEventListener('change',e=>{const f=e.target.files[0];const p=document.getElementById('editPreviewArte');if(f){const r=new FileReader();r.onload=ev=>{p.src=ev.target.result;p.style.display='block';};r.readAsDataURL(f);}});
+
+        document.querySelectorAll('.image-upload').forEach(u=>{
+            u.addEventListener('dragover',e=>{e.preventDefault();u.classList.add('dragover');});
+            u.addEventListener('dragleave',e=>{e.preventDefault();u.classList.remove('dragover');});
+            u.addEventListener('drop',e=>{e.preventDefault();u.classList.remove('dragover');const files=e.dataTransfer.files;if(files.length>0){const input=u.querySelector('input[type="file"]');input.files=files;input.dispatchEvent(new Event('change'));}});
+        });
+
+        // Criar nova OP
+        document.getElementById('orderForm').addEventListener('submit', async function(e){
+            e.preventDefault();
+            const imgF=document.getElementById('imagemFaca').files[0];
+            const imgA=document.getElementById('imagemArte').files[0];
+            let imgFData=null, imgAData=null;
+            if(imgF){ try{ imgFData = await compressFileToDataURL(imgF, 1280, 0.8);}catch(_){ /* fallback handled below */ } }
+            if(imgA){ try{ imgAData = await compressFileToDataURL(imgA, 1280, 0.8);}catch(_){ /* fallback handled below */ } }
+            const order={
+                id:generateOrderId(),
+                medidasFolha:document.getElementById('medidasFolha').value,
+                quantidade:document.getElementById('quantidade').value,
+                folhasResma:document.getElementById('folhasResma').value,
+                fornecedor:document.getElementById('fornecedor').value,
+                status:document.getElementById('status').value,
+                tipoPapel:document.getElementById('tipoPapel').value,
+                gramatura:document.getElementById('gramatura').value,
+                impressao:document.getElementById('impressao').value,
+                prioridade:document.getElementById('prioridade').value,
+                nomeTemplate:document.getElementById('nomeTemplate').value,
+                
+                formato:document.getElementById('formato').value,
+                codigoFaca:document.getElementById('codigoFaca').value,
+                resmasUsadas:document.getElementById('resmasUsadas').value,
+        enviadoFaca:document.getElementById('enviadoFaca').checked,
+                enviadoChapa:document.getElementById('enviadoChapa').checked,
+                enviadoImpressao:document.getElementById('enviadoImpressao').checked,
+                acabamento:document.getElementById('acabamento').value,
+                descricaoEmbalagens:document.getElementById('descricaoEmbalagens').value,
+                dataCreated:new Date().toLocaleDateString('pt-BR'),
+                timeCreated:new Date().toLocaleTimeString('pt-BR'),
+                currentStep:0,
+                imagemFaca:imgFData,
+                imagemArte:imgAData
+            };
+            let processed=0;const total=(imgF?1:0)+(imgA?1:0);
+            function saveOrder(){orders.push(order);setJSON('productionOrders', orders);saveAsTemplate();displayOrders();updateStats();document.getElementById('orderForm').reset();document.getElementById('previewFaca').style.display='none';document.getElementById('previewArte').style.display='none';clearSelection();showNotification('✅ Ordem de produção criada com sucesso!','success');}
+            if(total===0){saveOrder();return;}
+            if(imgF){imageToBase64(imgF,b64=>{order.imagemFaca=b64;processed++;if(processed===total)saveOrder();});}
+            if(imgA){imageToBase64(imgA,b64=>{order.imagemArte=b64;processed++;if(processed===total)saveOrder();});}
+        });
+
+        // Editar OP
+        document.getElementById('editForm').addEventListener('submit', async function(e){
+            e.preventDefault();
+            const id=document.getElementById('editOrderId').value;
+            const idx=orders.findIndex(o=>o.id===id);
+            if(idx===-1){showNotification('Erro: Ordem não encontrada!','error');return;}
+            const order=orders[idx];
+            const editImgFInput=document.getElementById('editImagemFaca'); const imgF=(editImgFInput && editImgFInput.files && editImgFInput.files[0])||null;
+            const editImgAInput=document.getElementById('editImagemArte'); const imgA=(editImgAInput && editImgAInput.files && editImgAInput.files[0])||null;
+
+            order.medidasFolha=document.getElementById('editMedidasFolha').value;
+            order.quantidade=document.getElementById('editQuantidade').value;
+            order.folhasResma=document.getElementById('editFolhasResma').value;
+            order.fornecedor=document.getElementById('editFornecedor').value;
+            order.status=document.getElementById('editStatus').value;
+            order.tipoPapel=document.getElementById('editTipoPapel').value;
+            order.gramatura=document.getElementById('editGramatura').value;
+            order.impressao=document.getElementById('editImpressao').value;
+            order.prioridade=document.getElementById('editPrioridade').value;
+            order.nomeTemplate=document.getElementById('editNomeTemplate').value;
+            order.enviadoFaca=document.getElementById('editEnviadoFaca').checked;
+            order.enviadoChapa=document.getElementById('editEnviadoChapa').checked;
+            order.enviadoImpressao=document.getElementById('editEnviadoImpressao').checked;
+            order.acabamento=document.getElementById('editAcabamento').value;
+            order.descricaoEmbalagens=document.getElementById('editDescricaoEmbalagens').value;
+            order.formato=document.getElementById('editFormato').value;
+            order.codigoFaca=document.getElementById('editCodigoFaca').value;
+            order.resmasUsadas=document.getElementById('editResmasUsadas').value;
+            order.lastModified=new Date().toLocaleDateString('pt-BR')+' às '+new Date().toLocaleTimeString('pt-BR');
+
+            let processed=0;const total=(imgF?1:0)+(imgA?1:0);
+            function finish(){orders[idx]=order;setJSON('productionOrders', orders);displayOrders();updateStats();closeEditModal();showNotification(`✅ Ordem ${id} atualizada com sucesso!`,'success');}
+            if(total===0){finish();return;}
+            if(imgF){imageToBase64(imgF,b64=>{order.imagemFaca=b64;processed++;if(processed===total)finish();});}
+            if(imgA){imageToBase64(imgA,b64=>{order.imagemArte=b64;processed++;if(processed===total)finish();});}
+        });
+
+        function editOrder(orderId){
+            const order=orders.find(o=>o.id===orderId);
+            if(!order){showNotification('Erro: Ordem não encontrada!','error');return;}
+            isEditing=true;
+            document.getElementById('editOrderId').value=order.id;
+            document.getElementById('editMedidasFolha').value=order.medidasFolha;
+            document.getElementById('editQuantidade').value=order.quantidade;
+            document.getElementById('editFornecedor').value=order.fornecedor||'';
+            document.getElementById('editStatus').value=order.status;
+            document.getElementById('editTipoPapel').value=order.tipoPapel;
+            document.getElementById('editGramatura').value=order.gramatura;
+            document.getElementById('editImpressao').value=order.impressao;
+            document.getElementById('editPrioridade').value=order.prioridade||'Média';
+            document.getElementById('editNomeTemplate').value=order.nomeTemplate||'';
+            document.getElementById('editAcabamento').value=order.acabamento;
+            document.getElementById('editDescricaoEmbalagens').value=order.descricaoEmbalagens;
+            document.getElementById('editFormato').value=order.formato||'';
+            document.getElementById('editCodigoFaca').value=order.codigoFaca||'';
+            document.getElementById('editResmasUsadas').value=order.resmasUsadas||'';
+            document.getElementById('editFolhasResma').value=order.folhasResma||'';
+            document.getElementById('editEnviadoFaca').checked=!!order.enviadoFaca;
+            document.getElementById('editEnviadoChapa').checked=!!order.enviadoChapa;
+            document.getElementById('editEnviadoImpressao').checked=!!order.enviadoImpressao;
+
+            const ciF=document.getElementById('currentImageFaca');
+            const ciA=document.getElementById('currentImageArte');
+            ciF.innerHTML=order.imagemFaca?`<p><strong>Imagem Atual da Faca:</strong></p><img src="${order.imagemFaca}" alt="Faca Atual" class="current-image-preview">`:'<p style="color:#999;">Nenhuma imagem da faca cadastrada</p>';
+            ciA.innerHTML=order.imagemArte?`<p><strong>Imagem Atual da Arte:</strong></p><img src="${order.imagemArte}" alt="Arte Atual" class="current-image-preview">`:'<p style="color:#999;">Nenhuma imagem da arte cadastrada</p>';
+
+            document.getElementById('editPreviewFaca').style.display='none';
+            document.getElementById('editPreviewArte').style.display='none';
+            document.getElementById('editImagemFaca').value='';
+            document.getElementById('editImagemArte').value='';
+            document.getElementById('editModal').style.display='block';
+            showNotification(`Editando ordem ${orderId}`,'info');
+        }
+        function closeEditModal(){document.getElementById('editModal').style.display='none';isEditing=false;}
+
+        function filterOrders(){
+            const st=document.getElementById('filterStatus').value;
+            const pr=document.getElementById('filterPriority').value;
+            const q=document.getElementById('searchOrders').value.toLowerCase();
+            let filtered=orders.filter(order=>{
+                const sOK=!st||order.status===st;
+                const pOK=!pr||order.prioridade===pr;
+                const qOK=!q||order.id.toLowerCase().includes(q)||order.tipoPapel.toLowerCase().includes(q)||order.acabamento.toLowerCase().includes(q)||order.descricaoEmbalagens.toLowerCase().includes(q)||(order.nomeTemplate&&order.nomeTemplate.toLowerCase().includes(q));
+                return sOK&&pOK&&qOK;
+            });
+            displayOrdersList(filtered);
+        }
+
+        /* === Renderizadores === */
+        function buildPreProducaoChips(order){
+            const chips = [
+                {ok: order.enviadoFaca, label:'Enviado p/ produção da faca'},
+                {ok: order.enviadoChapa, label:'Enviado p/ gravar chapa'},
+                {ok: order.enviadoImpressao, label:'Enviado p/ impressão'}
+            ];
+            return `<div class="process-flow">${chips.map(c=>`<div class="process-step ${c.ok?'completed':''}">${c.label}${c.ok?' ✅':''}</div>`).join('')}</div>`;
+        }
+
+        function buildDetailedCard(order){
+            const processSteps=['Corte e Vinco','Desmolde','Acabamento','Selagem','Prateleira'];
+            const pClass=order.prioridade?order.prioridade.toLowerCase():'media';
+            
+            // Definir classes CSS baseadas no status
+            const statusClass = order.status === 'Finalizado' ? 'status-finalizado' : 'status-em-andamento';
+            const badgeClass = order.status === 'Finalizado' ? 'finalizado' : 'em-andamento';
+            const statusIcon = order.status === 'Finalizado' ? '✅' : '🔄';
+            const statusBadgeText = order.status === 'Finalizado' ? '✅ Finalizado' : '🔄 Em Andamento';
+            
+            return `
+            <div class="order-item order-card ${statusClass} priority-${pClass==='média'?'medium':pClass==='alta'?'high':'low'}" style="position:relative;">
+                <div class="status-badge ${badgeClass}" style="position:absolute;top:15px;right:15px;">${statusBadgeText}</div>
+                <div class="order-header">
+                    <input type="checkbox" class="select-order" data-order-id="${order.id}" onchange="toggleSelectOrder('${order.id}', this.checked)" ${isSelected(order.id)?'checked':''} style="margin-right:8px;"> <span class="order-id">${order.id}</span>
+                    ${order.nomeTemplate?`<span style="background:#e8f4fd;color:#2c3e50;padding:3px 8px;border-radius:12px;font-size:12px;margin-left:10px;">📦 ${order.nomeTemplate}</span>`:''}
+                    <span class="priority ${pClass}">${order.prioridade||'Média'}</span>
+                    <span style="margin-left:15px;color:#6c757d;">${order.dataCreated} ${order.timeCreated?'às '+order.timeCreated:''}</span>
+                    ${order.lastModified?`<span style="margin-left:10px;color:#e67e22;font-size:12px;">(Editado: ${order.lastModified})</span>`:''}
+                    <span class="status ${order.status.toLowerCase().replace(' ','-')}" style="font-weight:700;">${statusIcon} ${order.status}</span>
+                </div>
+
+                <div>
+                    <div class="preprod-label">Pré-produção</div>
+                    ${buildPreProducaoChips(order)}
+                </div>
+
+                <div class="process-flow">
+                    ${processSteps.map((s,i)=>`<div class="process-step ${i<order.currentStep?'completed':i===order.currentStep?'current':''}">${i+1}. ${s}</div>`).join('')}
+                </div>
+
+                <div class="order-details">
+                    ${order.formato?`<div class="detail-item"><span class="detail-label">Formato:</span><span>${order.formato}</span></div>`:""}
+                    ${order.codigoFaca?`<div class="detail-item"><span class="detail-label">Código da Faca:</span><span>${order.codigoFaca}</span></div>`:""}
+                    <div class="detail-item"><span class="detail-label">Medidas:</span><span>${order.medidasFolha}</span></div>
+                    <div class="detail-item"><span class="detail-label">Quantidade:</span><span>${parseInt(order.quantidade).toLocaleString()}</span></div>
+                    ${order.folhasResma?`<div class="detail-item"><span class="detail-label">Folhas/Resma:</span><span>${order.folhasResma}</span></div>`:''}
+                    ${order.resmasUsadas?`<div class="detail-item"><span class="detail-label">Resmas:</span><span>${order.resmasUsadas}</span></div>`:""}
+                    <div class="detail-item"><span class="detail-label">Papel:</span><span>${order.tipoPapel}</span></div>
+                    <div class="detail-item"><span class="detail-label">Gramatura:</span><span>${order.gramatura}</span></div>
+                    <div class="detail-item"><span class="detail-label">Impressão:</span><span>${order.impressao}</span></div>
+                    ${order.fornecedor?`<div class="detail-item"><span class="detail-label">Fornecedor:</span><span>${order.fornecedor}</span></div>`:''}
+                </div>
+
+                ${order.imagemFaca||order.imagemArte?`
+                <div class="order-images">
+                    ${order.imagemFaca?`<div class="order-image"><h4>Imagem da Faca</h4><img src="${order.imagemFaca}" alt="Faca"></div>`:''}
+                    ${order.imagemArte?`<div class="order-image"><h4>Montagem da Arte</h4><img src="${order.imagemArte}" alt="Arte"></div>`:''}
+                </div>`:''}
+
+                <div style="margin:15px 0;">
+                    <strong>Acabamento:</strong>
+                    <p style="margin-top:5px;background:#f8f9fa;padding:10px;border-radius:5px;">${order.acabamento}</p>
+                </div>
+
+                <div style="margin:15px 0;">
+                    <strong>Descrição das Embalagens:</strong>
+                    <p style="margin-top:5px;background:#f8f9fa;padding:10px;border-radius:5px;">${order.descricaoEmbalagens}</p>
+                </div>
+
+                <div class="order-actions">
+                    <button class="btn btn-primary" onclick="printOrderModal('${order.id}')">🖨️ Imprimir</button>
+                    <button class="btn btn-success" onclick="advanceStep('${order.id}')">➡️ Próxima Etapa</button>
+                    <button class="btn btn-warning" onclick="editOrder('${order.id}')">✏️ Editar</button>
+                    <button class="btn btn-info btn-small" onclick="duplicateOrder('${order.id}')">📋 Duplicar</button>
+                    <button class="btn btn-danger" onclick="deleteOrder('${order.id}')">🗑️ Excluir</button>
+                </div>
+            </div>`;
+        }
+
+        
+function buildCompactItem(order){
+            // Linha resumida exata conforme solicitado: OP-0001 📦 Caixa para 4 Doces Média 27/09/2025 às 03:43:59
+            const resumeLine = `${order.id} ${order.nomeTemplate ? `📦 ${order.nomeTemplate}` : ''} ${order.prioridade || 'Média'} ${order.dataCreated}${order.timeCreated ? ` às ${order.timeCreated}` : ''}`;
+            const detailHtml = buildDetailedCard(order);
+            const safeId = `exp_${order.id.replace(/[^a-zA-Z0-9_-]/g,'')}`;
+            
+            // Definir classes CSS baseadas no status
+            const statusClass = order.status === 'Finalizado' ? 'status-finalizado' : 'status-em-andamento';
+            const badgeClass = order.status === 'Finalizado' ? 'finalizado' : 'em-andamento';
+            const statusTextClass = order.status === 'Finalizado' ? 'finalizado' : 'em-andamento';
+            
+            // Ícone e texto do selo
+            const statusIcon = order.status === 'Finalizado' ? '✅' : '🔄';
+            const statusBadgeText = order.status === 'Finalizado' ? '✅ Finalizado' : '🔄 Em Andamento';
+            
+            return `
+            <div class="compact-item ${statusClass}" onclick="toggleExpand('${safeId}')" style="cursor:pointer;transition:all 0.3s ease;">
+                <div class="status-badge ${badgeClass}">${statusBadgeText}</div>
+                <div style="display:flex;align-items:center;">
+                    <input type="checkbox" class="select-order" data-order-id="${order.id}" onchange="event.stopPropagation();toggleSelectOrder('${order.id}', this.checked)" ${isSelected(order.id)?'checked':''} style="margin-right:8px;">
+                    <div class="compact-title" style="flex:1;font-weight:600;color:#2c3e50;">${resumeLine}</div>
+                    <div data-hint style="margin-left:10px;color:#6c757d;font-size:12px;">👆 Clique para expandir</div>
+                </div>
+                <div class="compact-meta" style="font-size:12px;margin-top:4px;margin-left:24px;">Status: <span class="status-text ${statusTextClass}">${statusIcon} ${order.status}</span></div>
+                
+                <div id="${safeId}" class="compact-expanded" style="display:none;margin-top:15px;border-top:1px dashed #e0e6ed;padding-top:15px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <h4 style="color:#2c3e50;margin:0;">📋 Detalhes Completos da ${order.id}</h4>
+                        <button class="btn btn-info btn-small" onclick="event.stopPropagation();scrollToAndHighlight('${safeId}')">👁️ Ver OP Completa</button>
+                    </div>
+                    ${detailHtml}
+                </div>
+            </div>`;
+        }
+        function toggleExpand(id){
+            const el = document.getElementById(id);
+            if(!el) return;
+            
+            const isExpanded = el.style.display === 'block';
+            const parentCard = el.closest('.compact-item');
+            
+            if(isExpanded) {
+                // Fechando
+                el.style.display = 'none';
+                if(parentCard) {
+                    parentCard.style.backgroundColor = '';
+                    const hint = parentCard.querySelector('[data-hint]');
+                    if(hint) hint.textContent = '👆 Clique para expandir';
+                }
+            } else {
+                // Abrindo
+                el.style.display = 'block';
+                if(parentCard) {
+                    parentCard.style.backgroundColor = '#f8f9ff';
+                    const hint = parentCard.querySelector('[data-hint]');
+                    if(hint) hint.textContent = '👆 Clique para recolher';
+                }
+                // Scroll suave para a OP expandida
+                setTimeout(() => {
+                    el.scrollIntoView({behavior:'smooth', block:'nearest'});
+                }, 100);
+            }
+        }
+        function scrollToAndHighlight(id){
+            const el=document.getElementById(id);
+            if(!el) return;
+            el.style.display='block';
+            el.scrollIntoView({behavior:'smooth',block:'center'});
+        }
+
+        function displayOrders(){displayOrdersList(orders);}
+        function displayOrdersList(list=orders){
+            const el=document.getElementById('ordersList');
+            if(list.length===0){
+                el.innerHTML='<div style="text-align:center;color:#6c757d;padding:40px;background:#f8f9fa;border-radius:10px;border:2px dashed #ddd;"><h3 style="margin-bottom:10px;">📋 Nenhuma ordem encontrada</h3><p>Crie sua primeira ordem de produção usando o formulário acima.</p></div>';
+                return;
+            }
+            
+            // NOVA REGRA: OPs Em Andamento sempre primeiro, depois Finalizadas
+            const sortedList = [...list].sort((a, b) => {
+                // Se A é Em Andamento e B é Finalizado → A vem primeiro (retorna -1)
+                if (a.status === 'Em Andamento' && b.status === 'Finalizado') {
+                    return -1;
+                }
+                // Se A é Finalizado e B é Em Andamento → B vem primeiro (retorna 1)
+                if (a.status === 'Finalizado' && b.status === 'Em Andamento') {
+                    return 1;
+                }
+                
+                // Se ambos têm o mesmo status, ordenar por ID (mais recentes primeiro)
+                return b.id.localeCompare(a.id, undefined, {numeric: true, sensitivity: 'base'});
+            });
+            
+            const modeDescription = window.viewMode === 'list' 
+                ? '<div style="text-align:center;margin-bottom:20px;padding:12px;background:#e8f4fd;border-radius:8px;border-left:4px solid #74b9ff;"><p style="color:#2c3e50;margin:0;">💡 <strong>Modo Lista:</strong> Clique em qualquer OP para expandir os detalhes completos<br><small style="color:#fd7e14;">🟠 OPs Em Andamento aparecem primeiro | 🟢 OPs Finalizadas aparecem depois</small></p></div>'
+                : '<div style="text-align:center;margin-bottom:20px;padding:12px;background:#f0f8e8;border-radius:8px;border-left:4px solid #27ae60;"><p style="color:#2c3e50;margin:0;">💡 <strong>Modo Detalhado:</strong> Todas as informações visíveis<br><small style="color:#fd7e14;">🟠 OPs Em Andamento aparecem primeiro | 🟢 OPs Finalizadas aparecem depois</small></p></div>';
+            
+            if(window.viewMode==='list'){
+                el.innerHTML = modeDescription + sortedList.map(o=>buildCompactItem(o)).join('');
+            }else{
+                el.innerHTML = modeDescription + sortedList.map(o=>buildDetailedCard(o)).join('');
+            }
+        }
+
+        function duplicateOrder(orderId){
+            const order=orders.find(o=>o.id===orderId);
+            if(!order){showNotification('Erro: Ordem não encontrada!','error');return;}
+            fillFormWithTemplate(order);
+            document.getElementById('quantidade').value='';
+            document.getElementById('status').value='Em Andamento';
+            showNotification(`Dados da ordem ${orderId} carregados para nova ordem!`,'success');
+            document.querySelector('.main-content-new').scrollIntoView({behavior:'smooth'});
+        }
+
+        function advanceStep(orderId){
+            const order=orders.find(o=>o.id===orderId);
+            if(order&&order.currentStep<4){
+                order.currentStep++;
+                if(order.currentStep===4){order.status='Finalizado';}
+                setJSON('productionOrders', orders);
+                displayOrders();updateStats();
+                showNotification(`Ordem ${orderId} avançou para a próxima etapa!`,'success');
+            }
+        }
+        function deleteOrder(orderId){
+            if(confirm('Tem certeza que deseja excluir esta ordem de produção?')){
+                orders=orders.filter(o=>o.id!==orderId);
+                setJSON('productionOrders', orders);
+                displayOrders();updateStats();
+                showNotification(`Ordem ${orderId} excluída com sucesso!`,'info');
+            }
+        }
+
+        /* IMPRESSÃO – preservando formatação e sem bloco de “Processo de Produção” */
+        function printOrderModal(orderId){
+            const order=orders.find(o=>o.id===orderId);
+            if(!order){showNotification('Ordem não encontrada!','error');return;}
+
+            const printHTML = `
+                <div class="print-header">
+                    <h1 style="color:#2c3e50;font-size:22px;margin:0 0 6px 0;">ORDEM DE PRODUÇÃO</h1>
+                    <h2 style="color:#667eea;font-size:18px;margin:0 0 6px 0;">${order.id}</h2>
+                    ${order.nomeTemplate?`<h3 style="color:#2c3e50;font-size:16px;margin:0 0 6px 0;">📦 ${order.nomeTemplate}</h3>`:''}
+                    <p style="color:#666;margin:2px 0;">Data: ${order.dataCreated} ${order.timeCreated?'às '+order.timeCreated:''}</p>
+                    <p style="color:#666;margin:2px 0;">Status: ${order.status} | Prioridade: ${order.prioridade||'Média'}</p>
+                    ${order.lastModified?`<p style="color:#e67e22;margin:2px 0;font-size:12px;">Última edição: ${order.lastModified}</p>`:''}
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0;">
+                    <div>
+                        <h3 style="color:#2c3e50;margin-bottom:8px;font-size:14px;">📏 Especificações</h3>
+                        <table style="width:100%;border-collapse:collapse;">
+                            <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Formato:</td><td style="padding:6px 0;color:#333;">${order.formato||'-'}</td></tr>
+                            <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Código da Faca:</td><td style="padding:6px 0;color:#333;">${order.codigoFaca||'-'}</td></tr>
+                            <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Medidas da Folha:</td><td style="padding:6px 0;color:#333;">${order.medidasFolha}</td></tr>
+                            <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Quantidade:</td><td style="padding:6px 0;color:#333;">${parseInt(order.quantidade).toLocaleString()}</td></tr>
+                            ${order.folhasResma?`<tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Folhas/Resma:</td><td style="padding:6px 0;color:#333;">${order.folhasResma}</td></tr>`:''}
+                            <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Tipo de Papel:</td><td style="padding:6px 0;color:#333;">${order.tipoPapel}</td></tr>
+                            <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Gramatura:</td><td style="padding:6px 0;color:#333;">${order.gramatura}</td></tr>
+                            ${order.resmasUsadas?`<tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Resmas utilizadas:</td><td style="padding:6px 0;color:#333;">${order.resmasUsadas}</td></tr>`:''}
+                            <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Impressão:</td><td style="padding:6px 0;color:#333;">${order.impressao}</td></tr>
+                            ${order.fornecedor?`<tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Fornecedor:</td><td style="padding:6px 0;color:#333;">${order.fornecedor}</td></tr>`:''}
+                            ${order.enviadoFaca||order.enviadoChapa||order.enviadoImpressao?`
+                                <tr style="border-bottom:1px solid #ddd;">
+                                    <td style="padding:6px 0;font-weight:bold;color:#333;">Pré-produção:</td>
+                                    <td style="padding:6px 0;color:#333;">
+                                        ${order.enviadoFaca?'• Enviado p/ faca&nbsp;&nbsp;':''}
+                                        ${order.enviadoChapa?'• Gravar chapa&nbsp;&nbsp;':''}
+                                        ${order.enviadoImpressao?'• Impressão':''}
+                                    </td>
+                                </tr>
+                            `:''}
+                        </table>
+                    </div>
+
+                    ${order.imagemFaca||order.imagemArte?`
+                    <div>
+                        <h3 style="color:#2c3e50;margin-bottom:8px;font-size:14px;">🖼️ Imagens</h3>
+                        <div class="print-images" style="grid-template-columns:1fr 1fr;gap:10px;margin:0;">
+                            ${order.imagemFaca?`<div class="print-image" style="text-align:center;"><div style="font-size:12px;margin-bottom:4px;">🔧 Faca</div><img src="${order.imagemFaca}" alt="Faca" style="max-height:220px;border:1px solid #ddd;border-radius:8px;"></div>`:''}
+                            ${order.imagemArte?`<div class="print-image" style="text-align:center;"><div style="font-size:12px;margin-bottom:4px;">🎨 Arte</div><img src="${order.imagemArte}" alt="Arte" style="max-height:220px;border:1px solid #ddd;border-radius:8px;"></div>`:''}
+                        </div>
+                    </div>`:`<div></div>`}
+                </div>
+
+                <div style="margin:8px 0;">
+                    <h3 style="color:#2c3e50;margin-bottom:6px;font-size:14px;">🎨 Acabamento</h3>
+                    <div style="background:#f8f9fa;padding:10px;border-radius:8px;border-left:4px solid #667eea;">
+                        <pre style="white-space:pre-wrap;margin:0;font-size:13px;line-height:1.45;color:#333;">${order.acabamento}</pre>
+                    </div>
+                </div>
+
+                <div style="margin:8px 0;">
+                    <h3 style="color:#2c3e50;margin-bottom:6px;font-size:14px;">📦 Descrição das Embalagens</h3>
+                    <div style="background:#f8f9fa;padding:10px;border-radius:8px;border-left:4px solid #667eea;">
+                        <pre style="white-space:pre-wrap;margin:0;font-size:13px;line-height:1.45;color:#333;">${order.descricaoEmbalagens}</pre>
+                    </div>
+                </div>
+            `;
+            document.getElementById('printContent').innerHTML=printHTML;
+            document.getElementById('printModal').style.display='block';
+            const modal=document.getElementById('printModal');const modalContent=document.getElementById('printContent');
+            modal.style.visibility='visible';modalContent.style.visibility='visible';modalContent.style.display='block';
+            showNotification('Preview da impressão carregado!','success');
+        }
+
+        function closePrintModal(){document.getElementById('printModal').style.display='none';}
+        function printOrder(){
+            const modal=document.getElementById('printModal');
+            const content=document.getElementById('printContent');
+            if(modal.style.display==='none'||!content.innerHTML.trim()){showNotification('Erro: Nenhum conteúdo para imprimir!','error');return;}
+            content.style.display='block';content.style.visibility='visible';
+            setTimeout(()=>{try{window.print();showNotification('Enviando para impressão...','info');}catch(e){console.error(e);showNotification('Erro ao imprimir. Tente novamente.','error');}},300);
+        }
+
+        function exportData(){
+            if(orders.length===0){showNotification('Nenhuma ordem para exportar.','info');return;}
+            const dataStr=JSON.stringify({orders,productTemplates},null,2);
+            const blob=new Blob([dataStr],{type:'application/json'});
+            const url=URL.createObjectURL(blob);
+            const a=document.createElement('a');a.href=url;a.download=`ordens_producao_completo_${new Date().toISOString().split('T')[0]}.json`;a.click();
+            showNotification('Dados exportados com sucesso!','success');
+        }
+        function importData(){document.getElementById('importFile').click();}
+        
+
+
+function handleImport(ev){
+            const file=ev.target.files[0];if(!file)return;
+            const r=new FileReader();
+            r.onload=e=>{
+                try{
+                    const imported=JSON.parse(e.target.result);
+                    if(imported.orders&&Array.isArray(imported.orders)){
+                        orders=imported.orders;
+                        if(imported.productTemplates&&Array.isArray(imported.productTemplates)){productTemplates=imported.productTemplates;setJSON('productTemplates', productTemplates);}
+                        setJSON('productionOrders', orders);displayOrders();updateStats();showNotification('Dados importados com sucesso!','success');
+                    }else if(Array.isArray(imported)){
+                        orders=imported;setJSON('productionOrders', orders);displayOrders();updateStats();showNotification('Dados importados com sucesso!','success');
+                    }else{throw new Error('Formato inválido');}
+                }catch(err){showNotification('Erro ao importar dados. Verifique o formato do arquivo.','error');}
+            };
+            r.readAsText(file);
+        }
+
+        function clearAllData(){
+            if(confirm('ATENÇÃO: Isso irá excluir TODAS as ordens de produção E modelos salvos. Esta ação não pode ser desfeita. Deseja continuar?')){
+                orders=[];productTemplates=[];orderIdCounter=1;
+                localStorage.removeItem('productionOrders');localStorage.removeItem('productTemplates');localStorage.removeItem('orderIdCounter');
+                displayOrders();updateStats();showNotification('Todos os dados foram removidos.','info');
+            }
+        }
+
+        // Aguardar DOM estar pronto antes da inicialização
+        document.addEventListener('DOMContentLoaded', function(){
+            setViewMode(viewMode);
+            displayOrders();
             updateStats();
-            loadOrdersList();
-            loadTemplatesList();
+            migrateAndCompactOrdersIfNeeded();
+        });
+
+        // Fechar modais ao clicar fora
+        window.onclick=function(e){
+            const pm=document.getElementById('printModal');
+            const em=document.getElementById('editModal');
+            const tm=document.getElementById('templatesModal');
+            if(e.target===pm)closePrintModal();
+            if(e.target===em)closeEditModal();
+            if(e.target===tm)closeTemplatesModal();
         }
 
-        // Atualizar estatísticas
-        function updateStats() {
-            const total = window.orders.length;
-            const pending = window.orders.filter(o => o.status === 'Pendente').length;
-            const inProgress = window.orders.filter(o => o.status === 'Em Produção').length;
-            const completed = window.orders.filter(o => o.status === 'Finalizada').length;
+        // Auto-salvar
+        setInterval(()=>{if(orders.length>0)setJSON('productionOrders', orders);if(productTemplates.length>0)setJSON('productTemplates', productTemplates);},30000);
 
-            document.getElementById('total-orders').textContent = total;
-            document.getElementById('pending-orders').textContent = pending;
-            document.getElementById('in-progress-orders').textContent = inProgress;
-            document.getElementById('completed-orders').textContent = completed;
-        }
+        // Listeners de impressão
+        window.addEventListener('beforeprint',function(){const pc=document.getElementById('printContent');if(pc){pc.style.display='block !important';pc.style.visibility='visible !important';}});
+        window.addEventListener('afterprint',function(){showNotification('Impressão enviada!','success');});
+    
+        /* ===== Scroll FAB (Topo <-> Ordens) ===== */
+document.addEventListener('DOMContentLoaded', function(){
+    let initialized = false;
+    function initFab(){
+        if(initialized) return;
+        const fab = document.getElementById('scrollFab');
+        const ordersSection = document.querySelector('.orders-list');
+        if(!fab) return;
+        initialized = true;
 
-        // Carregar lista de ordens
-        function loadOrdersList() {
-            const container = document.getElementById('orders-list');
-            
-            if (window.orders.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align:center;padding:60px;color:#6c757d;">
-                        <h3>Nenhuma ordem de produção encontrada</h3>
-                        <p>Clique em "Criar OP" para começar</p>
-                    </div>
-                `;
-                return;
+        function atTop(){ return (window.scrollY || document.documentElement.scrollTop || 0) < 150; }
+        function updateFab(){
+            if(atTop()){
+                fab.textContent = '📋';
+                fab.setAttribute('aria-label','Ir para Ordens');
+                fab.title = 'Ir para Ordens';
+            }else{
+                fab.textContent = '⬆️';
+                fab.setAttribute('aria-label','Voltar ao topo');
+                fab.title = 'Voltar ao topo';
             }
+        }
+        fab.addEventListener('click', function(){
+            if(atTop()){
+                if(ordersSection){ ordersSection.scrollIntoView({behavior:'smooth', block:'start'}); }
+            }else{
+                window.scrollTo({top:0, behavior:'smooth'});
+            }
+        });
+        window.addEventListener('scroll', updateFab, {passive:true});
+        updateFab();
+    }
+    initFab();
+    window.addEventListener('load', initFab, {once:true});
+});
+/* ===== Compatibilidade Mobile (evitar zoom em inputs no iOS) ===== */
+        (function(){
+            try{
+                const set16 = el => el && (el.style.fontSize = '16px');
+                document.querySelectorAll('input, select, textarea, button').forEach(set16);
+            }catch(e){/* no-op */}
+        })();
+window.addEventListener('error', function(e){ try{ if(typeof showNotification==='function'){ showNotification('⚠️ Erro de script detectado. Verifique os dados/ações recentes.', 'warning'); } }catch(_){} });
+</script>
 
-            container.innerHTML = window.orders.map(order => `
-                <div class="order-card">
-                    <div class="order-header">
-                        <div class="order-id">${order.id}</div>
-                        <div class="order-status">${order.status}</div>
-                    </div>
-                    <div class="order-body">
-                        <div style="display:flex;align-items:center;margin-bottom:15px;">
-                            <input type="checkbox" class="select-order" data-order-id="${order.id}" 
-                                   onchange="toggleSelectOrder('${order.id}', this.checked)" style="margin-right:10px;">
-                            <span style="font-size:14px;color:#6c757d;">Selecionar para envio</span>
-                        </div>
-                        
-                        <div class="order-info">
-                            <div class="info-item">
-                                <div class="info-label">Produto</div>
-                                <div class="info-value">${order.nomeTemplate}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Quantidade</div>
-                                <div class="info-value">${order.quantidade.toLocaleString('pt-BR')}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Cliente</div>
-                                <div class="info-value">${order.cliente || '-'}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Data</div>
-                                <div class="info-value">${order.dataCreation}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Papel</div>
-                                <div class="info-value">${order.tipoPapel || '-'}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Fornecedor</div>
-                                <div class="info-value">${order.fornecedor || '-'}</div>
-                            </div>
-                        </div>
+    <!-- Botão Flutuante: Topo / Ir para Ordens -->
+    <button id="scrollFab" class="fab" aria-label="Ir para Ordens" title="Ir para Ordens">📋</button>
 
-                        <div class="production-process">
-                            <div class="process-steps">
-                                ${['Corte/Vinco', 'Impressão', 'Colagem', 'Acabamento', 'Embalagem', 'Expedição'].map(step => 
-                                    `<div class="process-step ${order.processosCompletos?.includes(step) ? 'completed' : ''}">${step}</div>`
-                                ).join('')}
-                            </div>
-                        </div>
 
-                        <div class="order-actions">
-                            <button class="btn btn-info" onclick="editOrder('${order.firebaseId || order.id}')">Editar</button>
-                            <button class="btn btn-success" onclick="updateOrderStatus('${order.firebaseId || order.id}')">Status</button>
-                            <button class="btn btn-danger" onclick="deleteOrder('${order.firebaseId || order.id}')">Excluir</button>
-                        </div>
-                    </div>
+    <!-- Modal Envio à Gráfica -->
+    <div id="graficaModal" class="modal">
+        <div class="modal-content large">
+            <span class="close" onclick="closeGraficaModal()">&times;</span>
+            <div class="print-preview">
+                <div class="print-header">
+                    <h1>📦 Relatório de Envio à Gráfica</h1>
+                    <p id="graficaMeta"></p>
                 </div>
-            `).join('');
-        }
-
-        // Carregar lista de templates
-        function loadTemplatesList() {
-            const container = document.getElementById('templates-list');
-            
-            if (window.productTemplates.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align:center;padding:60px;color:#6c757d;">
-                        <h3>Nenhum modelo salvo</h3>
-                        <p>Crie algumas ordens de produção para gerar modelos automaticamente</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = window.productTemplates.map((template, index) => `
-                <div class="order-card" style="cursor:pointer;" onclick="selectTemplate(${index})">
-                    <div class="order-header" style="background:linear-gradient(135deg,#28a745 0%,#20c997 100%);">
-                        <div class="order-id">${template.nomeTemplate}</div>
-                        <div class="order-status">Usado ${template.vezesCriado}x</div>
-                    </div>
-                    <div class="order-body">
-                        <div class="order-info">
-                            <div class="info-item">
-                                <div class="info-label">Papel</div>
-                                <div class="info-value">${template.tipoPapel || '-'}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Gramatura</div>
-                                <div class="info-value">${template.gramatura || '-'}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Fornecedor</div>
-                                <div class="info-value">${template.fornecedor || '-'}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Última Vez</div>
-                                <div class="info-value">${template.ultimaVez}</div>
-                            </div>
-                        </div>
-                        <div class="order-actions">
-                            <button class="btn btn-success" onclick="selectTemplate(${index}); showTab('create');">Usar Modelo</button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Selecionar template
-        window.selectTemplate = function(index) {
-            const template = window.productTemplates[index];
-            
-            document.getElementById('nomeTemplate').value = template.nomeTemplate || '';
-            document.getElementById('tipoPapel').value = template.tipoPapel || '';
-            document.getElementById('gramatura').value = template.gramatura || '';
-            document.getElementById('fornecedor').value = template.fornecedor || '';
-            document.getElementById('observacoes').value = template.observacoes || '';
-            
-            showNotification(`Modelo "${template.nomeTemplate}" carregado!`, 'success');
-        };
-
-        // Funções auxiliares
-        window.showTab = function(tabName) {
-            // Remover classe active de todas as abas
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            // Ativar aba selecionada
-            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
-            document.getElementById(`tab-${tabName}`).classList.add('active');
-        };
-
-        window.showNotification = function(message, type = 'info') {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `notification ${type} show`;
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 4000);
-        };
-
-        // Seleção de ordens
-        window.toggleSelectOrder = function(orderId, checked) {
-            if (checked) {
-                window.selectedOrderIds.add(orderId);
-            } else {
-                window.selectedOrderIds.delete(orderId);
-            }
-        };
-
-        window.toggleSelectAll = function() {
-            const checkboxes = document.querySelectorAll('.select-order');
-            const anyUnchecked = Array.from(checkboxes).some(cb => !cb.checked);
-            
-            checkboxes.forEach(cb => {
-                cb.checked = anyUnchecked;
-                toggleSelectOrder(cb.dataset.orderId, anyUnchecked);
-            });
-            
-            showNotification(anyUnchecked ? 'Todas as OPs selecionadas' : 'Seleção limpa', 'info');
-        };
-
-        // Funções de edição, exclusão, etc.
-        window.editOrder = function(id) {
-            showNotification('Função de edição em desenvolvimento', 'info');
-        };
-
-        window.updateOrderStatus = function(id) {
-            showNotification('Função de atualização de status em desenvolvimento', 'info');
-        };
-
-        window.deleteOrder = async function(id) {
-            if (!confirm('Tem certeza que deseja excluir esta OP?')) return;
-            
-            try {
-                if (isFirebaseConnected) {
-                    await deleteOrderFromFirebase(id);
-                } else {
-                    const index = window.orders.findIndex(o => o.id === id || o.firebaseId === id);
-                    if (index !== -1) {
-                        window.orders.splice(index, 1);
-                        if (window.saveToLocalStorage) {
-                            window.saveToLocalStorage();
-                        }
-                        updateUI();
-                    }
-                }
-                
-                showNotification('OP excluída com sucesso!', 'success');
-            } catch (error) {
-                console.error('Erro ao excluir OP:', error);
-                showNotification('Erro ao excluir OP', 'error');
-            }
-        };
-
-        // Funções de export/import
-        window.exportData = function() {
-            const data = {
-                orders: window.orders,
-                templates: window.productTemplates,
-                orderIdCounter: window.orderIdCounter,
-                exportedAt: new Date().toISOString()
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `backup_ops_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            showNotification('Dados exportados com sucesso!', 'success');
-        };
-
-        window.importData = function() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.onchange = async function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                try {
-                    const text = await file.text();
-                    const data = JSON.parse(text);
-                    
-                    if (confirm('Isso irá substituir todos os dados atuais. Continuar?')) {
-                        window.orders = data.orders || [];
-                        window.productTemplates = data.templates || [];
-                        window.orderIdCounter = data.orderIdCounter || 1;
-                        
-                        if (isFirebaseConnected) {
-                            // TODO: Implementar sincronização com Firebase
-                            showNotification('Import com Firebase em desenvolvimento', 'warning');
-                        } else if (window.saveToLocalStorage) {
-                            window.saveToLocalStorage();
-                        }
-                        
-                        updateUI();
-                        showNotification('Dados importados com sucesso!', 'success');
-                    }
-                } catch (error) {
-                    console.error('Erro ao importar:', error);
-                    showNotification('Erro ao importar dados', 'error');
-                }
-            };
-            input.click();
-        };
-
-        window.clearAllData = function() {
-            if (!confirm('ATENÇÃO: Isso irá apagar TODOS os dados. Esta ação não pode ser desfeita. Continuar?')) return;
-            if (!confirm('Tem CERTEZA ABSOLUTA? Todos os dados serão perdidos!')) return;
-            
-            window.orders = [];
-            window.productTemplates = [];
-            window.orderIdCounter = 1;
-            window.selectedOrderIds.clear();
-            
-            if (isFirebaseConnected) {
-                showNotification('Limpeza do Firebase em desenvolvimento', 'warning');
-            } else if (window.saveToLocalStorage) {
-                window.saveToLocalStorage();
-            }
-            
-            updateUI();
-            showNotification('Todos os dados foram limpos!', 'success');
-        };
-
-        window.toggleViewMode = function() {
-            const container = document.getElementById('orders-list');
-            container.classList.toggle('compact-view');
-            showNotification('Modo de visualização alternado', 'info');
-        };
-
-        // Expor funções globalmente para uso em HTML
-        window.isFirebaseConnected = () => isFirebaseConnected;
-        window.initializeApp = initializeApp;
-        
-    </script>
+                <div id="graficaOrders"></div>
+                <div id="graficaTotais" style="margin-top:15px;"></div>
+            </div>
+            <div style="text-align:center;margin-top:20px;padding-top:20px;border-top:1px solid #ddd;">
+                <button class="btn btn-primary" onclick="printGraficaReport()">🖨️ Imprimir Relatório</button>
+                <button class="btn btn-warning" onclick="closeGraficaModal()">❌ Fechar</button>
+            </div>
+        </div>
+    </div>
+    
 </body>
 </html>
