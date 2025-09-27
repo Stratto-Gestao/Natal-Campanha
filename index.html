@@ -1356,14 +1356,34 @@ function buildCompactItem(order){
                 return;
             }
             
+            // NOVA REGRA: OPs Em Andamento sempre primeiro, depois Finalizadas
+            const sortedList = [...list].sort((a, b) => {
+                // Status Em Andamento tem prioridade (valor 0), Finalizado vem depois (valor 1)
+                const statusPriority = {
+                    'Em Andamento': 0,
+                    'Finalizado': 1
+                };
+                
+                const aPriority = statusPriority[a.status] || 2; // Status desconhecido vai para o final
+                const bPriority = statusPriority[b.status] || 2;
+                
+                // Primeiro critério: ordenar por status
+                if (aPriority !== bPriority) {
+                    return aPriority - bPriority;
+                }
+                
+                // Segundo critério: dentro do mesmo status, ordenar por ID (mais recentes primeiro)
+                return b.id.localeCompare(a.id, undefined, {numeric: true});
+            });
+            
             const modeDescription = window.viewMode === 'list' 
-                ? '<div style="text-align:center;margin-bottom:20px;padding:12px;background:#e8f4fd;border-radius:8px;border-left:4px solid #74b9ff;"><p style="color:#2c3e50;margin:0;">💡 <strong>Modo Lista:</strong> Clique em qualquer OP para expandir os detalhes completos</p></div>'
-                : '<div style="text-align:center;margin-bottom:20px;padding:12px;background:#f0f8e8;border-radius:8px;border-left:4px solid #27ae60;"><p style="color:#2c3e50;margin:0;">💡 <strong>Modo Detalhado:</strong> Todas as informações visíveis</p></div>';
+                ? '<div style="text-align:center;margin-bottom:20px;padding:12px;background:#e8f4fd;border-radius:8px;border-left:4px solid #74b9ff;"><p style="color:#2c3e50;margin:0;">💡 <strong>Modo Lista:</strong> Clique em qualquer OP para expandir os detalhes completos<br><small style="color:#fd7e14;">🟠 OPs Em Andamento aparecem primeiro | 🟢 OPs Finalizadas aparecem depois</small></p></div>'
+                : '<div style="text-align:center;margin-bottom:20px;padding:12px;background:#f0f8e8;border-radius:8px;border-left:4px solid #27ae60;"><p style="color:#2c3e50;margin:0;">💡 <strong>Modo Detalhado:</strong> Todas as informações visíveis<br><small style="color:#fd7e14;">🟠 OPs Em Andamento aparecem primeiro | 🟢 OPs Finalizadas aparecem depois</small></p></div>';
             
             if(window.viewMode==='list'){
-                el.innerHTML = modeDescription + list.map(o=>buildCompactItem(o)).join('');
+                el.innerHTML = modeDescription + sortedList.map(o=>buildCompactItem(o)).join('');
             }else{
-                el.innerHTML = modeDescription + list.map(o=>buildDetailedCard(o)).join('');
+                el.innerHTML = modeDescription + sortedList.map(o=>buildDetailedCard(o)).join('');
             }
         }
 
