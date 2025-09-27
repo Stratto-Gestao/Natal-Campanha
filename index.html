@@ -148,6 +148,35 @@
         .notification.success{background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%)}
         .notification.error{background:linear-gradient(135deg,#fd79a8 0%,#e84393 100%)}
         .notification.info{background:linear-gradient(135deg,#74b9ff 0%,#0984e3 100%)}
+    
+        /* === Botão Flutuante (Topo/Ordens) === */
+        :root{ --safe-bottom: env(safe-area-inset-bottom); }
+        .fab{
+            position:fixed; right:20px; bottom:calc(20px + var(--safe-bottom));
+            width:56px; height:56px; border-radius:50%; border:none;
+            background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            color:#fff; font-size:22px; font-weight:700;
+            display:flex; align-items:center; justify-content:center;
+            box-shadow:0 12px 30px rgba(0,0,0,.25);
+            cursor:pointer; z-index:2500;
+            transition:transform .2s ease, box-shadow .2s ease, opacity .25s ease;
+        }
+        .fab:focus{outline:none; box-shadow:0 0 0 4px rgba(102,126,234,.25), 0 12px 30px rgba(0,0,0,.25)}
+        @media (hover:hover){
+            .fab:hover{transform:translateY(-3px); box-shadow:0 16px 32px rgba(0,0,0,.3)}
+        }
+        .fab.hide{opacity:0; pointer-events:none; transform:translateY(20px)}
+        /* Ajustes mobile extras */
+        html,body{-webkit-text-size-adjust:100%}
+        .btn{min-height:44px}
+        @media (max-width:480px){
+            .container{padding:12px}
+            .header h1{font-size:1.8em}
+            .header p{font-size:1em}
+            .btn{width:100%}
+            .view-toggle{width:100%; justify-content:center}
+        }
+
     </style>
 </head>
 <body>
@@ -651,8 +680,8 @@
             const idx=orders.findIndex(o=>o.id===id);
             if(idx===-1){showNotification('Erro: Ordem não encontrada!','error');return;}
             const order=orders[idx];
-            const imgF=document.getElementById('editImagemFaca')?.files?.[0];
-            const imgA=document.getElementById('editImagemArte')?.files?.[0];
+            const editImgFInput=document.getElementById('editImagemFaca'); const imgF=(editImgFInput && editImgFInput.files && editImgFInput.files[0])||null;
+            const editImgAInput=document.getElementById('editImagemArte'); const imgA=(editImgAInput && editImgAInput.files && editImgAInput.files[0])||null;
 
             order.medidasFolha=document.getElementById('editMedidasFolha').value;
             order.quantidade=document.getElementById('editQuantidade').value;
@@ -1000,6 +1029,53 @@
         // Listeners de impressão
         window.addEventListener('beforeprint',function(){const pc=document.getElementById('printContent');if(pc){pc.style.display='block !important';pc.style.visibility='visible !important';}});
         window.addEventListener('afterprint',function(){showNotification('Impressão enviada!','success');});
-    </script>
+    
+        /* ===== Scroll FAB (Topo <-> Ordens) ===== */
+document.addEventListener('DOMContentLoaded', function(){
+    let initialized = false;
+    function initFab(){
+        if(initialized) return;
+        const fab = document.getElementById('scrollFab');
+        const ordersSection = document.querySelector('.orders-list');
+        if(!fab) return;
+        initialized = true;
+
+        function atTop(){ return (window.scrollY || document.documentElement.scrollTop || 0) < 150; }
+        function updateFab(){
+            if(atTop()){
+                fab.textContent = '📋';
+                fab.setAttribute('aria-label','Ir para Ordens');
+                fab.title = 'Ir para Ordens';
+            }else{
+                fab.textContent = '⬆️';
+                fab.setAttribute('aria-label','Voltar ao topo');
+                fab.title = 'Voltar ao topo';
+            }
+        }
+        fab.addEventListener('click', function(){
+            if(atTop()){
+                if(ordersSection){ ordersSection.scrollIntoView({behavior:'smooth', block:'start'}); }
+            }else{
+                window.scrollTo({top:0, behavior:'smooth'});
+            }
+        });
+        window.addEventListener('scroll', updateFab, {passive:true});
+        updateFab();
+    }
+    initFab();
+    window.addEventListener('load', initFab, {once:true});
+});
+/* ===== Compatibilidade Mobile (evitar zoom em inputs no iOS) ===== */
+        (function(){
+            try{
+                const set16 = el => el && (el.style.fontSize = '16px');
+                document.querySelectorAll('input, select, textarea, button').forEach(set16);
+            }catch(e){/* no-op */}
+        })();
+</script>
+
+    <!-- Botão Flutuante: Topo / Ir para Ordens -->
+    <button id="scrollFab" class="fab" aria-label="Ir para Ordens" title="Ir para Ordens">📋</button>
+
 </body>
 </html>
