@@ -40,16 +40,12 @@
         .product-item{background:#fff;border:2px solid #e0e6ed;border-radius:8px;padding:12px;cursor:pointer;transition:all .3s ease}
         .product-item:hover{border-color:#667eea;background:#f8f9ff}
         .product-item.selected{border-color:#667eea;background:#e8f2ff}
-        .product-name{font-weight:600;color:#2c3e50;margin-bottom:5px}
-        .product-details{font-size:12px;color:#6c757d}
-        .clear-selection{background:#fd79a8;color:#fff;border:none;padding:8px 15px;border-radius:6px;font-size:14px;cursor:pointer;margin-top:10px}
 
         .template-actions{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
         .btn{padding:12px 25px;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;transition:all .3s ease;text-transform:uppercase;letter-spacing:.5px}
         .btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
         .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(102,126,234,.3)}
         .btn-success{background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);color:#fff}
-        .btn-success:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(17,153,142,.3)}
         .btn-warning{background:linear-gradient(135deg,#ffeaa7 0%,#fab1a0 100%);color:#2d3436}
         .btn-danger{background:linear-gradient(135deg,#fd79a8 0%,#e84393 100%);color:#fff}
         .btn-info{background:linear-gradient(135deg,#74b9ff 0%,#0984e3 100%);color:#fff}
@@ -60,6 +56,9 @@
         .list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:15px}
         .filter-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
         .filter-controls select,.filter-controls input{padding:8px 12px;border:2px solid #e0e6ed;border-radius:6px;font-size:14px}
+
+        .view-toggle{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+        .view-toggle .btn{padding:8px 14px;font-size:14px}
 
         .order-item{background:#fff;padding:20px;margin-bottom:15px;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,.08);border-left:5px solid #667eea}
         .order-item.priority-high{border-left-color:#e74c3c}
@@ -75,10 +74,12 @@
         .priority.media{background:#fff8e1;color:#f57c00}
         .priority.baixa{background:#e8f5e8;color:#2e7d32}
 
-        .process-flow{display:flex;gap:10px;margin:15px 0;flex-wrap:wrap}
-        .process-step{padding:8px 15px;background:#f8f9fa;border-radius:20px;font-size:14px;border:2px solid #e9ecef}
+        .process-flow{display:flex;gap:10px;margin:10px 0;flex-wrap:wrap}
+        .process-step{padding:6px 12px;background:#f8f9fa;border-radius:20px;font-size:13px;border:2px solid #e9ecef}
         .process-step.completed{background:#d4edda;border-color:#c3e6cb;color:#155724}
         .process-step.current{background:#fff3cd;border-color:#ffeaa7;color:#856404}
+
+        .preprod-label{font-size:12px;color:#6c757d;margin-top:5px}
 
         .order-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:15px 0}
         .detail-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}
@@ -89,6 +90,10 @@
         .order-image img{max-width:100%;max-height:150px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.1)}
 
         .order-actions{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}
+        .compact-item{padding:14px 16px;background:#fff;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,.06);border-left:5px solid #667eea;cursor:pointer}
+        .compact-title{display:flex;gap:8px;align-items:center;font-weight:600;color:#2c3e50}
+        .compact-meta{font-size:12px;color:#6c757d;margin-top:4px}
+        .compact-expanded{margin-top:12px;border-top:1px dashed #e0e6ed;padding-top:12px}
 
         .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,.5)}
         .modal-content{background:#fff;margin:5% auto;padding:20px;border-radius:15px;width:90%;max-width:600px;max-height:80vh;overflow-y:auto}
@@ -102,22 +107,19 @@
         .print-image{text-align:center}
         .print-image img{max-width:100%;max-height:300px;border:2px solid #ddd;border-radius:10px}
 
-        .export-options{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}
-
         .edit-form{background:#fff;padding:30px;border-radius:15px}
         .edit-form h2{color:#2c3e50;margin-bottom:25px;font-size:1.8em;text-align:center;border-bottom:2px solid #667eea;padding-bottom:15px}
         .edit-actions{display:flex;gap:15px;justify-content:center;margin-top:30px;padding-top:20px;border-top:1px solid #eee}
         .current-image-preview{max-width:150px;max-height:150px;border-radius:8px;margin:10px 0;border:2px solid #ddd}
 
         @media print{
-            @page { size: A4 portrait; margin:10mm; }
+            @page{size:A4 portrait;margin:10mm}
             *{-webkit-print-color-adjust:exact !important;color-adjust:exact !important;print-color-adjust:exact !important}
             body{background:#fff !important}
             .container,.header,.stats-row,.main-content,.orders-list,.modal-content>div:last-child{display:none !important}
             .modal{display:block !important;position:static !important;background:#fff !important;width:100% !important;height:auto !important}
             .modal-content{margin:0 !important;padding:0 !important;width:100% !important;max-width:100% !important;max-height:none !important;background:#fff !important;box-shadow:none !important;border-radius:0 !important}
             .print-preview{display:block !important;visibility:visible !important;padding:10px !important;margin:0 !important;background:#fff !important;box-shadow:none !important;border-radius:0 !important}
-            .print-preview *{visibility:visible !important}
             .print-header h1,.print-header h2,.print-header p{color:#000 !important;margin:4px 0 !important}
             .print-preview,.print-preview *{break-inside:avoid-page !important;page-break-inside:avoid !important}
             .print-preview{font-size:13px !important;line-height:1.35 !important}
@@ -196,7 +198,7 @@
                         </div>
                     </div>
 
-                    <!-- NOVO CAMPO: Quantidade de folhas/resma -->
+                    <!-- Folhas/Resma -->
                     <div class="form-row">
                         <div class="form-group" style="grid-column:1 / -1;">
                             <label for="folhasResma">Quantidade de folhas/resma</label>
@@ -247,6 +249,21 @@
                         </div>
                     </div>
 
+                    <!-- Pré-produção (novos marcadores) -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><input type="checkbox" id="enviadoFaca"> Enviado para produção da faca</label>
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" id="enviadoChapa"> Enviado para gravar chapa</label>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="grid-column:1 / -1;">
+                            <label><input type="checkbox" id="enviadoImpressao"> Enviado para impressão</label>
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label for="acabamento">Acabamento</label>
                         <textarea id="acabamento" placeholder="Descreva os acabamentos (quebras de linha serão preservadas no PDF)" required></textarea>
@@ -282,6 +299,7 @@
 
             <div class="card">
                 <h2>📊 Processo de Produção</h2>
+                <!-- Mantido processo principal -->
                 <div class="process-flow">
                     <div class="process-step">1. Corte e Vinco</div>
                     <div class="process-step">2. Desmolde</div>
@@ -289,10 +307,12 @@
                     <div class="process-step">4. Selagem</div>
                     <div class="process-step">5. Prateleira</div>
                 </div>
-                <p style="margin-top:20px;color:#6c757d;line-height:1.6;">
-                    <strong>Fluxo Padrão:</strong> Todas as embalagens seguem este processo sequencial.
-                    Cada etapa deve ser concluída antes de passar para a próxima.
-                </p>
+                <p class="preprod-label">Pré-produção: os marcadores abaixo são definidos nos formulários.</p>
+                <div class="process-flow">
+                    <div class="process-step">Enviado p/ produção da faca</div>
+                    <div class="process-step">Enviado p/ gravar chapa</div>
+                    <div class="process-step">Enviado p/ impressão</div>
+                </div>
 
                 <div style="margin-top:30px;">
                     <h3 style="margin-bottom:15px;">🔧 Ações Rápidas</h3>
@@ -310,6 +330,10 @@
         <div class="card orders-list">
             <div class="list-header">
                 <h2>📋 Ordens de Produção</h2>
+                <div class="view-toggle">
+                    <button class="btn btn-secondary btn-small" id="btnLista" onclick="setViewMode('list')">Modo Lista</button>
+                    <button class="btn btn-secondary btn-small" id="btnDetalhado" onclick="setViewMode('detailed')">Modo Detalhado</button>
+                </div>
                 <div class="filter-controls">
                     <select id="filterStatus" onchange="filterOrders()">
                         <option value="">Todos os Status</option>
@@ -366,7 +390,6 @@
                         </div>
                     </div>
 
-                    <!-- NOVO CAMPO (edição): Quantidade de folhas/resma -->
                     <div class="form-row">
                         <div class="form-group" style="grid-column:1 / -1;">
                             <label for="editFolhasResma">Quantidade de folhas/resma</label>
@@ -414,6 +437,21 @@
                                 <option value="Alta">Alta</option>
                                 <option value="Baixa">Baixa</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <!-- Pré-produção (edição) -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><input type="checkbox" id="editEnviadoFaca"> Enviado para produção da faca</label>
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" id="editEnviadoChapa"> Enviado para gravar chapa</label>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="grid-column:1 / -1;">
+                            <label><input type="checkbox" id="editEnviadoImpressao"> Enviado para impressão</label>
                         </div>
                     </div>
 
@@ -480,6 +518,15 @@
         let productTemplates = JSON.parse(localStorage.getItem('productTemplates')) || [];
         let isEditing = false;
         let selectedTemplate = null;
+        let viewMode = localStorage.getItem('ordersViewMode') || 'detailed'; // 'list' | 'detailed'
+
+        function setViewMode(mode){
+            viewMode = mode;
+            localStorage.setItem('ordersViewMode', mode);
+            document.getElementById('btnLista').className = 'btn btn-secondary btn-small' + (mode==='list'?' btn-info':'');
+            document.getElementById('btnDetalhado').className = 'btn btn-secondary btn-small' + (mode==='detailed'?' btn-info':'');
+            displayOrders();
+        }
 
         function showNotification(message,type='success'){const n=document.getElementById('notification');n.textContent=message;n.className=`notification ${type}`;n.classList.add('show');setTimeout(()=>n.classList.remove('show'),3000);}
         function generateOrderId(){const id=orderIdCounter;orderIdCounter++;localStorage.setItem('orderIdCounter',orderIdCounter);return `OP-${String(id).padStart(4,'0')}`;}
@@ -562,6 +609,7 @@
             u.addEventListener('drop',e=>{e.preventDefault();u.classList.remove('dragover');const files=e.dataTransfer.files;if(files.length>0){const input=u.querySelector('input[type="file"]');input.files=files;input.dispatchEvent(new Event('change'));}});
         });
 
+        // Criar nova OP
         document.getElementById('orderForm').addEventListener('submit',function(e){
             e.preventDefault();
             const imgF=document.getElementById('imagemFaca').files[0];
@@ -578,6 +626,9 @@
                 impressao:document.getElementById('impressao').value,
                 prioridade:document.getElementById('prioridade').value,
                 nomeTemplate:document.getElementById('nomeTemplate').value,
+                enviadoFaca:document.getElementById('enviadoFaca').checked,
+                enviadoChapa:document.getElementById('enviadoChapa').checked,
+                enviadoImpressao:document.getElementById('enviadoImpressao').checked,
                 acabamento:document.getElementById('acabamento').value,
                 descricaoEmbalagens:document.getElementById('descricaoEmbalagens').value,
                 dataCreated:new Date().toLocaleDateString('pt-BR'),
@@ -593,6 +644,7 @@
             if(imgA){imageToBase64(imgA,b64=>{order.imagemArte=b64;processed++;if(processed===total)saveOrder();});}
         });
 
+        // Editar OP
         document.getElementById('editForm').addEventListener('submit',function(e){
             e.preventDefault();
             const id=document.getElementById('editOrderId').value;
@@ -612,6 +664,9 @@
             order.impressao=document.getElementById('editImpressao').value;
             order.prioridade=document.getElementById('editPrioridade').value;
             order.nomeTemplate=document.getElementById('editNomeTemplate').value;
+            order.enviadoFaca=document.getElementById('editEnviadoFaca').checked;
+            order.enviadoChapa=document.getElementById('editEnviadoChapa').checked;
+            order.enviadoImpressao=document.getElementById('editEnviadoImpressao').checked;
             order.acabamento=document.getElementById('editAcabamento').value;
             order.descricaoEmbalagens=document.getElementById('editDescricaoEmbalagens').value;
             order.lastModified=new Date().toLocaleDateString('pt-BR')+' às '+new Date().toLocaleTimeString('pt-BR');
@@ -640,6 +695,9 @@
             document.getElementById('editAcabamento').value=order.acabamento;
             document.getElementById('editDescricaoEmbalagens').value=order.descricaoEmbalagens;
             document.getElementById('editFolhasResma').value=order.folhasResma||'';
+            document.getElementById('editEnviadoFaca').checked=!!order.enviadoFaca;
+            document.getElementById('editEnviadoChapa').checked=!!order.enviadoChapa;
+            document.getElementById('editEnviadoImpressao').checked=!!order.enviadoImpressao;
 
             const ciF=document.getElementById('currentImageFaca');
             const ciA=document.getElementById('currentImageArte');
@@ -668,64 +726,114 @@
             displayOrdersList(filtered);
         }
 
+        /* === Renderizadores === */
+        function buildPreProducaoChips(order){
+            const chips = [
+                {ok: order.enviadoFaca, label:'Enviado p/ produção da faca'},
+                {ok: order.enviadoChapa, label:'Enviado p/ gravar chapa'},
+                {ok: order.enviadoImpressao, label:'Enviado p/ impressão'}
+            ];
+            return `<div class="process-flow">${chips.map(c=>`<div class="process-step ${c.ok?'completed':''}">${c.label}${c.ok?' ✅':''}</div>`).join('')}</div>`;
+        }
+
+        function buildDetailedCard(order){
+            const processSteps=['Corte e Vinco','Desmolde','Acabamento','Selagem','Prateleira'];
+            const pClass=order.prioridade?order.prioridade.toLowerCase():'media';
+            return `
+            <div class="order-item priority-${pClass==='média'?'medium':pClass==='alta'?'high':'low'}">
+                <div class="order-header">
+                    <div>
+                        <span class="order-id">${order.id}</span>
+                        ${order.nomeTemplate?`<span style="background:#e8f4fd;color:#2c3e50;padding:3px 8px;border-radius:12px;font-size:12px;margin-left:10px;">📦 ${order.nomeTemplate}</span>`:''}
+                        <span class="priority ${pClass}">${order.prioridade||'Média'}</span>
+                        <span style="margin-left:15px;color:#6c757d;">${order.dataCreated} ${order.timeCreated?'às '+order.timeCreated:''}</span>
+                        ${order.lastModified?`<span style="margin-left:10px;color:#e67e22;font-size:12px;">(Editado: ${order.lastModified})</span>`:''}
+                    </div>
+                    <span class="status ${order.status.toLowerCase().replace(' ','-')}">${order.status}</span>
+                </div>
+
+                <div>
+                    <div class="preprod-label">Pré-produção</div>
+                    ${buildPreProducaoChips(order)}
+                </div>
+
+                <div class="process-flow">
+                    ${processSteps.map((s,i)=>`<div class="process-step ${i<order.currentStep?'completed':i===order.currentStep?'current':''}">${i+1}. ${s}</div>`).join('')}
+                </div>
+
+                <div class="order-details">
+                    <div class="detail-item"><span class="detail-label">Medidas:</span><span>${order.medidasFolha}</span></div>
+                    <div class="detail-item"><span class="detail-label">Quantidade:</span><span>${parseInt(order.quantidade).toLocaleString()}</span></div>
+                    ${order.folhasResma?`<div class="detail-item"><span class="detail-label">Folhas/Resma:</span><span>${order.folhasResma}</span></div>`:''}
+                    <div class="detail-item"><span class="detail-label">Papel:</span><span>${order.tipoPapel}</span></div>
+                    <div class="detail-item"><span class="detail-label">Gramatura:</span><span>${order.gramatura}</span></div>
+                    <div class="detail-item"><span class="detail-label">Impressão:</span><span>${order.impressao}</span></div>
+                    ${order.fornecedor?`<div class="detail-item"><span class="detail-label">Fornecedor:</span><span>${order.fornecedor}</span></div>`:''}
+                </div>
+
+                ${order.imagemFaca||order.imagemArte?`
+                <div class="order-images">
+                    ${order.imagemFaca?`<div class="order-image"><h4>Imagem da Faca</h4><img src="${order.imagemFaca}" alt="Faca"></div>`:''}
+                    ${order.imagemArte?`<div class="order-image"><h4>Montagem da Arte</h4><img src="${order.imagemArte}" alt="Arte"></div>`:''}
+                </div>`:''}
+
+                <div style="margin:15px 0;">
+                    <strong>Acabamento:</strong>
+                    <p style="margin-top:5px;background:#f8f9fa;padding:10px;border-radius:5px;">${order.acabamento}</p>
+                </div>
+
+                <div style="margin:15px 0;">
+                    <strong>Descrição das Embalagens:</strong>
+                    <p style="margin-top:5px;background:#f8f9fa;padding:10px;border-radius:5px;">${order.descricaoEmbalagens}</p>
+                </div>
+
+                <div class="order-actions">
+                    <button class="btn btn-primary" onclick="printOrderModal('${order.id}')">🖨️ Imprimir</button>
+                    <button class="btn btn-success" onclick="advanceStep('${order.id}')">➡️ Próxima Etapa</button>
+                    <button class="btn btn-warning" onclick="editOrder('${order.id}')">✏️ Editar</button>
+                    <button class="btn btn-info btn-small" onclick="duplicateOrder('${order.id}')">📋 Duplicar</button>
+                    <button class="btn btn-danger" onclick="deleteOrder('${order.id}')">🗑️ Excluir</button>
+                </div>
+            </div>`;
+        }
+
+        function buildCompactItem(order){
+            const line = `${order.id} ${order.nomeTemplate?`📦 ${order.nomeTemplate}`:''} ${order.prioridade||'Média'} ${order.dataCreated}${order.timeCreated?` às ${order.timeCreated}`:''}`;
+            const detailHtml = buildDetailedCard(order);
+            const safeId = `exp_${order.id.replace(/[^a-zA-Z0-9_-]/g,'')}`;
+            return `
+            <div class="compact-item" onclick="toggleExpand('${safeId}')">
+                <div class="compact-title">${line}</div>
+                <div class="compact-meta">${order.status}</div>
+                <div id="${safeId}" class="compact-expanded" style="display:none;">
+                    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+                        <button class="btn btn-secondary btn-small" onclick="event.stopPropagation();scrollToAndHighlight('${safeId}')">Ver OP completa</button>
+                    </div>
+                    ${detailHtml}
+                </div>
+            </div>`;
+        }
+        function toggleExpand(id){
+            const el=document.getElementById(id);
+            if(!el) return;
+            el.style.display = (el.style.display==='none' || el.style.display==='') ? 'block' : 'none';
+        }
+        function scrollToAndHighlight(id){
+            const el=document.getElementById(id);
+            if(!el) return;
+            el.style.display='block';
+            el.scrollIntoView({behavior:'smooth',block:'center'});
+        }
+
+        function displayOrders(){displayOrdersList(orders);}
         function displayOrdersList(list=orders){
             const el=document.getElementById('ordersList');
             if(list.length===0){el.innerHTML='<p style="text-align:center;color:#6c757d;padding:40px;">Nenhuma ordem encontrada.</p>';return;}
-            el.innerHTML=list.map(order=>{
-                const processSteps=['Corte e Vinco','Desmolde','Acabamento','Selagem','Prateleira'];
-                const pClass=order.prioridade?order.prioridade.toLowerCase():'media';
-                return `
-                <div class="order-item priority-${pClass==='média'?'medium':pClass==='alta'?'high':'low'}">
-                    <div class="order-header">
-                        <div>
-                            <span class="order-id">${order.id}</span>
-                            ${order.nomeTemplate?`<span style="background:#e8f4fd;color:#2c3e50;padding:3px 8px;border-radius:12px;font-size:12px;margin-left:10px;">📦 ${order.nomeTemplate}</span>`:''}
-                            <span class="priority ${pClass}">${order.prioridade||'Média'}</span>
-                            <span style="margin-left:15px;color:#6c757d;">${order.dataCreated} ${order.timeCreated?'às '+order.timeCreated:''}</span>
-                            ${order.lastModified?`<span style="margin-left:10px;color:#e67e22;font-size:12px;">(Editado: ${order.lastModified})</span>`:''}
-                        </div>
-                        <span class="status ${order.status.toLowerCase().replace(' ','-')}">${order.status}</span>
-                    </div>
-
-                    <div class="process-flow">
-                        ${processSteps.map((s,i)=>`<div class="process-step ${i<order.currentStep?'completed':i===order.currentStep?'current':''}">${i+1}. ${s}</div>`).join('')}
-                    </div>
-
-                    <div class="order-details">
-                        <div class="detail-item"><span class="detail-label">Medidas:</span><span>${order.medidasFolha}</span></div>
-                        <div class="detail-item"><span class="detail-label">Quantidade:</span><span>${parseInt(order.quantidade).toLocaleString()}</span></div>
-                        ${order.folhasResma?`<div class="detail-item"><span class="detail-label">Folhas/Resma:</span><span>${order.folhasResma}</span></div>`:''}
-                        <div class="detail-item"><span class="detail-label">Papel:</span><span>${order.tipoPapel}</span></div>
-                        <div class="detail-item"><span class="detail-label">Gramatura:</span><span>${order.gramatura}</span></div>
-                        <div class="detail-item"><span class="detail-label">Impressão:</span><span>${order.impressao}</span></div>
-                        ${order.fornecedor?`<div class="detail-item"><span class="detail-label">Fornecedor:</span><span>${order.fornecedor}</span></div>`:''}
-                    </div>
-
-                    ${order.imagemFaca||order.imagemArte?`
-                    <div class="order-images">
-                        ${order.imagemFaca?`<div class="order-image"><h4>Imagem da Faca</h4><img src="${order.imagemFaca}" alt="Faca"></div>`:''}
-                        ${order.imagemArte?`<div class="order-image"><h4>Montagem da Arte</h4><img src="${order.imagemArte}" alt="Arte"></div>`:''}
-                    </div>`:''}
-
-                    <div style="margin:15px 0;">
-                        <strong>Acabamento:</strong>
-                        <p style="margin-top:5px;background:#f8f9fa;padding:10px;border-radius:5px;">${order.acabamento}</p>
-                    </div>
-
-                    <div style="margin:15px 0;">
-                        <strong>Descrição das Embalagens:</strong>
-                        <p style="margin-top:5px;background:#f8f9fa;padding:10px;border-radius:5px;">${order.descricaoEmbalagens}</p>
-                    </div>
-
-                    <div class="order-actions">
-                        <button class="btn btn-primary" onclick="printOrderModal('${order.id}')">🖨️ Imprimir</button>
-                        <button class="btn btn-success" onclick="advanceStep('${order.id}')">➡️ Próxima Etapa</button>
-                        <button class="btn btn-warning" onclick="editOrder('${order.id}')">✏️ Editar</button>
-                        <button class="btn btn-info btn-small" onclick="duplicateOrder('${order.id}')">📋 Duplicar</button>
-                        <button class="btn btn-danger" onclick="deleteOrder('${order.id}')">🗑️ Excluir</button>
-                    </div>
-                </div>`;
-            }).join('');
+            if(viewMode==='list'){
+                el.innerHTML = list.map(o=>buildCompactItem(o)).join('');
+            }else{
+                el.innerHTML = list.map(o=>buildDetailedCard(o)).join('');
+            }
         }
 
         function duplicateOrder(orderId){
@@ -738,11 +846,26 @@
             document.querySelector('.main-content').scrollIntoView({behavior:'smooth'});
         }
 
-        function displayOrders(){displayOrdersList(orders);}
-        function advanceStep(orderId){const order=orders.find(o=>o.id===orderId);if(order&&order.currentStep<4){order.currentStep++;if(order.currentStep===4){order.status='Finalizado';}localStorage.setItem('productionOrders',JSON.stringify(orders));displayOrders();updateStats();showNotification(`Ordem ${orderId} avançou para a próxima etapa!`,'success');}}
-        function deleteOrder(orderId){if(confirm('Tem certeza que deseja excluir esta ordem de produção?')){orders=orders.filter(o=>o.id!==orderId);localStorage.setItem('productionOrders',JSON.stringify(orders));displayOrders();updateStats();showNotification(`Ordem ${orderId} excluída com sucesso!`,'info');}}
+        function advanceStep(orderId){
+            const order=orders.find(o=>o.id===orderId);
+            if(order&&order.currentStep<4){
+                order.currentStep++;
+                if(order.currentStep===4){order.status='Finalizado';}
+                localStorage.setItem('productionOrders',JSON.stringify(orders));
+                displayOrders();updateStats();
+                showNotification(`Ordem ${orderId} avançou para a próxima etapa!`,'success');
+            }
+        }
+        function deleteOrder(orderId){
+            if(confirm('Tem certeza que deseja excluir esta ordem de produção?')){
+                orders=orders.filter(o=>o.id!==orderId);
+                localStorage.setItem('productionOrders',JSON.stringify(orders));
+                displayOrders();updateStats();
+                showNotification(`Ordem ${orderId} excluída com sucesso!`,'info');
+            }
+        }
 
-        /* IMPRESSÃO – sem bloco de processo e preservando formatação dos textos */
+        /* IMPRESSÃO – preservando formatação e sem bloco de “Processo de Produção” */
         function printOrderModal(orderId){
             const order=orders.find(o=>o.id===orderId);
             if(!order){showNotification('Ordem não encontrada!','error');return;}
@@ -768,6 +891,16 @@
                             <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Gramatura:</td><td style="padding:6px 0;color:#333;">${order.gramatura}</td></tr>
                             <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Impressão:</td><td style="padding:6px 0;color:#333;">${order.impressao}</td></tr>
                             ${order.fornecedor?`<tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Fornecedor:</td><td style="padding:6px 0;color:#333;">${order.fornecedor}</td></tr>`:''}
+                            ${order.enviadoFaca||order.enviadoChapa||order.enviadoImpressao?`
+                                <tr style="border-bottom:1px solid #ddd;">
+                                    <td style="padding:6px 0;font-weight:bold;color:#333;">Pré-produção:</td>
+                                    <td style="padding:6px 0;color:#333;">
+                                        ${order.enviadoFaca?'• Enviado p/ faca&nbsp;&nbsp;':''}
+                                        ${order.enviadoChapa?'• Gravar chapa&nbsp;&nbsp;':''}
+                                        ${order.enviadoImpressao?'• Impressão':''}
+                                    </td>
+                                </tr>
+                            `:''}
                         </table>
                     </div>
 
@@ -846,8 +979,12 @@
             }
         }
 
-        displayOrders();updateStats();
+        // Inicialização
+        setViewMode(viewMode);
+        displayOrders();
+        updateStats();
 
+        // Fechar modais ao clicar fora
         window.onclick=function(e){
             const pm=document.getElementById('printModal');
             const em=document.getElementById('editModal');
@@ -857,8 +994,10 @@
             if(e.target===tm)closeTemplatesModal();
         }
 
+        // Auto-salvar
         setInterval(()=>{if(orders.length>0)localStorage.setItem('productionOrders',JSON.stringify(orders));if(productTemplates.length>0)localStorage.setItem('productTemplates',JSON.stringify(productTemplates));},30000);
 
+        // Listeners de impressão
         window.addEventListener('beforeprint',function(){const pc=document.getElementById('printContent');if(pc){pc.style.display='block !important';pc.style.visibility='visible !important';}});
         window.addEventListener('afterprint',function(){showNotification('Impressão enviada!','success');});
     </script>
