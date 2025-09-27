@@ -1358,21 +1358,16 @@ function buildCompactItem(order){
             
             // NOVA REGRA: OPs Em Andamento sempre primeiro, depois Finalizadas
             const sortedList = [...list].sort((a, b) => {
-                // Status Em Andamento tem prioridade (valor 0), Finalizado vem depois (valor 1)
-                const statusPriority = {
-                    'Em Andamento': 0,
-                    'Finalizado': 1
-                };
-                
-                const aPriority = statusPriority[a.status] || 2; // Status desconhecido vai para o final
-                const bPriority = statusPriority[b.status] || 2;
-                
-                // Primeiro critério: ordenar por status (Em Andamento primeiro)
-                if (aPriority !== bPriority) {
-                    return aPriority - bPriority; // Menor valor = maior prioridade
+                // Se A é Em Andamento e B é Finalizado → A vem primeiro (retorna -1)
+                if (a.status === 'Em Andamento' && b.status === 'Finalizado') {
+                    return -1;
+                }
+                // Se A é Finalizado e B é Em Andamento → B vem primeiro (retorna 1)
+                if (a.status === 'Finalizado' && b.status === 'Em Andamento') {
+                    return 1;
                 }
                 
-                // Segundo critério: dentro do mesmo status, ordenar por ID (mais recentes primeiro)
+                // Se ambos têm o mesmo status, ordenar por ID (mais recentes primeiro)
                 return b.id.localeCompare(a.id, undefined, {numeric: true, sensitivity: 'base'});
             });
             
