@@ -463,8 +463,8 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="descricaoEmbalagens">Descrição das Embalagens na Faca</label>
-                            <textarea id="descricaoEmbalagens" placeholder="Descreva as embalagens que estão na faca (formatação preservada no PDF)" required></textarea>
+                            <label for="descricaoEmbalagens">Observação</label>
+                            <textarea id="descricaoEmbalagens" placeholder="Observações gerais sobre a ordem de produção (formatação preservada no PDF)" required></textarea>
                         </div>
                     </div>
 
@@ -659,8 +659,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="editDescricaoEmbalagens">Descrição das Embalagens na Faca</label>
-                        <textarea id="editDescricaoEmbalagens" placeholder="Descreva as embalagens que estão na faca" required></textarea>
+                        <label for="editDescricaoEmbalagens">Observação</label>
+                        <textarea id="editDescricaoEmbalagens" placeholder="Observações gerais sobre a ordem de produção" required></textarea>
                     </div>
 
                     <div class="form-row">
@@ -1722,7 +1722,7 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
                 </div>
 
                 <div style="margin:15px 0;">
-                    <strong>Descrição das Embalagens:</strong>
+                    <strong>Observação:</strong>
                     <p style="margin-top:5px;background:#f8f9fa;padding:10px;border-radius:5px;">${order.descricaoEmbalagens}</p>
                 </div>
 
@@ -1911,14 +1911,14 @@ function buildCompactItem(order){
                         <table style="width:100%;border-collapse:collapse;">
                             <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Formato:</td><td style="padding:6px 0;color:#333;">${order.formato||'-'}</td></tr>
                             <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Código da Faca:</td><td style="padding:6px 0;color:#333;">${order.codigoFaca||'-'}</td></tr>
-                            <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Medidas da Folha:</td><td style="padding:6px 0;color:#333;">${order.medidasFolha}</td></tr>
+                            <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Medidas da Folha Impressa:</td><td style="padding:6px 0;color:#333;">${order.medidasFolha}</td></tr>
                             <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Quantidade:</td><td style="padding:6px 0;color:#333;">${parseInt(order.quantidade).toLocaleString()}</td></tr>
                             ${order.folhasResma?`<tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Folhas/Resma:</td><td style="padding:6px 0;color:#333;">${order.folhasResma}</td></tr>`:''}
                             <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Tipo de Papel:</td><td style="padding:6px 0;color:#333;">${order.tipoPapel}</td></tr>
                             <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Gramatura:</td><td style="padding:6px 0;color:#333;">${order.gramatura}</td></tr>
                             ${order.resmasUsadas?`<tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Resmas utilizadas:</td><td style="padding:6px 0;color:#333;">${order.resmasUsadas}</td></tr>`:''}
                             <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Impressão:</td><td style="padding:6px 0;color:#333;">${order.impressao}</td></tr>
-                            ${order.fornecedor?`<tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Gráfica (Terceirização):</td><td style="padding:6px 0;color:#333;">🏢 ${order.fornecedor}</td></tr>`:''}
+                            ${order.fornecedor?`<tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Gráfica:</td><td style="padding:6px 0;color:#333;">🏢 ${order.fornecedor}</td></tr>`:''}
                             ${order.enviadoFaca||order.enviadoChapa||order.enviadoImpressao?`
                                 <tr style="border-bottom:1px solid #ddd;">
                                     <td style="padding:6px 0;font-weight:bold;color:#333;">Pré-produção:</td>
@@ -1950,7 +1950,7 @@ function buildCompactItem(order){
                 </div>
 
                 <div style="margin:8px 0;">
-                    <h3 style="color:#2c3e50;margin-bottom:6px;font-size:14px;">📦 Descrição das Embalagens</h3>
+                    <h3 style="color:#2c3e50;margin-bottom:6px;font-size:14px;">� Observação</h3>
                     <div style="background:#f8f9fa;padding:10px;border-radius:8px;border-left:4px solid #667eea;">
                         <pre style="white-space:pre-wrap;margin:0;font-size:13px;line-height:1.45;color:#333;">${order.descricaoEmbalagens}</pre>
                     </div>
