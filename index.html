@@ -349,27 +349,34 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="tipoPapel">Tipo de Papel</label>
-                                <select id="tipoPapel" required>
-                                    <option value="">Selecione...</option>
-                                    <option>Papel Kraft 66x96</option>
-                                    <option>Papel Kraft 77x113</option>
-                                    <option>papel duplex 66x96</option>
-                                    <option>papel duplex 77x113</option>
-                                    <option>papel triplex 66x96</option>
-                                    <option>papel triplex 77x113</option>
-                                </select>
+                                <input list="tipoPapelOptions" id="tipoPapel" placeholder="Digite ou selecione o tipo de papel" required>
+                                <datalist id="tipoPapelOptions">
+                                    <option value="Papel Kraft 66x96">
+                                    <option value="Papel Kraft 77x113">
+                                    <option value="papel duplex 66x96">
+                                    <option value="papel duplex 77x113">
+                                    <option value="papel triplex 66x96">
+                                    <option value="papel triplex 77x113">
+                                    <option value="Papel Couche 66x96">
+                                    <option value="Papel Couche 77x113">
+                                </datalist>
                             </div>
                             <div class="form-group">
                                 <label for="gramatura">Gramatura do Papel</label>
-                                <select id="gramatura" required>
-                                    <option value="">Selecione...</option>
-                                    <option>190g</option>
-                                    <option>220g</option>
-                                    <option>225g</option>
-                                    <option>240g</option>
-                                    <option>250g</option>
-                                    <option>300g</option>
-                                </select>
+                                <input list="gramaturaOptions" id="gramatura" placeholder="Digite ou selecione a gramatura" required>
+                                <datalist id="gramaturaOptions">
+                                    <option value="70g">
+                                    <option value="90g">
+                                    <option value="170g">
+                                    <option value="190g">
+                                    <option value="210g">
+                                    <option value="220g">
+                                    <option value="225g">
+                                    <option value="240g">
+                                    <option value="250g">
+                                    <option value="300g">
+                                    <option value="350g">
+                                </datalist>
                             </div>
                         </div>
 
@@ -569,27 +576,35 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="editTipoPapel">Tipo de Papel</label>
-                            <select id="editTipoPapel" required>
-                <option value="">Selecione...</option>
-                <option>Papel Kraft 66x96</option>
-                <option>Papel Kraft 77x113</option>
-                <option>papel duplex 66x96</option>
-                <option>papel duplex 77x113</option>
-                <option>papel triplex 66x96</option>
-                <option>papel triplex 77x113</option>
-            </select>
+                            <input list="editTipoPapelOptions" id="editTipoPapel" placeholder="Digite ou selecione o tipo de papel" required>
+                            <datalist id="editTipoPapelOptions">
+                                <option value="Papel Kraft 66x96">
+                                <option value="Papel Kraft 77x113">
+                                <option value="papel duplex 66x96">
+                                <option value="papel duplex 77x113">
+                                <option value="papel triplex 66x96">
+                                <option value="papel triplex 77x113">
+                                <option value="Papel Couche 66x96">
+                                <option value="Papel Couche 77x113">
+                            </datalist>
                         </div>
                         <div class="form-group">
                             <label for="editGramatura">Gramatura do Papel</label>
-                            <select id="editGramatura" required>
-                <option value="">Selecione...</option>
-                <option>190g</option>
-                <option>220g</option>
-                <option>225g</option>
-                <option>240g</option>
-                <option>250g</option>
-                <option>300g</option>
-            </select>
+                            <input list="editGramaturaOptions" id="editGramatura" placeholder="Digite ou selecione a gramatura" required>
+                            <datalist id="editGramaturaOptions">
+                                <option value="70g">
+                                <option value="90g">
+                                <option value="170g">
+                                <option value="190g">
+                                <option value="210g">
+                                <option value="220g">
+                                <option value="225g">
+                                <option value="240g">
+                                <option value="250g">
+                                    <option value="270g">
+                                <option value="300g">
+                                <option value="350g">
+                            </datalist>
                         </div>
                     </div>
 
