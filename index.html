@@ -183,17 +183,20 @@
             *{-webkit-print-color-adjust:exact !important;color-adjust:exact !important;print-color-adjust:exact !important}
             body{background:#fff !important}
             .container,.header,.stats-row,.main-content,.orders-list,.modal-content>div:last-child{display:none !important}
-            .modal{display:block !important;position:static !important;background:#fff !important;width:100% !important;height:auto !important}
-            .modal-content{margin:0 !important;padding:0 !important;width:100% !important;max-width:100% !important;max-height:none !important;background:#fff !important;box-shadow:none !important;border-radius:0 !important}
-            .print-preview{display:block !important;visibility:visible !important;padding:10px !important;margin:0 !important;background:#fff !important;box-shadow:none !important;border-radius:0 !important}
+            /* Esconder completamente o modal de gráfica durante impressão de OP */
+            #graficaModal,#graficaModal *{display:none !important;visibility:hidden !important}
+            /* Mostrar apenas o modal de impressão individual */
+            #printModal{display:block !important;position:static !important;background:#fff !important;width:100% !important;height:auto !important}
+            #printModal .modal-content{margin:0 !important;padding:0 !important;width:100% !important;max-width:100% !important;max-height:none !important;background:#fff !important;box-shadow:none !important;border-radius:0 !important}
+            #printModal .print-preview{display:block !important;visibility:visible !important;padding:10px !important;margin:0 !important;background:#fff !important;box-shadow:none !important;border-radius:0 !important}
             .print-header h1,.print-header h2,.print-header p{color:#000 !important;margin:4px 0 !important}
-            .print-preview,.print-preview *{break-inside:avoid-page !important;page-break-inside:avoid !important}
-            .print-preview{font-size:13px !important;line-height:1.35 !important}
-            .print-images img{max-height:220px !important}
-            .print-images{gap:10px !important;margin:10px 0 !important}
+            #printModal .print-preview,#printModal .print-preview *{break-inside:avoid-page !important;page-break-inside:avoid !important}
+            #printModal .print-preview{font-size:13px !important;line-height:1.35 !important}
+            #printModal .print-images img{max-height:220px !important}
+            #printModal .print-images{gap:10px !important;margin:10px 0 !important}
             .close{display:none !important}
-            .print-preview table{border-collapse:collapse !important;width:100% !important}
-            .print-preview td{border-bottom:1px solid #ddd !important;padding:6px 0 !important}
+            #printModal .print-preview table{border-collapse:collapse !important;width:100% !important}
+            #printModal .print-preview td{border-bottom:1px solid #ddd !important;padding:6px 0 !important}
         }
 
         @media (max-width:768px){
@@ -1745,6 +1748,7 @@ function buildCompactItem(order){
                     ${order.nomeTemplate?`<h3 style="color:#2c3e50;font-size:16px;margin:0 0 6px 0;">📦 ${order.nomeTemplate}</h3>`:''}
                     <p style="color:#666;margin:2px 0;">Data: ${order.dataCreated} ${order.timeCreated?'às '+order.timeCreated:''}</p>
                     <p style="color:#666;margin:2px 0;">Status: ${order.status} | Prioridade: ${order.prioridade||'Média'}</p>
+                    ${order.grafica?`<p style="color:#666;margin:2px 0;">Gráfica: 🏢 ${order.grafica}</p>`:''}
                     ${order.lastModified?`<p style="color:#e67e22;margin:2px 0;font-size:12px;">Última edição: ${order.lastModified}</p>`:''}
                 </div>
 
@@ -1761,6 +1765,7 @@ function buildCompactItem(order){
                             <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Gramatura:</td><td style="padding:6px 0;color:#333;">${order.gramatura}</td></tr>
                             ${order.resmasUsadas?`<tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Resmas utilizadas:</td><td style="padding:6px 0;color:#333;">${order.resmasUsadas}</td></tr>`:''}
                             <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Impressão:</td><td style="padding:6px 0;color:#333;">${order.impressao}</td></tr>
+                            ${order.grafica?`<tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Gráfica:</td><td style="padding:6px 0;color:#333;">🏢 ${order.grafica}</td></tr>`:''}
                             ${order.fornecedor?`<tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Fornecedor:</td><td style="padding:6px 0;color:#333;">${order.fornecedor}</td></tr>`:''}
                             ${order.enviadoFaca||order.enviadoChapa||order.enviadoImpressao?`
                                 <tr style="border-bottom:1px solid #ddd;">
