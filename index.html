@@ -974,6 +974,7 @@
             // Expor para uso global
             window.cloudStorage = CloudStorage;
             window.onAppReady = onAppReady;
+            window.initAuth = initAuth;
             
             // Expor Firebase globalmente (já foi feito acima, mas garantindo)
             if (db) window.db = db;
@@ -1677,7 +1678,7 @@
                 async function saveOrder() {
                     try {
                         // Garante autenticação e obtém UID
-                        const user = await initAuth();
+                        const user = await window.initAuth();
                         
                         // Usa a nova função para salvar ordem individual
                         if (window.db && user) {
@@ -1772,7 +1773,7 @@
                 async function finish(){
                     try {
                         // Garante autenticação
-                        const user = await initAuth();
+                        const user = await window.initAuth();
                         
                         // Usa a nova função para atualizar ordem individual
                         if (window.db && user) {
@@ -2102,7 +2103,7 @@
                 if(confirm('Tem certeza que deseja excluir esta ordem de produção?')){
                     try {
                         // Garante autenticação
-                        const user = await initAuth();
+                        const user = await window.initAuth();
                         
                         // Remove do Firestore se disponível
                         if (window.db && user) {
@@ -2235,7 +2236,7 @@
                             // Salva no Firestore usando coleção do usuário
                             if (window.db) {
                                 try {
-                                    const user = await initAuth();
+                                    const user = await window.initAuth();
                                     if (user) {
                                         // Remove todas as ordens existentes do usuário
                                         const userOrdersCollection = collection(window.db, "users", user.uid, "orders");
@@ -2264,7 +2265,7 @@
                             // Salva no Firestore usando coleção do usuário
                             if (window.db) {
                                 try {
-                                    const user = await initAuth();
+                                    const user = await window.initAuth();
                                     if (user) {
                                         const userOrdersCollection = collection(window.db, "users", user.uid, "orders");
                                         const existingSnapshot = await getDocs(userOrdersCollection);
@@ -2301,7 +2302,7 @@
                     // Limpa Firestore da coleção do usuário se disponível
                     if (window.db) {
                         try {
-                            const user = await initAuth();
+                            const user = await window.initAuth();
                             if (user) {
                                 const userOrdersCollection = collection(window.db, "users", user.uid, "orders");
                                 const ordersSnapshot = await getDocs(userOrdersCollection);
@@ -2343,7 +2344,7 @@
                     
                     // Notificação de status do Firebase
                     if (window.storageSvc && window.db) {
-                        const user = await initAuth();
+                        const user = await window.initAuth();
                         if (user) {
                             showNotification(`✅ Sistema carregado! Firebase ativo com Storage e coleção de usuário (${user.uid.substring(0,8)}...).`, 'success');
                         } else {
@@ -2379,7 +2380,7 @@
         // Função para forçar migração manual
         async function forceMigration() {
             try {
-                if (!db || !auth) {
+                if (!window.db || !window.firebaseAuth) {
                     showNotification('❌ Firebase não está disponível', 'error');
                     return;
                 }
@@ -2388,7 +2389,7 @@
                 console.log('🔄 Migração manual iniciada...');
 
                 // Garante autenticação primeiro
-                await initAuth();
+                await window.initAuth();
 
                 // Remove flag de migração para forçar nova migração
                 if (window.cloudStorage) {
