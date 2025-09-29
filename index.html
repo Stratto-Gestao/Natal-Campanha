@@ -157,9 +157,9 @@
         .compact-meta{font-size:12px;color:#6c757d;margin-top:4px;}
         .compact-expanded{margin-top:12px;border-top:1px dashed #e0e6ed;padding-top:12px;background:#f8f9ff;padding:15px;border-radius:8px;}
         
-        /* Tags de Gráfica */
-        .grafica-tag{background:#f0f8e8 !important;color:#27ae60 !important;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px;}
-        .grafica-tag-detailed{background:#f0f8e8 !important;color:#27ae60 !important;padding:3px 8px;border-radius:12px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px;}
+        /* Tags de Gráfica (Terceirização) */
+        .grafica-tag{background:#e8f4fd !important;color:#0984e3 !important;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-left:8px;box-shadow:0 2px 4px rgba(9,132,227,0.2);}
+        .grafica-tag-detailed{background:#e8f4fd !important;color:#0984e3 !important;padding:4px 10px;border-radius:15px;font-size:12px;font-weight:bold;display:inline-flex;align-items:center;gap:4px;margin-left:8px;box-shadow:0 2px 6px rgba(9,132,227,0.3);}
 
         .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,.5)}
         .modal-content{background:#fff;margin:5% auto;padding:20px;border-radius:15px;width:90%;max-width:600px;max-height:80vh;overflow-y:auto}
@@ -504,7 +504,7 @@
                         <option value="">Todas as Gráficas</option>
                         <!-- Opções serão preenchidas dinamicamente -->
                     </select>
-                    <input type="text" id="searchOrders" placeholder="Buscar..." onkeyup="filterOrders()">
+                    <input type="text" id="searchOrders" placeholder="Buscar por OP, produto, gráfica..." onkeyup="filterOrders()">
                 </div>
             </div>
             <div id="ordersList"></div>
@@ -1323,9 +1323,9 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
 
 
         function updateGraficaFilter() {
-            // Extrair todas as gráficas únicas das ordens existentes
+            // Extrair todas as gráficas únicas das ordens existentes (campo fornecedor = terceirização)
             const graficasUnicas = [...new Set(orders
-                .map(order => order.grafica)
+                .map(order => order.fornecedor)
                 .filter(grafica => grafica && grafica.trim() !== '')
             )].sort();
             
@@ -1383,7 +1383,6 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
             setValueSafely('gramatura', t.gramatura);
             setValueSafely('impressao', t.impressao || 'Frente 4x0');
             setValueSafely('prioridade', t.prioridade || 'Média');
-            setValueSafely('grafica', t.grafica);
             setValueSafely('nomeTemplate', t.nomeTemplate);
             setValueSafely('folhasResma', t.folhasResma);
             setValueSafely('acabamento', t.acabamento);
@@ -1424,7 +1423,6 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
                 gramatura:getTemplateValueSafely('gramatura'),
                 impressao:getTemplateValueSafely('impressao'),
                 prioridade:getTemplateValueSafely('prioridade'),
-                grafica:getTemplateValueSafely('grafica'),
                 folhasResma:getTemplateValueSafely('folhasResma'),
                 acabamento:getTemplateValueSafely('acabamento'),
                 descricaoEmbalagens:getTemplateValueSafely('descricaoEmbalagens'),
@@ -1512,7 +1510,6 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
                 gramatura:getValueSafely('gramatura'),
                 impressao:getValueSafely('impressao'),
                 prioridade:getValueSafely('prioridade'),
-                grafica:getValueSafely('grafica'),
                 nomeTemplate:getValueSafely('nomeTemplate'),
                 
                 formato:getValueSafely('formato'),
@@ -1573,7 +1570,6 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
             order.gramatura=getEditValueSafely('editGramatura');
             order.impressao=getEditValueSafely('editImpressao');
             order.prioridade=getEditValueSafely('editPrioridade');
-            order.grafica=getEditValueSafely('editGrafica');
             order.nomeTemplate=getEditValueSafely('editNomeTemplate');
             order.enviadoFaca=getEditValueSafely('editEnviadoFaca', false);
             order.enviadoChapa=getEditValueSafely('editEnviadoChapa', false);
@@ -1619,7 +1615,6 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
             setValueSafely('editGramatura', order.gramatura);
             setValueSafely('editImpressao', order.impressao);
             setValueSafely('editPrioridade', order.prioridade || 'Média');
-            setValueSafely('editGrafica', order.grafica);
             setValueSafely('editNomeTemplate', order.nomeTemplate);
             setValueSafely('editAcabamento', order.acabamento);
             setValueSafely('editDescricaoEmbalagens', order.descricaoEmbalagens);
@@ -1653,8 +1648,8 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
             let filtered=orders.filter(order=>{
                 const sOK=!st||order.status===st;
                 const pOK=!pr||order.prioridade===pr;
-                const gOK=!gr||order.grafica===gr;
-                const qOK=!q||order.id.toLowerCase().includes(q)||order.tipoPapel.toLowerCase().includes(q)||order.acabamento.toLowerCase().includes(q)||order.descricaoEmbalagens.toLowerCase().includes(q)||(order.nomeTemplate&&order.nomeTemplate.toLowerCase().includes(q))||(order.grafica&&order.grafica.toLowerCase().includes(q));
+                const gOK=!gr||order.fornecedor===gr;
+                const qOK=!q||order.id.toLowerCase().includes(q)||order.tipoPapel.toLowerCase().includes(q)||order.acabamento.toLowerCase().includes(q)||order.descricaoEmbalagens.toLowerCase().includes(q)||(order.nomeTemplate&&order.nomeTemplate.toLowerCase().includes(q))||(order.fornecedor&&order.fornecedor.toLowerCase().includes(q));
                 return sOK&&pOK&&gOK&&qOK;
             });
             displayOrdersList(filtered);
@@ -1686,7 +1681,7 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
                 <div class="order-header">
                     <input type="checkbox" class="select-order" data-order-id="${order.id}" onchange="toggleSelectOrder('${order.id}', this.checked)" ${isSelected(order.id)?'checked':''} style="margin-right:8px;"> <span class="order-id">${order.id}</span>
                     ${order.nomeTemplate?`<span style="background:#e8f4fd;color:#2c3e50;padding:3px 8px;border-radius:12px;font-size:12px;margin-left:10px;">📦 ${order.nomeTemplate}</span>`:''}
-                    ${order.grafica?`<span style="background:#ff6b6b;color:white;padding:4px 10px;border-radius:15px;font-size:11px;font-weight:bold;margin-left:8px;box-shadow:0 2px 4px rgba(255,107,107,0.3);">🏢 ${order.grafica}</span>`:''}
+                    ${order.fornecedor?`<span class="grafica-tag-detailed">🏢 ${order.fornecedor}</span>`:''}
                     <span class="priority ${pClass}">${order.prioridade||'Média'}</span>
                     <span style="margin-left:15px;color:#6c757d;">${order.dataCreated} ${order.timeCreated?'às '+order.timeCreated:''}</span>
                     ${order.lastModified?`<span style="margin-left:10px;color:#e67e22;font-size:12px;">(Editado: ${order.lastModified})</span>`:''}
@@ -1712,8 +1707,7 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
                     <div class="detail-item"><span class="detail-label">Papel:</span><span>${order.tipoPapel}</span></div>
                     <div class="detail-item"><span class="detail-label">Gramatura:</span><span>${order.gramatura}</span></div>
                     <div class="detail-item"><span class="detail-label">Impressão:</span><span>${order.impressao}</span></div>
-                    ${order.grafica?`<div class="detail-item"><span class="detail-label">Gráfica:</span><span>🏢 ${order.grafica}</span></div>`:''}
-                    ${order.fornecedor?`<div class="detail-item"><span class="detail-label">Fornecedor:</span><span>${order.fornecedor}</span></div>`:''}
+                    ${order.fornecedor?`<div class="detail-item"><span class="detail-label">Gráfica (Terceirização):</span><span>🏢 ${order.fornecedor}</span></div>`:''}
                 </div>
 
                 ${order.imagemFaca||order.imagemArte?`
@@ -1758,8 +1752,8 @@ function buildCompactItem(order){
             const statusIcon = order.status === 'Finalizado' ? '✅' : '🔄';
             const statusBadgeText = order.status === 'Finalizado' ? '✅ Finalizado' : '🔄 Em Andamento';
             
-            // Tag da gráfica
-            const graficaTag = order.grafica ? `<span style="background:#ff6b6b;color:white;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:bold;margin-left:8px;box-shadow:0 2px 4px rgba(255,107,107,0.3);">🏢 ${order.grafica}</span>` : '';
+            // Tag da gráfica (usando campo fornecedor = terceirização)
+            const graficaTag = order.fornecedor ? `<span class="grafica-tag">🏢 ${order.fornecedor}</span>` : '';
             
             // Status da Produção (pré-produção) - chips compactos
             const statusProducao = [
@@ -1907,7 +1901,7 @@ function buildCompactItem(order){
                     ${order.nomeTemplate?`<h3 style="color:#2c3e50;font-size:16px;margin:0 0 6px 0;">📦 ${order.nomeTemplate}</h3>`:''}
                     <p style="color:#666;margin:2px 0;">Data: ${order.dataCreated} ${order.timeCreated?'às '+order.timeCreated:''}</p>
                     <p style="color:#666;margin:2px 0;">Status: ${order.status} | Prioridade: ${order.prioridade||'Média'}</p>
-                    ${order.grafica?`<p style="color:#666;margin:2px 0;">Gráfica: 🏢 ${order.grafica}</p>`:''}
+                    ${order.fornecedor?`<p style="color:#666;margin:2px 0;">Gráfica: 🏢 ${order.fornecedor}</p>`:''}
                     ${order.lastModified?`<p style="color:#e67e22;margin:2px 0;font-size:12px;">Última edição: ${order.lastModified}</p>`:''}
                 </div>
 
@@ -1924,8 +1918,7 @@ function buildCompactItem(order){
                             <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Gramatura:</td><td style="padding:6px 0;color:#333;">${order.gramatura}</td></tr>
                             ${order.resmasUsadas?`<tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Resmas utilizadas:</td><td style="padding:6px 0;color:#333;">${order.resmasUsadas}</td></tr>`:''}
                             <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Impressão:</td><td style="padding:6px 0;color:#333;">${order.impressao}</td></tr>
-                            ${order.grafica?`<tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Gráfica:</td><td style="padding:6px 0;color:#333;">🏢 ${order.grafica}</td></tr>`:''}
-                            ${order.fornecedor?`<tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Fornecedor:</td><td style="padding:6px 0;color:#333;">${order.fornecedor}</td></tr>`:''}
+                            ${order.fornecedor?`<tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Gráfica (Terceirização):</td><td style="padding:6px 0;color:#333;">🏢 ${order.fornecedor}</td></tr>`:''}
                             ${order.enviadoFaca||order.enviadoChapa||order.enviadoImpressao?`
                                 <tr style="border-bottom:1px solid #ddd;">
                                     <td style="padding:6px 0;font-weight:bold;color:#333;">Pré-produção:</td>
