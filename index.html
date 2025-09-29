@@ -782,7 +782,7 @@
 
         // Wrapper de armazenamento (key-value)
         const CloudStorage = (() => {
-            let uid = null;
+            let uid = 'anonymous-user'; // Usar UID fixo sem autenticação
             const mem = new Map();
             const listeners = new Map();
 
@@ -793,22 +793,23 @@
                     uid = user.uid;
                     return uid;
                 } catch (error) {
-                    console.warn('Auth failed, using offline mode:', error);
-                    throw new Error('Firebase authentication failed');
+                    console.warn('Auth failed, using anonymous mode:', error);
+                    uid = 'anonymous-user'; // Fallback para modo anônimo
+                    return uid;
                 }
             }
 
             function keyDoc(key) {
-                if (!db || !uid) {
-                    throw new Error('Firebase not properly initialized');
+                if (!db) {
+                    throw new Error('Firestore not initialized');
                 }
-                return doc(db, "users", uid, "kv", key);
+                return doc(db, "public-data", uid, "kv", key);
             }
 
             async function get(key) {
-                await ensureAuth();
-                if (mem.has(key)) return mem.get(key);
                 try {
+                    await ensureAuth();
+                    if (mem.has(key)) return mem.get(key);
                     const snap = await getDoc(keyDoc(key));
                     if (!snap.exists()) return null;
                     const val = snap.data().value;
@@ -821,8 +822,8 @@
             }
 
             async function set(key, value) {
-                await ensureAuth();
                 try {
+                    await ensureAuth();
                     await setDoc(keyDoc(key), { value, updatedAt: Date.now() });
                     mem.set(key, value);
                     return true;
@@ -833,8 +834,8 @@
             }
 
             async function remove(key) {
-                await ensureAuth();
                 try {
+                    await ensureAuth();
                     await deleteDoc(keyDoc(key));
                     mem.delete(key);
                 } catch (e) {
@@ -843,23 +844,28 @@
             }
 
             function onChange(key, cb) {
-                if (!db || !uid) {
-                    console.warn('Firebase not ready for onChange listener');
-                    return () => {}; // retorna função vazia para cleanup
-                }
-                if (listeners.has(key)) return listeners.get(key);
-                const unsub = onSnapshot(keyDoc(key), snap => {
-                    if (snap.exists()) {
-                        const val = snap.data().value;
-                        mem.set(key, val);
-                        cb(val);
-                    } else {
-                        mem.delete(key);
-                        cb(null);
+                try {
+                    if (!db) {
+                        console.warn('Firebase not ready for onChange listener');
+                        return () => {}; // retorna função vazia para cleanup
                     }
-                });
-                listeners.set(key, unsub);
-                return unsub;
+                    if (listeners.has(key)) return listeners.get(key);
+                    const unsub = onSnapshot(keyDoc(key), snap => {
+                        if (snap.exists()) {
+                            const val = snap.data().value;
+                            mem.set(key, val);
+                            cb(val);
+                        } else {
+                            mem.delete(key);
+                            cb(null);
+                        }
+                    });
+                    listeners.set(key, unsub);
+                    return unsub;
+                } catch (e) {
+                    console.warn('onChange setup failed:', e);
+                    return () => {};
+                }
             }
 
             return { get, set, remove, onChange };
@@ -869,6 +875,11 @@
         async function migrateLocalStorage() {
             try {
                 console.log("🔄 Iniciando verificação de migração...");
+                
+                if (!db) {
+                    console.warn("Firestore não disponível, pulando migração");
+                    return;
+                }
                 
                 // Força uma nova migração sempre que necessário
                 const keys = Object.keys(localStorage);
@@ -887,19 +898,22 @@
                         
                         // Sempre migra dados importantes mesmo se já migrado antes
                         const isImportantKey = ['productionOrders', 'productTemplates', 'orderIdCounter'].includes(k);
-                        const existsRemote = await CloudStorage.get(k);
                         
-                        if (existsRemote == null || isImportantKey) {
-                            await CloudStorage.set(k, parsed);
-                            migrationCount++;
-                            console.log(`[Migração] Key migrada: ${k}`);
+                        if (isImportantKey) {
+                            const success = await CloudStorage.set(k, parsed);
+                            if (success) {
+                                migrationCount++;
+                                console.log(`[Migração] Key migrada: ${k}`);
+                            }
                         }
                     } catch (e) {
                         console.warn("[Migração] Falhou key:", k, e);
                     }
                 }
                 
-                await CloudStorage.set("__migrated__", true);
+                if (migrationCount > 0) {
+                    await CloudStorage.set("__migrated__", true);
+                }
                 console.log(`[Migração] Concluída. ${migrationCount} keys migradas.`);
             } catch (e) {
                 console.error("[Migração] Erro:", e);
@@ -923,20 +937,21 @@
         // Função bootstrap
         async function bootstrapApplication() {
             try {
-                if (auth && db) {
-                    console.log("🔥 Inicializando autenticação Firebase...");
-                    await initAuth();
-                    console.log("🔥 Executando migração do localStorage...");
-                    await migrateLocalStorage();
-                    console.log("🔥 Firebase completamente integrado!");
+                if (db) {
+                    console.log("🔥 Firebase Firestore disponível, tentando migração...");
+                    try {
+                        await migrateLocalStorage();
+                        console.log("🔥 Firebase integrado com sucesso!");
+                    } catch (e) {
+                        console.warn("⚠️ Migração falhou, mas Firestore disponível:", e);
+                    }
                 } else {
-                    console.warn("⚠️ Firebase não inicializado corretamente");
+                    console.warn("⚠️ Firebase Firestore não inicializado");
                 }
                 fireReady();
-                console.log("[App] Firebase integrado e pronto.");
+                console.log("[App] Sistema pronto.");
             } catch (e) {
-                console.warn("[Bootstrap] Firebase falhou, continuando em modo offline:", e);
-                // Fallback para localStorage se Firebase falhar
+                console.warn("[Bootstrap] Erro, continuando em modo offline:", e);
                 fireReady();
             }
         }
@@ -1051,7 +1066,7 @@ const storage = (function(){
         enableFirebase: () => { useFirebase = true; },
         disableFirebase: () => { useFirebase = false; },
         get useFirebase() { return useFirebase; },
-        get isFirebaseReady() { return !!(window.cloudStorage && useFirebase); }
+        get isFirebaseReady() { return !!(window.cloudStorage && useFirebase && window.db); }
     };
 })();
 
@@ -2097,8 +2112,8 @@ function buildCompactItem(order){
         // Função para forçar migração manual
         async function forceMigration() {
             try {
-                if (!storage.isFirebaseReady) {
-                    showNotification('❌ Firebase não está pronto', 'error');
+                if (!window.db) {
+                    showNotification('❌ Firestore não está disponível', 'error');
                     return;
                 }
 
@@ -2140,17 +2155,19 @@ function buildCompactItem(order){
                     useFirebase: storage.useFirebase,
                     isFirebaseReady: storage.isFirebaseReady,
                     hasCloudStorage: !!window.cloudStorage,
-                    hasAuth: !!window.auth,
                     hasDb: !!window.db
                 });
                 
-                if (!storage.isFirebaseReady) {
-                    throw new Error('Firebase não está pronto');
+                if (!window.db) {
+                    throw new Error('Firestore não está inicializado');
                 }
                 
                 // Teste de escrita
                 console.log('🔥 Testando escrita...');
-                await window.cloudStorage.set(testKey, testValue);
+                const writeSuccess = await window.cloudStorage.set(testKey, testValue);
+                if (!writeSuccess) {
+                    throw new Error('Falha na escrita');
+                }
                 console.log('✅ Escrita realizada com sucesso');
                 
                 // Teste de leitura
@@ -2265,6 +2282,8 @@ window.addEventListener('error', function(e){ try{ if(typeof showNotification===
 
 <!--
 CONFIGURAÇÃO FIRESTORE RULES:
+
+OPÇÃO 1 - COM AUTENTICAÇÃO ANÔNIMA (RECOMENDADO):
 Copie e cole no Console Firebase > Firestore Database > Rules:
 
 rules_version = '2';
@@ -2272,6 +2291,39 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId}/kv/{docId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+
+E ATIVE: Authentication > Sign-in method > Anonymous
+
+OPÇÃO 2 - SEM AUTENTICAÇÃO (MODO PÚBLICO):
+Copie e cole no Console Firebase > Firestore Database > Rules:
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /public-data/{userId}/kv/{docId} {
+      allow read, write: if true;
+    }
+  }
+}
+
+PASSOS PARA CONFIGURAR:
+1. Vá ao Firebase Console (https://console.firebase.google.com)
+2. Selecione seu projeto "sistema-de-ordem-de-producao"
+3. Vá em Firestore Database > Rules
+4. Cole uma das regras acima
+5. Clique em "Publicar"
+6. Se escolher Opção 1: Vá em Authentication > Sign-in method > Ativar "Anonymous"
+
+ESTRUTURA DOS DADOS NO FIRESTORE:
+OPÇÃO 1: users/{uid}/kv/productionOrders = array de ordens
+OPÇÃO 2: public-data/anonymous-user/kv/productionOrders = array de ordens
+
+NOTA: O sistema agora funciona mesmo sem autenticação configurada,
+usando localStorage como fallback automático.
+-->
     }
   }
 }
