@@ -156,6 +156,10 @@
         .compact-title{display:flex;gap:8px;align-items:center;font-weight:600;color:#2c3e50;}
         .compact-meta{font-size:12px;color:#6c757d;margin-top:4px;}
         .compact-expanded{margin-top:12px;border-top:1px dashed #e0e6ed;padding-top:12px;background:#f8f9ff;padding:15px;border-radius:8px;}
+        
+        /* Tags de Gráfica */
+        .grafica-tag{background:#f0f8e8 !important;color:#27ae60 !important;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px;}
+        .grafica-tag-detailed{background:#f0f8e8 !important;color:#27ae60 !important;padding:3px 8px;border-radius:12px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px;}
 
         .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,.5)}
         .modal-content{background:#fff;margin:5% auto;padding:20px;border-radius:15px;width:90%;max-width:600px;max-height:80vh;overflow-y:auto}
@@ -374,6 +378,7 @@
                                     <option value="225g">
                                     <option value="240g">
                                     <option value="250g">
+                                    <option value="270g">
                                     <option value="300g">
                                     <option value="350g">
                                 </datalist>
@@ -491,6 +496,14 @@
                         <option value="Alta">Alta</option>
                         <option value="Média">Média</option>
                         <option value="Baixa">Baixa</option>
+                    </select>
+                    <select id="filterGrafica" onchange="filterOrders()">
+                        <option value="">Todas as Gráficas</option>
+                        <option value="Gráfica São José">Gráfica São José</option>
+                        <option value="Gráfica Central">Gráfica Central</option>
+                        <option value="Gráfica Norte">Gráfica Norte</option>
+                        <option value="Gráfica Sul">Gráfica Sul</option>
+                        <option value="Gráfica Express">Gráfica Express</option>
                     </select>
                     <input type="text" id="searchOrders" placeholder="Buscar..." onkeyup="filterOrders()">
                 </div>
@@ -1301,6 +1314,7 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
             document.getElementById('gramatura').value=t.gramatura||'';
             document.getElementById('impressao').value=t.impressao||'Frente 4x0';
             document.getElementById('prioridade').value=t.prioridade||'Média';
+            document.getElementById('grafica').value=t.grafica||'';
             document.getElementById('nomeTemplate').value=t.nomeTemplate||'';
             document.getElementById('folhasResma').value=t.folhasResma||'';
             document.getElementById('acabamento').value=t.acabamento||'';
@@ -1317,7 +1331,7 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
         async function saveAsTemplate(){
             const nome=document.getElementById('nomeTemplate').value.trim();
             if(!nome){showNotification('Digite o nome do produto antes de salvar como modelo.','error');return;}
-            const t={nomeTemplate:nome,medidasFolha:document.getElementById('medidasFolha').value,fornecedor:document.getElementById('fornecedor').value,tipoPapel:document.getElementById('tipoPapel').value,gramatura:document.getElementById('gramatura').value,impressao:document.getElementById('impressao').value,prioridade:document.getElementById('prioridade').value,folhasResma:document.getElementById('folhasResma').value,acabamento:document.getElementById('acabamento').value,descricaoEmbalagens:document.getElementById('descricaoEmbalagens').value,formato:document.getElementById('formato').value,codigoFaca:document.getElementById('codigoFaca').value,resmasUsadas:document.getElementById('resmasUsadas').value,imagemFaca:document.getElementById('previewFaca').src||null,imagemArte:document.getElementById('previewArte').src||null,dataCriacao:new Date().toLocaleDateString('pt-BR'),vezesCriado:1};
+            const t={nomeTemplate:nome,medidasFolha:document.getElementById('medidasFolha').value,fornecedor:document.getElementById('fornecedor').value,tipoPapel:document.getElementById('tipoPapel').value,gramatura:document.getElementById('gramatura').value,impressao:document.getElementById('impressao').value,prioridade:document.getElementById('prioridade').value,grafica:document.getElementById('grafica').value,folhasResma:document.getElementById('folhasResma').value,acabamento:document.getElementById('acabamento').value,descricaoEmbalagens:document.getElementById('descricaoEmbalagens').value,formato:document.getElementById('formato').value,codigoFaca:document.getElementById('codigoFaca').value,resmasUsadas:document.getElementById('resmasUsadas').value,imagemFaca:document.getElementById('previewFaca').src||null,imagemArte:document.getElementById('previewArte').src||null,dataCriacao:new Date().toLocaleDateString('pt-BR'),vezesCriado:1};
             const idx=productTemplates.findIndex(x=>x.nomeTemplate===nome);
             if(idx!==-1){if(confirm(`Já existe um modelo com o nome "${nome}". Deseja atualizar?`)){productTemplates[idx]={...t,vezesCriado:productTemplates[idx].vezesCriado+1};showNotification(`Modelo "${nome}" atualizado!`,'success');}}
             else{productTemplates.push(t);showNotification(`Modelo "${nome}" salvo no histórico!`,'success');}
@@ -1384,6 +1398,7 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
                 gramatura:document.getElementById('gramatura').value,
                 impressao:document.getElementById('impressao').value,
                 prioridade:document.getElementById('prioridade').value,
+                grafica:document.getElementById('grafica').value,
                 nomeTemplate:document.getElementById('nomeTemplate').value,
                 
                 formato:document.getElementById('formato').value,
@@ -1426,6 +1441,7 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
             order.gramatura=document.getElementById('editGramatura').value;
             order.impressao=document.getElementById('editImpressao').value;
             order.prioridade=document.getElementById('editPrioridade').value;
+            order.grafica=document.getElementById('editGrafica').value;
             order.nomeTemplate=document.getElementById('editNomeTemplate').value;
             order.enviadoFaca=document.getElementById('editEnviadoFaca').checked;
             order.enviadoChapa=document.getElementById('editEnviadoChapa').checked;
@@ -1457,6 +1473,7 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
             document.getElementById('editGramatura').value=order.gramatura;
             document.getElementById('editImpressao').value=order.impressao;
             document.getElementById('editPrioridade').value=order.prioridade||'Média';
+            document.getElementById('editGrafica').value=order.grafica||'';
             document.getElementById('editNomeTemplate').value=order.nomeTemplate||'';
             document.getElementById('editAcabamento').value=order.acabamento;
             document.getElementById('editDescricaoEmbalagens').value=order.descricaoEmbalagens;
@@ -1485,12 +1502,14 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
         function filterOrders(){
             const st=document.getElementById('filterStatus').value;
             const pr=document.getElementById('filterPriority').value;
+            const gr=document.getElementById('filterGrafica').value;
             const q=document.getElementById('searchOrders').value.toLowerCase();
             let filtered=orders.filter(order=>{
                 const sOK=!st||order.status===st;
                 const pOK=!pr||order.prioridade===pr;
-                const qOK=!q||order.id.toLowerCase().includes(q)||order.tipoPapel.toLowerCase().includes(q)||order.acabamento.toLowerCase().includes(q)||order.descricaoEmbalagens.toLowerCase().includes(q)||(order.nomeTemplate&&order.nomeTemplate.toLowerCase().includes(q));
-                return sOK&&pOK&&qOK;
+                const gOK=!gr||order.grafica===gr;
+                const qOK=!q||order.id.toLowerCase().includes(q)||order.tipoPapel.toLowerCase().includes(q)||order.acabamento.toLowerCase().includes(q)||order.descricaoEmbalagens.toLowerCase().includes(q)||(order.nomeTemplate&&order.nomeTemplate.toLowerCase().includes(q))||(order.grafica&&order.grafica.toLowerCase().includes(q));
+                return sOK&&pOK&&gOK&&qOK;
             });
             displayOrdersList(filtered);
         }
@@ -1521,6 +1540,7 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
                 <div class="order-header">
                     <input type="checkbox" class="select-order" data-order-id="${order.id}" onchange="toggleSelectOrder('${order.id}', this.checked)" ${isSelected(order.id)?'checked':''} style="margin-right:8px;"> <span class="order-id">${order.id}</span>
                     ${order.nomeTemplate?`<span style="background:#e8f4fd;color:#2c3e50;padding:3px 8px;border-radius:12px;font-size:12px;margin-left:10px;">📦 ${order.nomeTemplate}</span>`:''}
+                    ${order.grafica?`<span style="background:#f0f8e8;color:#27ae60;padding:3px 8px;border-radius:12px;font-size:12px;margin-left:10px;">🏢 ${order.grafica}</span>`:''}
                     <span class="priority ${pClass}">${order.prioridade||'Média'}</span>
                     <span style="margin-left:15px;color:#6c757d;">${order.dataCreated} ${order.timeCreated?'às '+order.timeCreated:''}</span>
                     ${order.lastModified?`<span style="margin-left:10px;color:#e67e22;font-size:12px;">(Editado: ${order.lastModified})</span>`:''}
@@ -1546,6 +1566,7 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
                     <div class="detail-item"><span class="detail-label">Papel:</span><span>${order.tipoPapel}</span></div>
                     <div class="detail-item"><span class="detail-label">Gramatura:</span><span>${order.gramatura}</span></div>
                     <div class="detail-item"><span class="detail-label">Impressão:</span><span>${order.impressao}</span></div>
+                    ${order.grafica?`<div class="detail-item"><span class="detail-label">Gráfica:</span><span>🏢 ${order.grafica}</span></div>`:''}
                     ${order.fornecedor?`<div class="detail-item"><span class="detail-label">Fornecedor:</span><span>${order.fornecedor}</span></div>`:''}
                 </div>
 
@@ -1577,8 +1598,8 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
 
         
 function buildCompactItem(order){
-            // Linha resumida exata conforme solicitado: OP-0001 📦 Caixa para 4 Doces Média 27/09/2025 às 03:43:59
-            const resumeLine = `${order.id} ${order.nomeTemplate ? `📦 ${order.nomeTemplate}` : ''} ${order.prioridade || 'Média'} ${order.dataCreated}${order.timeCreated ? ` às ${order.timeCreated}` : ''}`;
+            // Linha resumida sem prioridade conforme solicitado: OP-0001 📦 Caixa para 4 Doces 27/09/2025 às 03:43:59
+            const resumeLine = `${order.id} ${order.nomeTemplate ? `📦 ${order.nomeTemplate}` : ''} ${order.dataCreated}${order.timeCreated ? ` às ${order.timeCreated}` : ''}`;
             const detailHtml = buildDetailedCard(order);
             const safeId = `exp_${order.id.replace(/[^a-zA-Z0-9_-]/g,'')}`;
             
@@ -1591,6 +1612,9 @@ function buildCompactItem(order){
             const statusIcon = order.status === 'Finalizado' ? '✅' : '🔄';
             const statusBadgeText = order.status === 'Finalizado' ? '✅ Finalizado' : '🔄 Em Andamento';
             
+            // Tag da gráfica
+            const graficaTag = order.grafica ? `<span style="background:#e8f4fd;color:#2c3e50;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:8px;">🏢 ${order.grafica}</span>` : '';
+            
             return `
             <div class="compact-item ${statusClass}" onclick="toggleExpand('${safeId}')" style="cursor:pointer;transition:all 0.3s ease;">
                 <div class="status-badge ${badgeClass}">${statusBadgeText}</div>
@@ -1599,7 +1623,7 @@ function buildCompactItem(order){
                     <div class="compact-title" style="flex:1;font-weight:600;color:#2c3e50;">${resumeLine}</div>
                     <div data-hint style="margin-left:10px;color:#6c757d;font-size:12px;">👆 Clique para expandir</div>
                 </div>
-                <div class="compact-meta" style="font-size:12px;margin-top:4px;margin-left:24px;">Status: <span class="status-text ${statusTextClass}">${statusIcon} ${order.status}</span></div>
+                <div class="compact-meta" style="font-size:12px;margin-top:4px;margin-left:24px;">Status: <span class="status-text ${statusTextClass}">${statusIcon} ${order.status}</span>${graficaTag}</div>
                 
                 <div id="${safeId}" class="compact-expanded" style="display:none;margin-top:15px;border-top:1px dashed #e0e6ed;padding-top:15px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
