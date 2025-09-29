@@ -275,6 +275,8 @@
                 <button class="btn btn-warning" onclick="importData()">📅 Importar Dados</button>
                 <button class="btn btn-danger" onclick="clearAllData()">🗑️ Limpar Tudo</button>
                 <button class="btn btn-secondary" onclick="manageTemplates()">🗊 Gerenciar Modelos</button>
+                <button class="btn btn-primary" onclick="testFirebaseConnection()">🔥 Testar Firebase</button>
+                <button class="btn btn-success" onclick="forceMigration()">🔄 Migrar para Firebase</button>
             </div>
             <input type="file" id="importFile" accept=".json" style="display:none;" onchange="handleImport(event)">
         </div>
@@ -866,33 +868,39 @@
         // Migração automática do localStorage (1ª vez)
         async function migrateLocalStorage() {
             try {
-                await CloudStorage.get("__migrated__");
-                const already = await CloudStorage.get("__migrated__");
-                if (already) {
-                    console.log("[Migração] Já executada anteriormente.");
-                    return;
-                }
+                console.log("🔄 Iniciando verificação de migração...");
                 
+                // Força uma nova migração sempre que necessário
                 const keys = Object.keys(localStorage);
+                let migrationCount = 0;
+                
                 for (const k of keys) {
                     if (k === "__migrated__") continue;
                     try {
                         const raw = localStorage.getItem(k);
+                        if (!raw) continue;
+                        
                         let parsed = raw;
                         if (raw && (raw.startsWith("{") || raw.startsWith("["))) {
                             try { parsed = JSON.parse(raw); } catch {}
                         }
+                        
+                        // Sempre migra dados importantes mesmo se já migrado antes
+                        const isImportantKey = ['productionOrders', 'productTemplates', 'orderIdCounter'].includes(k);
                         const existsRemote = await CloudStorage.get(k);
-                        if (existsRemote == null) {
+                        
+                        if (existsRemote == null || isImportantKey) {
                             await CloudStorage.set(k, parsed);
-                            console.log("[Migração] Key migrada:", k);
+                            migrationCount++;
+                            console.log(`[Migração] Key migrada: ${k}`);
                         }
                     } catch (e) {
                         console.warn("[Migração] Falhou key:", k, e);
                     }
                 }
+                
                 await CloudStorage.set("__migrated__", true);
-                console.log("[Migração] Concluída.");
+                console.log(`[Migração] Concluída. ${migrationCount} keys migradas.`);
             } catch (e) {
                 console.error("[Migração] Erro:", e);
             }
@@ -916,8 +924,13 @@
         async function bootstrapApplication() {
             try {
                 if (auth && db) {
+                    console.log("🔥 Inicializando autenticação Firebase...");
                     await initAuth();
+                    console.log("🔥 Executando migração do localStorage...");
                     await migrateLocalStorage();
+                    console.log("🔥 Firebase completamente integrado!");
+                } else {
+                    console.warn("⚠️ Firebase não inicializado corretamente");
                 }
                 fireReady();
                 console.log("[App] Firebase integrado e pronto.");
@@ -936,7 +949,7 @@
         
 // Storage híbrido com fallback para iOS/Android + Firebase
 const storage = (function(){
-    let useFirebase = false;
+    let useFirebase = true; // Habilitar Firebase por padrão
     
     // Testa localStorage tradicional
     const localStorageWorks = (function(){
@@ -960,25 +973,34 @@ const storage = (function(){
 
     return {
         getItem: async (key) => {
+            // Primeiro tenta Firebase se disponível
             if (useFirebase && window.cloudStorage) {
                 try {
                     const value = await window.cloudStorage.get(key);
                     if (value !== null) {
+                        console.log(`✅ Firebase get successful for key: ${key}`);
                         return typeof value === 'string' ? value : JSON.stringify(value);
                     }
+                    console.log(`📭 Firebase get returned null for key: ${key}`);
                     return null;
                 } catch (e) {
-                    console.warn("Firebase get failed, using localStorage:", e);
+                    console.warn(`❌ Firebase get failed for key ${key}, using localStorage:`, e);
                 }
             }
             
+            // Fallback para localStorage
             if (localStorageWorks) {
-                return localStorage.getItem(key);
+                const value = localStorage.getItem(key);
+                console.log(`📱 LocalStorage get for key: ${key}, found: ${value !== null}`);
+                return value;
             }
-            return fallbackStorage.getItem(key);
+            const value = fallbackStorage.getItem(key);
+            console.log(`💾 Memory storage get for key: ${key}, found: ${value !== null}`);
+            return value;
         },
         
         setItem: async (key, value) => {
+            // Primeiro tenta Firebase se disponível
             if (useFirebase && window.cloudStorage) {
                 try {
                     let parsed = value;
@@ -986,20 +1008,24 @@ const storage = (function(){
                         try { parsed = JSON.parse(value); } catch { /* keep as string */ }
                     }
                     await window.cloudStorage.set(key, parsed);
+                    console.log(`✅ Firebase save successful for key: ${key}`);
                     return;
                 } catch (e) {
-                    console.warn("Firebase set failed, using localStorage:", e);
+                    console.warn(`❌ Firebase set failed for key ${key}, using localStorage:`, e);
                 }
             }
             
+            // Fallback para localStorage
             if (localStorageWorks) {
                 try {
                     localStorage.setItem(key, value);
+                    console.log(`📱 LocalStorage save successful for key: ${key}`);
                 } catch (e) {
                     console.warn("localStorage.setItem failed:", e);
                 }
             } else {
                 fallbackStorage.setItem(key, value);
+                console.log(`💾 Memory storage save for key: ${key}`);
             }
         },
         
@@ -1007,6 +1033,7 @@ const storage = (function(){
             if (useFirebase && window.cloudStorage) {
                 try {
                     await window.cloudStorage.remove(key);
+                    console.log(`✅ Firebase remove successful for key: ${key}`);
                     return;
                 } catch (e) {
                     console.warn("Firebase remove failed, using localStorage:", e);
@@ -1020,21 +1047,35 @@ const storage = (function(){
             }
         },
         
-        enableFirebase: () => { useFirebase = true; }
+        // Funções de debug e controle
+        enableFirebase: () => { useFirebase = true; },
+        disableFirebase: () => { useFirebase = false; },
+        get useFirebase() { return useFirebase; },
+        get isFirebaseReady() { return !!(window.cloudStorage && useFirebase); }
     };
 })();
 
 async function getJSON(key, fallback){
     try {
+        console.log(`🔍 getJSON called for key: ${key}`, {
+            useFirebase: storage.useFirebase, 
+            isFirebaseReady: storage.isFirebaseReady
+        });
         const v = await storage.getItem(key);
         return v ? JSON.parse(v) : fallback;
     } catch(e){
+        console.warn(`getJSON error for key ${key}:`, e);
         return fallback;
     }
 }
 
 async function setJSON(key, value){
     try { 
+        console.log(`🔄 setJSON called for key: ${key}`, {
+            useFirebase: storage.useFirebase, 
+            isFirebaseReady: storage.isFirebaseReady,
+            hasCloudStorage: !!window.cloudStorage
+        });
         await storage.setItem(key, JSON.stringify(value)); 
     } catch(e){
         console.error("setJSON error:", e);
@@ -2028,9 +2069,6 @@ function buildCompactItem(order){
                 updateGraficaFilter(); // Atualizar filtro de gráficas
                 await migrateAndCompactOrdersIfNeeded();
                 
-                // Habilita Firebase após carregamento inicial
-                storage.enableFirebase();
-                
                 showNotification('Sistema carregado com sucesso!', 'success');
             } catch (e) {
                 console.error('Erro na inicialização:', e);
@@ -2054,6 +2092,90 @@ function buildCompactItem(order){
             if(e.target===pm)closePrintModal();
             if(e.target===em)closeEditModal();
             if(e.target===tm)closeTemplatesModal();
+        }
+
+        // Função para forçar migração manual
+        async function forceMigration() {
+            try {
+                if (!storage.isFirebaseReady) {
+                    showNotification('❌ Firebase não está pronto', 'error');
+                    return;
+                }
+
+                showNotification('🔄 Iniciando migração para Firebase...', 'info');
+                console.log('🔄 Migração manual iniciada...');
+
+                // Remove flag de migração para forçar nova migração
+                if (window.cloudStorage) {
+                    await window.cloudStorage.remove('__migrated__');
+                }
+
+                // Execute a migração
+                await migrateLocalStorage();
+
+                // Recarrega os dados para garantir que estão sincronizados
+                await loadInitialData();
+                displayOrders();
+                updateStats();
+
+                showNotification('✅ Migração para Firebase concluída!', 'success');
+                console.log('✅ Migração manual concluída');
+
+            } catch (error) {
+                console.error('❌ Erro na migração:', error);
+                showNotification(`❌ Erro na migração: ${error.message}`, 'error');
+            }
+        }
+
+        // Função para testar conexão Firebase
+        async function testFirebaseConnection() {
+            const testKey = '__firebase_test__';
+            const testValue = { test: true, timestamp: Date.now() };
+            
+            try {
+                console.log('🔥 Iniciando teste de conectividade Firebase...');
+                
+                // Verificações iniciais
+                console.log('Status do storage:', {
+                    useFirebase: storage.useFirebase,
+                    isFirebaseReady: storage.isFirebaseReady,
+                    hasCloudStorage: !!window.cloudStorage,
+                    hasAuth: !!window.auth,
+                    hasDb: !!window.db
+                });
+                
+                if (!storage.isFirebaseReady) {
+                    throw new Error('Firebase não está pronto');
+                }
+                
+                // Teste de escrita
+                console.log('🔥 Testando escrita...');
+                await window.cloudStorage.set(testKey, testValue);
+                console.log('✅ Escrita realizada com sucesso');
+                
+                // Teste de leitura
+                console.log('🔥 Testando leitura...');
+                const retrieved = await window.cloudStorage.get(testKey);
+                console.log('✅ Leitura realizada:', retrieved);
+                
+                // Teste de remoção
+                console.log('🔥 Testando remoção...');
+                await window.cloudStorage.remove(testKey);
+                console.log('✅ Remoção realizada com sucesso');
+                
+                // Verifica se foi removido
+                const shouldBeNull = await window.cloudStorage.get(testKey);
+                if (shouldBeNull === null) {
+                    console.log('✅ Confirmado: dados removidos');
+                    showNotification('🔥 Firebase funcionando perfeitamente!', 'success');
+                } else {
+                    throw new Error('Falha na remoção dos dados');
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro no teste Firebase:', error);
+                showNotification(`❌ Erro Firebase: ${error.message}`, 'error');
+            }
         }
 
         // Auto-salvar assíncrono
