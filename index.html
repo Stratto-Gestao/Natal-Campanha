@@ -789,7 +789,7 @@
 
             // Wrapper de armazenamento (key-value)
             const CloudStorage = (() => {
-                let uid = 'anonymous-user'; // Usar UID fixo sem autenticação
+                let uid = null; // Usar UID real da autenticação
                 const mem = new Map();
                 const listeners = new Map();
 
@@ -798,11 +798,11 @@
                     try {
                         const user = await initAuth();
                         uid = user.uid;
+                        console.log('🔐 Usuário autenticado:', uid);
                         return uid;
                     } catch (error) {
-                        console.warn('Auth failed, using anonymous mode:', error);
-                        uid = 'anonymous-user'; // Fallback para modo anônimo
-                        return uid;
+                        console.warn('Auth failed, tentando continuar:', error);
+                        throw error;
                     }
                 }
 
@@ -810,7 +810,10 @@
                     if (!db) {
                         throw new Error('Firestore not initialized');
                     }
-                    return doc(db, "public-data", uid, "kv", key);
+                    if (!uid) {
+                        throw new Error('User not authenticated');
+                    }
+                    return doc(db, "users", uid, "kv", key);
                 }
 
                 async function get(key) {
@@ -947,16 +950,14 @@
             // Função bootstrap
             async function bootstrapApplication() {
                 try {
-                    if (db) {
-                        console.log("🔥 Firebase Firestore disponível, tentando migração...");
-                        try {
-                            await migrateLocalStorage();
-                            console.log("🔥 Firebase integrado com sucesso!");
-                        } catch (e) {
-                            console.warn("⚠️ Migração falhou, mas Firestore disponível:", e);
-                        }
+                    if (auth && db) {
+                        console.log("🔥 Inicializando autenticação anônima Firebase...");
+                        await initAuth();
+                        console.log("🔥 Executando migração do localStorage...");
+                        await migrateLocalStorage();
+                        console.log("🔥 Firebase completamente integrado!");
                     } else {
-                        console.warn("⚠️ Firebase Firestore não inicializado");
+                        console.warn("⚠️ Firebase não inicializado corretamente");
                     }
                     fireReady();
                     console.log("[App] Sistema pronto.");
@@ -1076,7 +1077,7 @@
             enableFirebase: () => { useFirebase = true; },
             disableFirebase: () => { useFirebase = false; },
             get useFirebase() { return useFirebase; },
-            get isFirebaseReady() { return !!(window.cloudStorage && useFirebase && window.db); }
+            get isFirebaseReady() { return !!(window.cloudStorage && useFirebase && window.db && auth); }
         };
     })();
 
@@ -2120,95 +2121,104 @@
                 if(e.target===tm)closeTemplatesModal();
             }
 
-            // Função para forçar migração manual
-            async function forceMigration() {
-                try {
-                    if (!db) {
-                        showNotification('❌ Firestore não está disponível', 'error');
-                        return;
-                    }
-
-                    showNotification('🔄 Iniciando migração para Firebase...', 'info');
-                    console.log('🔄 Migração manual iniciada...');
-
-                    // Remove flag de migração para forçar nova migração
-                    if (window.cloudStorage) {
-                        await CloudStorage.remove('migrated_flag');
-                    }
-
-                    // Execute a migração
-                    await migrateLocalStorage();
-
-                    // Recarrega os dados para garantir que estão sincronizados
-                    await loadInitialData();
-                    displayOrders();
-                    updateStats();
-
-                    showNotification('✅ Migração para Firebase concluída!', 'success');
-                    console.log('✅ Migração manual concluída');
-
-                } catch (error) {
-                    console.error('❌ Erro na migração:', error);
-                    showNotification(`❌ Erro na migração: ${error.message}`, 'error');
+        // Função para forçar migração manual
+        async function forceMigration() {
+            try {
+                if (!db || !auth) {
+                    showNotification('❌ Firebase não está disponível', 'error');
+                    return;
                 }
-            }
 
-            // Função para testar conexão Firebase
-            async function testFirebaseConnection() {
-                const testKey = 'firebase_test_' + Date.now();
-                const testValue = { test: true, timestamp: Date.now() };
+                showNotification('🔄 Iniciando migração para Firebase...', 'info');
+                console.log('🔄 Migração manual iniciada...');
+
+                // Garante autenticação primeiro
+                await initAuth();
+
+                // Remove flag de migração para forçar nova migração
+                if (window.cloudStorage) {
+                    await CloudStorage.remove('migrated_flag');
+                }
+
+                // Execute a migração
+                await migrateLocalStorage();
+
+                // Recarrega os dados para garantir que estão sincronizados
+                await loadInitialData();
+                displayOrders();
+                updateStats();
+
+                showNotification('✅ Migração para Firebase concluída!', 'success');
+                console.log('✅ Migração manual concluída');
+
+            } catch (error) {
+                console.error('❌ Erro na migração:', error);
+                showNotification(`❌ Erro na migração: ${error.message}`, 'error');
+            }
+        }        // Função para testar conexão Firebase
+        async function testFirebaseConnection() {
+            const testKey = 'firebase_test_' + Date.now();
+            const testValue = { test: true, timestamp: Date.now() };
+            
+            try {
+                console.log('🔥 Iniciando teste de conectividade Firebase...');
                 
-                try {
-                    console.log('🔥 Iniciando teste de conectividade Firebase...');
-                    
-                    // Verificações iniciais
-                    console.log('Status do storage:', {
-                        useFirebase: storage.useFirebase,
-                        isFirebaseReady: storage.isFirebaseReady,
-                        hasCloudStorage: !!window.cloudStorage,
-                        hasDb: !!db,
-                        dbInitialized: !!window.db
-                    });
-                    
-                    if (!db) {
-                        throw new Error('Firestore não está inicializado. Verifique a configuração do Firebase.');
-                    }
-                    
-                    // Teste de escrita
-                    console.log('🔥 Testando escrita...');
-                    const writeSuccess = await CloudStorage.set(testKey, testValue);
-                    if (!writeSuccess) {
-                        throw new Error('Falha na escrita');
-                    }
-                    console.log('✅ Escrita realizada com sucesso');
-                    
-                    // Teste de leitura
-                    console.log('🔥 Testando leitura...');
-                    const retrieved = await CloudStorage.get(testKey);
-                    console.log('✅ Leitura realizada:', retrieved);
-                    
-                    // Teste de remoção
-                    console.log('🔥 Testando remoção...');
-                    await CloudStorage.remove(testKey);
-                    console.log('✅ Remoção realizada com sucesso');
-                    
-                    // Verifica se foi removido
-                    const shouldBeNull = await CloudStorage.get(testKey);
-                    if (shouldBeNull === null) {
-                        console.log('✅ Confirmado: dados removidos');
-                        showNotification('🔥 Firebase funcionando perfeitamente!', 'success');
-                    } else {
-                        console.log('⚠️ Dados não foram completamente removidos, mas Firebase está funcionando');
-                        showNotification('🔥 Firebase funcionando (com pequenas inconsistências)!', 'success');
-                    }
-                    
-                } catch (error) {
-                    console.error('❌ Erro no teste Firebase:', error);
-                    showNotification(`❌ Erro Firebase: ${error.message}`, 'error');
+                // Verificações iniciais
+                console.log('Status do storage:', {
+                    useFirebase: storage.useFirebase,
+                    isFirebaseReady: storage.isFirebaseReady,
+                    hasCloudStorage: !!window.cloudStorage,
+                    hasDb: !!db,
+                    hasAuth: !!auth,
+                    dbInitialized: !!window.db
+                });
+                
+                if (!db) {
+                    throw new Error('Firestore não está inicializado. Verifique a configuração do Firebase.');
                 }
+                
+                if (!auth) {
+                    throw new Error('Firebase Auth não está inicializado.');
+                }
+                
+                // Teste de autenticação
+                console.log('🔥 Testando autenticação anônima...');
+                const user = await initAuth();
+                console.log('✅ Usuário autenticado:', user.uid);
+                
+                // Teste de escrita
+                console.log('🔥 Testando escrita...');
+                const writeSuccess = await CloudStorage.set(testKey, testValue);
+                if (!writeSuccess) {
+                    throw new Error('Falha na escrita');
+                }
+                console.log('✅ Escrita realizada com sucesso');
+                
+                // Teste de leitura
+                console.log('🔥 Testando leitura...');
+                const retrieved = await CloudStorage.get(testKey);
+                console.log('✅ Leitura realizada:', retrieved);
+                
+                // Teste de remoção
+                console.log('🔥 Testando remoção...');
+                await CloudStorage.remove(testKey);
+                console.log('✅ Remoção realizada com sucesso');
+                
+                // Verifica se foi removido
+                const shouldBeNull = await CloudStorage.get(testKey);
+                if (shouldBeNull === null) {
+                    console.log('✅ Confirmado: dados removidos');
+                    showNotification('🔥 Firebase funcionando perfeitamente!', 'success');
+                } else {
+                    console.log('⚠️ Dados não foram completamente removidos, mas Firebase está funcionando');
+                    showNotification('🔥 Firebase funcionando (com pequenas inconsistências)!', 'success');
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro no teste Firebase:', error);
+                showNotification(`❌ Erro Firebase: ${error.message}`, 'error');
             }
-
-            // Auto-salvar assíncrono
+        }            // Auto-salvar assíncrono
             setInterval(async ()=>{
                 try{
                     if(orders.length>0) await setJSON('productionOrders', orders);
@@ -2294,46 +2304,32 @@
     </html>
 
     <!--
-    CONFIGURAÇÃO FIRESTORE RULES:
-
-    OPÇÃO 1 - COM AUTENTICAÇÃO ANÔNIMA (RECOMENDADO):
-    Copie e cole no Console Firebase > Firestore Database > Rules:
+    ✅ FIREBASE CONFIGURADO COM AUTENTICAÇÃO ANÔNIMA!
+    
+    Use estas regras no Console Firebase > Firestore Database > Rules:
 
     rules_version = '2';
     service cloud.firestore {
-    match /databases/{database}/documents {
+      match /databases/{database}/documents {
         match /users/{userId}/kv/{docId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+          allow read, write: if request.auth != null && request.auth.uid == userId;
         }
-    }
-    }
-
-    E ATIVE: Authentication > Sign-in method > Anonymous
-
-    OPÇÃO 2 - SEM AUTENTICAÇÃO (MODO PÚBLICO):
-    Copie e cole no Console Firebase > Firestore Database > Rules:
-
-    rules_version = '2';
-    service cloud.firestore {
-    match /databases/{database}/documents {
-        match /public-data/{userId}/kv/{docId} {
-        allow read, write: if true;
-        }
-    }
+      }
     }
 
-    PASSOS PARA CONFIGURAR:
-    1. Vá ao Firebase Console (https://console.firebase.google.com)
-    2. Selecione seu projeto "sistema-de-ordem-de-producao"
-    3. Vá em Firestore Database > Rules
-    4. Cole uma das regras acima
-    5. Clique em "Publicar"
-    6. Se escolher Opção 1: Vá em Authentication > Sign-in method > Ativar "Anonymous"
+    STATUS DA CONFIGURAÇÃO:
+    ✅ Authentication > Anonymous ATIVADO
+    ✅ UID do usuário: CzMPNICV7pfc9s5TGt2tK99Y64l2
+    
+    PRÓXIMOS PASSOS:
+    1. Cole as regras acima no Firebase Console > Firestore Database > Rules
+    2. Clique em "Publicar"
+    3. Teste o botão "🔥 Testar Firebase"
+    4. Teste o botão "🔄 Migrar para Firebase"
 
     ESTRUTURA DOS DADOS NO FIRESTORE:
-    OPÇÃO 1: users/{uid}/kv/productionOrders = array de ordens
-    OPÇÃO 2: public-data/anonymous-user/kv/productionOrders = array de ordens
-
-    NOTA: O sistema agora funciona mesmo sem autenticação configurada,
-    usando localStorage como fallback automático.
+    users/CzMPNICV7pfc9s5TGt2tK99Y64l2/kv/productionOrders = array de ordens
+    users/CzMPNICV7pfc9s5TGt2tK99Y64l2/kv/productTemplates = array de templates  
+    users/CzMPNICV7pfc9s5TGt2tK99Y64l2/kv/orderIdCounter = número
+    users/CzMPNICV7pfc9s5TGt2tK99Y64l2/kv/migrated_flag = boolean (controle interno)
     -->
