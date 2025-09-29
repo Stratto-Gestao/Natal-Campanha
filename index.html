@@ -720,34 +720,75 @@
                 getAuth, signInAnonymously, onAuthStateChanged 
             } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
             import { 
-                getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, enableIndexedDbPersistence 
+                getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, enableIndexedDbPersistence, collection, addDoc, getDocs 
             } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+            import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
 
             // Config do seu projeto Firebase
             const firebaseConfig = {
                 apiKey: "AIzaSyBy0RGYoK3oFdFVnoVhG3dNva3BKbvCeUs",
                 authDomain: "sistema-de-ordem-de-producao.firebaseapp.com",
                 projectId: "sistema-de-ordem-de-producao",
-                storageBucket: "sistema-de-ordem-de-producao.firebasestorage.app",
+                storageBucket: "sistema-de-ordem-de-producao.appspot.com",
                 messagingSenderId: "681409177091",
                 appId: "1:681409177091:web:84fda4b78d4e4893dd9036"
             };
 
-            let app, auth, db;
+            let app, auth, db, storageSvc;
             try {
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
+                storageSvc = getStorage(app);
                 
                 // Expor globalmente para debug
                 window.firebaseApp = app;
                 window.firebaseAuth = auth;
                 window.db = db;
+                window.storageSvc = storageSvc;
                 
                 console.log('🔥 Firebase inicializado com sucesso');
             } catch (error) {
                 console.warn('Firebase initialization failed:', error);
                 // Continue sem Firebase se falhar
+            }
+
+            // Helper para subir DataURL e obter URL
+            async function uploadDataURL(path, dataURL) {
+                const r = ref(window.storageSvc, path);
+                await uploadString(r, dataURL, 'data_url');
+                return await getDownloadURL(r);
+            }
+
+            // Salvar cada ordem como documento individual (sem Base64)
+            async function saveOrderDoc(uid, order) {
+                try {
+                    // 1) sobe imagens (se existirem)
+                    let imagemFacaUrl = null, imagemArteUrl = null;
+                    if (order.imagemFaca) {
+                        imagemFacaUrl = await uploadDataURL(`users/${uid}/orders/${order.id}_faca.jpg`, order.imagemFaca);
+                    }
+                    if (order.imagemArte) {
+                        imagemArteUrl = await uploadDataURL(`users/${uid}/orders/${order.id}_arte.jpg`, order.imagemArte);
+                    }
+
+                    // 2) cria payload sem os Base64
+                    const payload = {
+                        ...order,
+                        imagemFaca: undefined,
+                        imagemArte: undefined,
+                        imagemFacaUrl,
+                        imagemArteUrl,
+                    };
+
+                    // 3) grava como doc
+                    const c = collection(window.db, "users", uid, "orders");
+                    await setDoc(doc(c, order.id), payload, { merge: true });
+                    console.log(`✅ Ordem ${order.id} salva no Firestore`);
+                } catch (error) {
+                    console.error('Erro ao salvar ordem no Firestore:', error);
+                    throw error;
+                }
             }
 
             // Cache offline (ignora se já estiver ativo em outro tab)
@@ -1077,7 +1118,7 @@
             enableFirebase: () => { useFirebase = true; },
             disableFirebase: () => { useFirebase = false; },
             get useFirebase() { return useFirebase; },
-            get isFirebaseReady() { return !!(window.cloudStorage && useFirebase && window.db && auth); }
+            get isFirebaseReady() { return !!(window.cloudStorage && useFirebase && window.db && window.firebaseAuth); }
         };
     })();
 
@@ -1116,9 +1157,47 @@
     // Função para carregar dados iniciais
     async function loadInitialData() {
         try {
-            orders = await getJSON('productionOrders', []);
+            // Carrega do localStorage como fallback
+            const localOrders = await getJSON('productionOrders', []);
             orderIdCounter = parseInt((await storage.getItem('orderIdCounter')) || '1');
             productTemplates = await getJSON('productTemplates', []);
+            
+            // Tenta carregar do Firestore usando UID do usuário
+            if (window.db) {
+                try {
+                    const user = await initAuth();
+                    if (user && user.uid) {
+                        // Carrega ordens da coleção do usuário
+                        const userOrdersCollection = collection(window.db, "users", user.uid, "orders");
+                        const ordersSnapshot = await getDocs(userOrdersCollection);
+                        const firestoreOrders = [];
+                        
+                        ordersSnapshot.forEach((doc) => {
+                            const orderData = doc.data();
+                            // Reconstrói URLs de imagem se existirem
+                            if (orderData.imagemFacaUrl) {
+                                orderData.imagemFaca = orderData.imagemFacaUrl;
+                            }
+                            if (orderData.imagemArteUrl) {
+                                orderData.imagemArte = orderData.imagemArteUrl;
+                            }
+                            firestoreOrders.push(orderData);
+                        });
+                        
+                        // Se tem dados no Firestore, usa eles. Senão usa localStorage
+                        orders = firestoreOrders.length > 0 ? firestoreOrders : localOrders;
+                        console.log(`📦 Carregadas ${orders.length} ordens do ${firestoreOrders.length > 0 ? 'Firestore (usuário ' + user.uid + ')' : 'localStorage'}`);
+                    } else {
+                        console.warn('Usuário não autenticado, usando localStorage');
+                        orders = localOrders;
+                    }
+                } catch (error) {
+                    console.warn('Erro ao carregar do Firestore, usando localStorage:', error);
+                    orders = localOrders;
+                }
+            } else {
+                orders = localOrders;
+            }
         } catch (e) {
             console.error("Erro carregando dados:", e);
             orders = [];
@@ -1280,7 +1359,7 @@
     // setJSON com retry ao atingir cota: tenta reduzir qualidade de imagens grandes
     async function setJSONRetry(key, value, onQuota){
         try{
-            setJSON(key, value);
+            await setJSON(key, value);
             return true;
         }catch(e){
             // Alguns navegadores lançam QuotaExceededError sem permitir catch aqui; então usamos try interno do setJSON.
@@ -1292,7 +1371,7 @@
     async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
         try{
             let changed = false;
-            const ordersLocal = getJSON('productionOrders', []);
+            const ordersLocal = await getJSON('productionOrders', []);
             // Estima tamanho atual da string JSON + imagens
             let approx = JSON.stringify(ordersLocal).length;
             if(approx < maxTotalBytes) return; // rápido
@@ -1593,8 +1672,48 @@
                     imagemFaca:imgFData,
                     imagemArte:imgAData
                 };
+                
+                // Nova lógica: salvar ordem individual usando UID real
+                async function saveOrder() {
+                    try {
+                        // Garante autenticação e obtém UID
+                        const user = await initAuth();
+                        
+                        // Usa a nova função para salvar ordem individual
+                        if (window.db && user) {
+                            try {
+                                await saveOrderDoc(user.uid, order);
+                            } catch (error) {
+                                console.warn('Erro ao salvar no Firestore, usando localStorage:', error);
+                                // Fallback para localStorage
+                                orders.push(order);
+                                await setJSON('productionOrders', orders);
+                            }
+                        } else {
+                            // Fallback para localStorage se Firebase não estiver disponível
+                            orders.push(order);
+                            await setJSON('productionOrders', orders);
+                        }
+                        
+                        // Adiciona à lista local para exibição imediata
+                        orders.push(order);
+                        
+                        await saveAsTemplate();
+                        displayOrders();
+                        updateStats();
+                        updateGraficaFilter();
+                        document.getElementById('orderForm').reset();
+                        document.getElementById('previewFaca').style.display='none';
+                        document.getElementById('previewArte').style.display='none';
+                        clearSelection();
+                        showNotification('✅ Ordem de produção criada com sucesso!','success');
+                    } catch (error) {
+                        console.error('Erro ao salvar ordem:', error);
+                        showNotification('❌ Erro ao salvar ordem: ' + error.message, 'error');
+                    }
+                }
+                
                 let processed=0;const total=(imgF?1:0)+(imgA?1:0);
-                async function saveOrder(){orders.push(order);await setJSON('productionOrders', orders);await saveAsTemplate();displayOrders();updateStats();updateGraficaFilter();document.getElementById('orderForm').reset();document.getElementById('previewFaca').style.display='none';document.getElementById('previewArte').style.display='none';clearSelection();showNotification('✅ Ordem de produção criada com sucesso!','success');}
                 if(total===0){await saveOrder();return;}
                 if(imgF){imageToBase64(imgF,async b64=>{order.imagemFaca=b64;processed++;if(processed===total)await saveOrder();});}
                 if(imgA){imageToBase64(imgA,async b64=>{order.imagemArte=b64;processed++;if(processed===total)await saveOrder();});}
@@ -1649,7 +1768,39 @@
                 order.lastModified=new Date().toLocaleDateString('pt-BR')+' às '+new Date().toLocaleTimeString('pt-BR');
 
                 let processed=0;const total=(imgF?1:0)+(imgA?1:0);
-                async function finish(){orders[idx]=order;await setJSON('productionOrders', orders);displayOrders();updateStats();updateGraficaFilter();closeEditModal();showNotification(`✅ Ordem ${id} atualizada com sucesso!`,'success');}
+                
+                async function finish(){
+                    try {
+                        // Garante autenticação
+                        const user = await initAuth();
+                        
+                        // Usa a nova função para atualizar ordem individual
+                        if (window.db && user) {
+                            try {
+                                await saveOrderDoc(user.uid, order);
+                            } catch (error) {
+                                console.warn('Erro ao atualizar no Firestore:', error);
+                                // Fallback para localStorage
+                                orders[idx]=order;
+                                await setJSON('productionOrders', orders);
+                            }
+                        } else {
+                            // Fallback para localStorage
+                            orders[idx]=order;
+                            await setJSON('productionOrders', orders);
+                        }
+                        
+                        // Atualiza array local para exibição
+                        orders[idx]=order;
+                        
+                        displayOrders();updateStats();updateGraficaFilter();closeEditModal();
+                        showNotification(`✅ Ordem ${id} atualizada com sucesso!`,'success');
+                    } catch (error) {
+                        console.error('Erro ao atualizar ordem:', error);
+                        showNotification('❌ Erro ao atualizar ordem: ' + error.message, 'error');
+                    }
+                }
+                
                 if(total===0){await finish();return;}
                 if(imgF){imageToBase64(imgF,async b64=>{order.imagemFaca=b64;processed++;if(processed===total)await finish();});}
                 if(imgA){imageToBase64(imgA,async b64=>{order.imagemArte=b64;processed++;if(processed===total)await finish();});}
@@ -1949,10 +2100,30 @@
             }
             async function deleteOrder(orderId){
                 if(confirm('Tem certeza que deseja excluir esta ordem de produção?')){
-                    orders=orders.filter(o=>o.id!==orderId);
-                    await setJSON('productionOrders', orders);
-                    displayOrders();updateStats();updateGraficaFilter();
-                    showNotification(`Ordem ${orderId} excluída com sucesso!`,'info');
+                    try {
+                        // Garante autenticação
+                        const user = await initAuth();
+                        
+                        // Remove do Firestore se disponível
+                        if (window.db && user) {
+                            try {
+                                const userOrdersCollection = collection(window.db, "users", user.uid, "orders");
+                                await deleteDoc(doc(userOrdersCollection, orderId));
+                                console.log('✅ Ordem removida do Firestore');
+                            } catch (error) {
+                                console.warn('Erro ao remover do Firestore:', error);
+                            }
+                        }
+                        
+                        // Remove do array local e localStorage (fallback)
+                        orders=orders.filter(o=>o.id!==orderId);
+                        await setJSON('productionOrders', orders);
+                        displayOrders();updateStats();updateGraficaFilter();
+                        showNotification(`Ordem ${orderId} excluída com sucesso!`,'info');
+                    } catch (error) {
+                        console.error('Erro ao excluir ordem:', error);
+                        showNotification('❌ Erro ao excluir ordem: ' + error.message, 'error');
+                    }
                 }
             }
 
@@ -2060,9 +2231,60 @@
                         if(imported.orders&&Array.isArray(imported.orders)){
                             orders=imported.orders;
                             if(imported.productTemplates&&Array.isArray(imported.productTemplates)){productTemplates=imported.productTemplates;await setJSON('productTemplates', productTemplates);}
+                            
+                            // Salva no Firestore usando coleção do usuário
+                            if (window.db) {
+                                try {
+                                    const user = await initAuth();
+                                    if (user) {
+                                        // Remove todas as ordens existentes do usuário
+                                        const userOrdersCollection = collection(window.db, "users", user.uid, "orders");
+                                        const existingSnapshot = await getDocs(userOrdersCollection);
+                                        const deletePromises = [];
+                                        existingSnapshot.forEach((doc) => {
+                                            deletePromises.push(deleteDoc(doc.ref));
+                                        });
+                                        await Promise.all(deletePromises);
+                                        
+                                        // Adiciona as novas ordens usando saveOrderDoc
+                                        for (const order of orders) {
+                                            await saveOrderDoc(user.uid, order);
+                                        }
+                                        console.log('✅ Dados importados para o Firestore');
+                                    }
+                                } catch (error) {
+                                    console.warn('Erro ao importar para Firestore:', error);
+                                }
+                            }
+                            
                             await setJSON('productionOrders', orders);displayOrders();updateStats();updateGraficaFilter();showNotification('Dados importados com sucesso!','success');
                         }else if(Array.isArray(imported)){
-                            orders=imported;await setJSON('productionOrders', orders);displayOrders();updateStats();updateGraficaFilter();showNotification('Dados importados com sucesso!','success');
+                            orders=imported;
+                            
+                            // Salva no Firestore usando coleção do usuário
+                            if (window.db) {
+                                try {
+                                    const user = await initAuth();
+                                    if (user) {
+                                        const userOrdersCollection = collection(window.db, "users", user.uid, "orders");
+                                        const existingSnapshot = await getDocs(userOrdersCollection);
+                                        const deletePromises = [];
+                                        existingSnapshot.forEach((doc) => {
+                                            deletePromises.push(deleteDoc(doc.ref));
+                                        });
+                                        await Promise.all(deletePromises);
+                                        
+                                        for (const order of orders) {
+                                            await saveOrderDoc(user.uid, order);
+                                        }
+                                        console.log('✅ Dados importados para o Firestore');
+                                    }
+                                } catch (error) {
+                                    console.warn('Erro ao importar para Firestore:', error);
+                                }
+                            }
+                            
+                            await setJSON('productionOrders', orders);displayOrders();updateStats();updateGraficaFilter();showNotification('Dados importados com sucesso!','success');
                         }else{throw new Error('Formato inválido');}
                     }catch(err){showNotification('Erro ao importar dados. Verifique o formato do arquivo.','error');}
                 };
@@ -2072,8 +2294,30 @@
             async function clearAllData(){
                 if(confirm('ATENÇÃO: Isso irá excluir TODAS as ordens de produção E modelos salvos. Esta ação não pode ser desfeita. Deseja continuar?')){
                     orders=[];productTemplates=[];orderIdCounter=1;
-                    // Limpa tanto localStorage quanto Firebase
+                    
+                    // Limpa localStorage
                     localStorage.removeItem('productionOrders');localStorage.removeItem('productTemplates');localStorage.removeItem('orderIdCounter');
+                    
+                    // Limpa Firestore da coleção do usuário se disponível
+                    if (window.db) {
+                        try {
+                            const user = await initAuth();
+                            if (user) {
+                                const userOrdersCollection = collection(window.db, "users", user.uid, "orders");
+                                const ordersSnapshot = await getDocs(userOrdersCollection);
+                                const deletePromises = [];
+                                ordersSnapshot.forEach((doc) => {
+                                    deletePromises.push(deleteDoc(doc.ref));
+                                });
+                                await Promise.all(deletePromises);
+                                console.log('✅ Todas as ordens removidas do Firestore');
+                            }
+                        } catch (error) {
+                            console.warn('Erro ao limpar Firestore:', error);
+                        }
+                    }
+                    
+                    // Compatibilidade com sistema antigo
                     if(window.cloudStorage){
                         try{
                             await CloudStorage.remove('productionOrders');
@@ -2082,6 +2326,7 @@
                             await CloudStorage.remove('migrated_flag');
                         }catch(e){console.warn('Erro limpando Firebase:', e);}
                     }
+                    
                     displayOrders();updateStats();updateGraficaFilter();showNotification('Todos os dados foram removidos.','info');
                 }
             }
@@ -2096,7 +2341,17 @@
                     updateGraficaFilter(); // Atualizar filtro de gráficas
                     await migrateAndCompactOrdersIfNeeded();
                     
-                    showNotification('Sistema carregado com sucesso!', 'success');
+                    // Notificação de status do Firebase
+                    if (window.storageSvc && window.db) {
+                        const user = await initAuth();
+                        if (user) {
+                            showNotification(`✅ Sistema carregado! Firebase ativo com Storage e coleção de usuário (${user.uid.substring(0,8)}...).`, 'success');
+                        } else {
+                            showNotification('✅ Sistema carregado! Firebase Storage ativo para imagens.', 'success');
+                        }
+                    } else {
+                        showNotification('⚠️ Sistema carregado em modo offline. Imagens serão salvas localmente.', 'warning');
+                    }
                 } catch (e) {
                     console.error('Erro na inicialização:', e);
                     showNotification('Erro ao carregar dados. Usando modo offline.', 'warning');
