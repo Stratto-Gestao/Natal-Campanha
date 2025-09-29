@@ -275,8 +275,6 @@
                     <button class="btn btn-warning" onclick="importData()">📅 Importar Dados</button>
                     <button class="btn btn-danger" onclick="clearAllData()">🗑️ Limpar Tudo</button>
                     <button class="btn btn-secondary" onclick="manageTemplates()">🗊 Gerenciar Modelos</button>
-                    <button class="btn btn-primary" onclick="testFirebaseConnection()">🔥 Testar Firebase</button>
-                    <button class="btn btn-success" onclick="forceMigration()">🔄 Migrar para Firebase</button>
                 </div>
                 <input type="file" id="importFile" accept=".json" style="display:none;" onchange="handleImport(event)">
             </div>
@@ -712,313 +710,10 @@
         <!-- Notificações -->
         <div id="notification" class="notification"></div>
 
-        <!-- Firebase Integration -->
-        <script type="module">
-            // Firebase SDKs (versão modular via CDN)
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-            import { 
-                getAuth, signInAnonymously, onAuthStateChanged 
-            } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-            import { 
-                getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, enableIndexedDbPersistence, collection, addDoc, getDocs 
-            } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-            import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
-
-            // Config do seu projeto Firebase
-            const firebaseConfig = {
-                apiKey: "AIzaSyBy0RGYoK3oFdFVnoVhG3dNva3BKbvCeUs",
-                authDomain: "sistema-de-ordem-de-producao.firebaseapp.com",
-                projectId: "sistema-de-ordem-de-producao",
-                storageBucket: "sistema-de-ordem-de-producao.appspot.com",
-                messagingSenderId: "681409177091",
-                appId: "1:681409177091:web:84fda4b78d4e4893dd9036"
-            };
-
-            let app, auth, db, storageSvc;
-            try {
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-                storageSvc = getStorage(app);
-                
-                // Expor globalmente para debug
-                window.firebaseApp = app;
-                window.firebaseAuth = auth;
-                window.db = db;
-                window.storageSvc = storageSvc;
-                
-                console.log('🔥 Firebase inicializado com sucesso');
-            } catch (error) {
-                console.warn('Firebase initialization failed:', error);
-                // Continue sem Firebase se falhar
-            }
-
-            // Helper para subir DataURL e obter URL
-            async function uploadDataURL(path, dataURL) {
-                const r = ref(window.storageSvc, path);
-                await uploadString(r, dataURL, 'data_url');
-                return await getDownloadURL(r);
-            }
-
-            // Salvar cada ordem como documento individual (sem Base64)
-            async function saveOrderDoc(uid, order) {
-                try {
-                    // 1) sobe imagens (se existirem)
-                    let imagemFacaUrl = null, imagemArteUrl = null;
-                    if (order.imagemFaca) {
-                        imagemFacaUrl = await uploadDataURL(`users/${uid}/orders/${order.id}_faca.jpg`, order.imagemFaca);
-                    }
-                    if (order.imagemArte) {
-                        imagemArteUrl = await uploadDataURL(`users/${uid}/orders/${order.id}_arte.jpg`, order.imagemArte);
-                    }
-
-                    // 2) cria payload sem os Base64
-                    const payload = {
-                        ...order,
-                        imagemFaca: undefined,
-                        imagemArte: undefined,
-                        imagemFacaUrl,
-                        imagemArteUrl,
-                    };
-
-                    // 3) grava como doc
-                    const c = collection(window.db, "users", uid, "orders");
-                    await setDoc(doc(c, order.id), payload, { merge: true });
-                    console.log(`✅ Ordem ${order.id} salva no Firestore`);
-                } catch (error) {
-                    console.error('Erro ao salvar ordem no Firestore:', error);
-                    throw error;
-                }
-            }
-
-            // Cache offline (ignora se já estiver ativo em outro tab)
-            if (db) {
-                enableIndexedDbPersistence(db).catch((error) => {
-                    console.warn('Firebase persistence not enabled:', error);
-                });
-            }
-
-            // Controle de readiness
-            let APP_READY = false;
-            const readyCallbacks = [];
-
-            function onAppReady(cb) {
-                if (APP_READY) cb(); else readyCallbacks.push(cb);
-            }
-
-            function fireReady() {
-                APP_READY = true;
-                while (readyCallbacks.length) readyCallbacks.shift()();
-            }
-
-            // Autenticação anônima
-            function initAuth() {
-                return new Promise((resolve, reject) => {
-                    if (!auth) {
-                        reject(new Error('Firebase not initialized'));
-                        return;
-                    }
-                    onAuthStateChanged(auth, user => {
-                        if (user) resolve(user);
-                        else signInAnonymously(auth).catch(error => {
-                            console.warn('Anonymous auth failed:', error);
-                            reject(error);
-                        });
-                    }, reject);
-                });
-            }
-
-            // Wrapper de armazenamento (key-value)
-            const CloudStorage = (() => {
-                let uid = null; // Usar UID real da autenticação
-                const mem = new Map();
-                const listeners = new Map();
-
-                async function ensureAuth() {
-                    if (uid) return uid;
-                    try {
-                        const user = await initAuth();
-                        uid = user.uid;
-                        console.log('🔐 Usuário autenticado:', uid);
-                        return uid;
-                    } catch (error) {
-                        console.warn('Auth failed, tentando continuar:', error);
-                        throw error;
-                    }
-                }
-
-                function keyDoc(key) {
-                    if (!db) {
-                        throw new Error('Firestore not initialized');
-                    }
-                    if (!uid) {
-                        throw new Error('User not authenticated');
-                    }
-                    return doc(db, "users", uid, "kv", key);
-                }
-
-                async function get(key) {
-                    try {
-                        await ensureAuth();
-                        if (mem.has(key)) return mem.get(key);
-                        const snap = await getDoc(keyDoc(key));
-                        if (!snap.exists()) return null;
-                        const val = snap.data().value;
-                        mem.set(key, val);
-                        return val;
-                    } catch (e) {
-                        console.error("CloudStorage get error:", e);
-                        return null;
-                    }
-                }
-
-                async function set(key, value) {
-                    try {
-                        await ensureAuth();
-                        await setDoc(keyDoc(key), { value, updatedAt: Date.now() });
-                        mem.set(key, value);
-                        return true;
-                    } catch (e) {
-                        console.error("CloudStorage set error:", e);
-                        return false;
-                    }
-                }
-
-                async function remove(key) {
-                    try {
-                        await ensureAuth();
-                        await deleteDoc(keyDoc(key));
-                        mem.delete(key);
-                    } catch (e) {
-                        console.error("CloudStorage remove error:", e);
-                    }
-                }
-
-                function onChange(key, cb) {
-                    try {
-                        if (!db) {
-                            console.warn('Firebase not ready for onChange listener');
-                            return () => {}; // retorna função vazia para cleanup
-                        }
-                        if (listeners.has(key)) return listeners.get(key);
-                        const unsub = onSnapshot(keyDoc(key), snap => {
-                            if (snap.exists()) {
-                                const val = snap.data().value;
-                                mem.set(key, val);
-                                cb(val);
-                            } else {
-                                mem.delete(key);
-                                cb(null);
-                            }
-                        });
-                        listeners.set(key, unsub);
-                        return unsub;
-                    } catch (e) {
-                        console.warn('onChange setup failed:', e);
-                        return () => {};
-                    }
-                }
-
-                return { get, set, remove, onChange };
-            })();
-
-            // Migração automática do localStorage (1ª vez)
-            async function migrateLocalStorage() {
-                try {
-                    console.log("🔄 Iniciando verificação de migração...");
-                    
-                    if (!db) {
-                        console.warn("Firestore não disponível, pulando migração");
-                        return;
-                    }
-                    
-                    // Força uma nova migração sempre que necessário
-                    const keys = Object.keys(localStorage);
-                    let migrationCount = 0;
-                    
-                    for (const k of keys) {
-                        if (k === "migrated_flag") continue;
-                        try {
-                            const raw = localStorage.getItem(k);
-                            if (!raw) continue;
-                            
-                            let parsed = raw;
-                            if (raw && (raw.startsWith("{") || raw.startsWith("["))) {
-                                try { parsed = JSON.parse(raw); } catch {}
-                            }
-                            
-                            // Sempre migra dados importantes mesmo se já migrado antes
-                            const isImportantKey = ['productionOrders', 'productTemplates', 'orderIdCounter'].includes(k);
-                            
-                            if (isImportantKey) {
-                                const success = await CloudStorage.set(k, parsed);
-                                if (success) {
-                                    migrationCount++;
-                                    console.log(`[Migração] Key migrada: ${k}`);
-                                }
-                            }
-                        } catch (e) {
-                            console.warn("[Migração] Falhou key:", k, e);
-                        }
-                    }
-                    
-                    if (migrationCount > 0) {
-                        await CloudStorage.set("migrated_flag", true);
-                    }
-                    console.log(`[Migração] Concluída. ${migrationCount} keys migradas.`);
-                } catch (e) {
-                    console.error("[Migração] Erro:", e);
-                }
-            }
-
-            // Expor para uso global
-            window.cloudStorage = CloudStorage;
-            window.onAppReady = onAppReady;
-            window.initAuth = initAuth;
-            
-            // Expor Firebase globalmente (já foi feito acima, mas garantindo)
-            if (db) window.db = db;
-
-            // Adapter de compatibilidade
-            window.storageAsync = {
-                getJson: async (k, fallback=null) => {
-                    const v = await CloudStorage.get(k);
-                    return (v == null) ? fallback : v;
-                },
-                setJson: async (k, obj) => CloudStorage.set(k, obj),
-                remove: async (k) => CloudStorage.remove(k)
-            };
-
-            // Função bootstrap
-            async function bootstrapApplication() {
-                try {
-                    if (auth && db) {
-                        console.log("🔥 Inicializando autenticação anônima Firebase...");
-                        await initAuth();
-                        console.log("🔥 Executando migração do localStorage...");
-                        await migrateLocalStorage();
-                        console.log("🔥 Firebase completamente integrado!");
-                    } else {
-                        console.warn("⚠️ Firebase não inicializado corretamente");
-                    }
-                    fireReady();
-                    console.log("[App] Sistema pronto.");
-                } catch (e) {
-                    console.warn("[Bootstrap] Erro, continuando em modo offline:", e);
-                    fireReady();
-                }
-            }
-
-            // Inicializar
-            bootstrapApplication();
-        </script>
-
         <script>
             
-    // Storage híbrido com fallback para iOS/Android + Firebase
+    // Storage simples com localStorage apenas
     const storage = (function(){
-        let useFirebase = true; // Habilitar Firebase por padrão
-        
         // Testa localStorage tradicional
         const localStorageWorks = (function(){
             try {
@@ -1041,22 +736,7 @@
 
         return {
             getItem: async (key) => {
-                // Primeiro tenta Firebase se disponível
-                if (useFirebase && window.cloudStorage) {
-                    try {
-                        const value = await window.cloudStorage.get(key);
-                        if (value !== null) {
-                            console.log(`✅ Firebase get successful for key: ${key}`);
-                            return typeof value === 'string' ? value : JSON.stringify(value);
-                        }
-                        console.log(`📭 Firebase get returned null for key: ${key}`);
-                        return null;
-                    } catch (e) {
-                        console.warn(`❌ Firebase get failed for key ${key}, using localStorage:`, e);
-                    }
-                }
-                
-                // Fallback para localStorage
+                // Usa localStorage se disponível
                 if (localStorageWorks) {
                     const value = localStorage.getItem(key);
                     console.log(`📱 LocalStorage get for key: ${key}, found: ${value !== null}`);
@@ -1068,22 +748,7 @@
             },
             
             setItem: async (key, value) => {
-                // Primeiro tenta Firebase se disponível
-                if (useFirebase && window.cloudStorage) {
-                    try {
-                        let parsed = value;
-                        if (typeof value === 'string') {
-                            try { parsed = JSON.parse(value); } catch { /* keep as string */ }
-                        }
-                        await window.cloudStorage.set(key, parsed);
-                        console.log(`✅ Firebase save successful for key: ${key}`);
-                        return;
-                    } catch (e) {
-                        console.warn(`❌ Firebase set failed for key ${key}, using localStorage:`, e);
-                    }
-                }
-                
-                // Fallback para localStorage
+                // Usa localStorage se disponível
                 if (localStorageWorks) {
                     try {
                         localStorage.setItem(key, value);
@@ -1098,37 +763,18 @@
             },
             
             removeItem: async (key) => {
-                if (useFirebase && window.cloudStorage) {
-                    try {
-                        await window.cloudStorage.remove(key);
-                        console.log(`✅ Firebase remove successful for key: ${key}`);
-                        return;
-                    } catch (e) {
-                        console.warn("Firebase remove failed, using localStorage:", e);
-                    }
-                }
-                
                 if (localStorageWorks) {
                     localStorage.removeItem(key);
                 } else {
                     fallbackStorage.removeItem(key);
                 }
-            },
-            
-            // Funções de debug e controle
-            enableFirebase: () => { useFirebase = true; },
-            disableFirebase: () => { useFirebase = false; },
-            get useFirebase() { return useFirebase; },
-            get isFirebaseReady() { return !!(window.cloudStorage && useFirebase && window.db && window.firebaseAuth); }
+            }
         };
     })();
 
     async function getJSON(key, fallback){
         try {
-            console.log(`🔍 getJSON called for key: ${key}`, {
-                useFirebase: storage.useFirebase, 
-                isFirebaseReady: storage.isFirebaseReady
-            });
+            console.log(`🔍 getJSON called for key: ${key}`);
             const v = await storage.getItem(key);
             return v ? JSON.parse(v) : fallback;
         } catch(e){
@@ -1139,18 +785,14 @@
 
     async function setJSON(key, value){
         try { 
-            console.log(`🔄 setJSON called for key: ${key}`, {
-                useFirebase: storage.useFirebase, 
-                isFirebaseReady: storage.isFirebaseReady,
-                hasCloudStorage: !!window.cloudStorage
-            });
+            console.log(`🔄 setJSON called for key: ${key}`);
             await storage.setItem(key, JSON.stringify(value)); 
         } catch(e){
             console.error("setJSON error:", e);
         }
     }
 
-    // Variáveis globais - serão carregadas do Firebase
+    // Variáveis globais - carregadas do localStorage
     let orders = [];
     let orderIdCounter = 1;
     let productTemplates = [];
@@ -1158,47 +800,12 @@
     // Função para carregar dados iniciais
     async function loadInitialData() {
         try {
-            // Carrega do localStorage como fallback
-            const localOrders = await getJSON('productionOrders', []);
+            // Carrega do localStorage
+            orders = await getJSON('productionOrders', []);
             orderIdCounter = parseInt((await storage.getItem('orderIdCounter')) || '1');
             productTemplates = await getJSON('productTemplates', []);
             
-            // Tenta carregar do Firestore usando UID do usuário
-            if (window.db) {
-                try {
-                    const user = await initAuth();
-                    if (user && user.uid) {
-                        // Carrega ordens da coleção do usuário
-                        const userOrdersCollection = collection(window.db, "users", user.uid, "orders");
-                        const ordersSnapshot = await getDocs(userOrdersCollection);
-                        const firestoreOrders = [];
-                        
-                        ordersSnapshot.forEach((doc) => {
-                            const orderData = doc.data();
-                            // Reconstrói URLs de imagem se existirem
-                            if (orderData.imagemFacaUrl) {
-                                orderData.imagemFaca = orderData.imagemFacaUrl;
-                            }
-                            if (orderData.imagemArteUrl) {
-                                orderData.imagemArte = orderData.imagemArteUrl;
-                            }
-                            firestoreOrders.push(orderData);
-                        });
-                        
-                        // Se tem dados no Firestore, usa eles. Senão usa localStorage
-                        orders = firestoreOrders.length > 0 ? firestoreOrders : localOrders;
-                        console.log(`📦 Carregadas ${orders.length} ordens do ${firestoreOrders.length > 0 ? 'Firestore (usuário ' + user.uid + ')' : 'localStorage'}`);
-                    } else {
-                        console.warn('Usuário não autenticado, usando localStorage');
-                        orders = localOrders;
-                    }
-                } catch (error) {
-                    console.warn('Erro ao carregar do Firestore, usando localStorage:', error);
-                    orders = localOrders;
-                }
-            } else {
-                orders = localOrders;
-            }
+            console.log(`📦 Carregadas ${orders.length} ordens do localStorage`);
         } catch (e) {
             console.error("Erro carregando dados:", e);
             orders = [];
@@ -1674,30 +1281,12 @@
                     imagemArte:imgAData
                 };
                 
-                // Nova lógica: salvar ordem individual usando UID real
+                // Nova lógica: salvar ordem individual
                 async function saveOrder() {
                     try {
-                        // Garante autenticação e obtém UID
-                        const user = await window.initAuth();
-                        
-                        // Usa a nova função para salvar ordem individual
-                        if (window.db && user) {
-                            try {
-                                await saveOrderDoc(user.uid, order);
-                            } catch (error) {
-                                console.warn('Erro ao salvar no Firestore, usando localStorage:', error);
-                                // Fallback para localStorage
-                                orders.push(order);
-                                await setJSON('productionOrders', orders);
-                            }
-                        } else {
-                            // Fallback para localStorage se Firebase não estiver disponível
-                            orders.push(order);
-                            await setJSON('productionOrders', orders);
-                        }
-                        
-                        // Adiciona à lista local para exibição imediata
+                        // Salva no localStorage
                         orders.push(order);
+                        await setJSON('productionOrders', orders);
                         
                         await saveAsTemplate();
                         displayOrders();
@@ -1772,27 +1361,9 @@
                 
                 async function finish(){
                     try {
-                        // Garante autenticação
-                        const user = await window.initAuth();
-                        
-                        // Usa a nova função para atualizar ordem individual
-                        if (window.db && user) {
-                            try {
-                                await saveOrderDoc(user.uid, order);
-                            } catch (error) {
-                                console.warn('Erro ao atualizar no Firestore:', error);
-                                // Fallback para localStorage
-                                orders[idx]=order;
-                                await setJSON('productionOrders', orders);
-                            }
-                        } else {
-                            // Fallback para localStorage
-                            orders[idx]=order;
-                            await setJSON('productionOrders', orders);
-                        }
-                        
-                        // Atualiza array local para exibição
+                        // Atualiza no localStorage
                         orders[idx]=order;
+                        await setJSON('productionOrders', orders);
                         
                         displayOrders();updateStats();updateGraficaFilter();closeEditModal();
                         showNotification(`✅ Ordem ${id} atualizada com sucesso!`,'success');
@@ -2102,21 +1673,7 @@
             async function deleteOrder(orderId){
                 if(confirm('Tem certeza que deseja excluir esta ordem de produção?')){
                     try {
-                        // Garante autenticação
-                        const user = await window.initAuth();
-                        
-                        // Remove do Firestore se disponível
-                        if (window.db && user) {
-                            try {
-                                const userOrdersCollection = collection(window.db, "users", user.uid, "orders");
-                                await deleteDoc(doc(userOrdersCollection, orderId));
-                                console.log('✅ Ordem removida do Firestore');
-                            } catch (error) {
-                                console.warn('Erro ao remover do Firestore:', error);
-                            }
-                        }
-                        
-                        // Remove do array local e localStorage (fallback)
+                        // Remove do array local e localStorage
                         orders=orders.filter(o=>o.id!==orderId);
                         await setJSON('productionOrders', orders);
                         displayOrders();updateStats();updateGraficaFilter();
@@ -2233,57 +1790,9 @@
                             orders=imported.orders;
                             if(imported.productTemplates&&Array.isArray(imported.productTemplates)){productTemplates=imported.productTemplates;await setJSON('productTemplates', productTemplates);}
                             
-                            // Salva no Firestore usando coleção do usuário
-                            if (window.db) {
-                                try {
-                                    const user = await window.initAuth();
-                                    if (user) {
-                                        // Remove todas as ordens existentes do usuário
-                                        const userOrdersCollection = collection(window.db, "users", user.uid, "orders");
-                                        const existingSnapshot = await getDocs(userOrdersCollection);
-                                        const deletePromises = [];
-                                        existingSnapshot.forEach((doc) => {
-                                            deletePromises.push(deleteDoc(doc.ref));
-                                        });
-                                        await Promise.all(deletePromises);
-                                        
-                                        // Adiciona as novas ordens usando saveOrderDoc
-                                        for (const order of orders) {
-                                            await saveOrderDoc(user.uid, order);
-                                        }
-                                        console.log('✅ Dados importados para o Firestore');
-                                    }
-                                } catch (error) {
-                                    console.warn('Erro ao importar para Firestore:', error);
-                                }
-                            }
-                            
                             await setJSON('productionOrders', orders);displayOrders();updateStats();updateGraficaFilter();showNotification('Dados importados com sucesso!','success');
                         }else if(Array.isArray(imported)){
                             orders=imported;
-                            
-                            // Salva no Firestore usando coleção do usuário
-                            if (window.db) {
-                                try {
-                                    const user = await window.initAuth();
-                                    if (user) {
-                                        const userOrdersCollection = collection(window.db, "users", user.uid, "orders");
-                                        const existingSnapshot = await getDocs(userOrdersCollection);
-                                        const deletePromises = [];
-                                        existingSnapshot.forEach((doc) => {
-                                            deletePromises.push(deleteDoc(doc.ref));
-                                        });
-                                        await Promise.all(deletePromises);
-                                        
-                                        for (const order of orders) {
-                                            await saveOrderDoc(user.uid, order);
-                                        }
-                                        console.log('✅ Dados importados para o Firestore');
-                                    }
-                                } catch (error) {
-                                    console.warn('Erro ao importar para Firestore:', error);
-                                }
-                            }
                             
                             await setJSON('productionOrders', orders);displayOrders();updateStats();updateGraficaFilter();showNotification('Dados importados com sucesso!','success');
                         }else{throw new Error('Formato inválido');}
@@ -2299,35 +1808,6 @@
                     // Limpa localStorage
                     localStorage.removeItem('productionOrders');localStorage.removeItem('productTemplates');localStorage.removeItem('orderIdCounter');
                     
-                    // Limpa Firestore da coleção do usuário se disponível
-                    if (window.db) {
-                        try {
-                            const user = await window.initAuth();
-                            if (user) {
-                                const userOrdersCollection = collection(window.db, "users", user.uid, "orders");
-                                const ordersSnapshot = await getDocs(userOrdersCollection);
-                                const deletePromises = [];
-                                ordersSnapshot.forEach((doc) => {
-                                    deletePromises.push(deleteDoc(doc.ref));
-                                });
-                                await Promise.all(deletePromises);
-                                console.log('✅ Todas as ordens removidas do Firestore');
-                            }
-                        } catch (error) {
-                            console.warn('Erro ao limpar Firestore:', error);
-                        }
-                    }
-                    
-                    // Compatibilidade com sistema antigo
-                    if(window.cloudStorage){
-                        try{
-                            await CloudStorage.remove('productionOrders');
-                            await CloudStorage.remove('productTemplates');
-                            await CloudStorage.remove('orderIdCounter');
-                            await CloudStorage.remove('migrated_flag');
-                        }catch(e){console.warn('Erro limpando Firebase:', e);}
-                    }
-                    
                     displayOrders();updateStats();updateGraficaFilter();showNotification('Todos os dados foram removidos.','info');
                 }
             }
@@ -2342,30 +1822,15 @@
                     updateGraficaFilter(); // Atualizar filtro de gráficas
                     await migrateAndCompactOrdersIfNeeded();
                     
-                    // Notificação de status do Firebase
-                    if (window.storageSvc && window.db) {
-                        const user = await window.initAuth();
-                        if (user) {
-                            showNotification(`✅ Sistema carregado! Firebase ativo com Storage e coleção de usuário (${user.uid.substring(0,8)}...).`, 'success');
-                        } else {
-                            showNotification('✅ Sistema carregado! Firebase Storage ativo para imagens.', 'success');
-                        }
-                    } else {
-                        showNotification('⚠️ Sistema carregado em modo offline. Imagens serão salvas localmente.', 'warning');
-                    }
+                    showNotification('✅ Sistema carregado com localStorage!', 'success');
                 } catch (e) {
                     console.error('Erro na inicialização:', e);
-                    showNotification('Erro ao carregar dados. Usando modo offline.', 'warning');
+                    showNotification('Erro ao carregar dados.', 'warning');
                 }
             }
 
-            // Aguardar Firebase estar pronto antes da inicialização
-            if (window.onAppReady) {
-                window.onAppReady(initializeApp);
-            } else {
-                // Fallback se Firebase não carregar
-                document.addEventListener('DOMContentLoaded', initializeApp);
-            }
+            // Inicialização quando o DOM estiver pronto
+            document.addEventListener('DOMContentLoaded', initializeApp);
 
             // Fechar modais ao clicar fora
             window.onclick=function(e){
@@ -2377,104 +1842,7 @@
                 if(e.target===tm)closeTemplatesModal();
             }
 
-        // Função para forçar migração manual
-        async function forceMigration() {
-            try {
-                if (!window.db || !window.firebaseAuth) {
-                    showNotification('❌ Firebase não está disponível', 'error');
-                    return;
-                }
-
-                showNotification('🔄 Iniciando migração para Firebase...', 'info');
-                console.log('🔄 Migração manual iniciada...');
-
-                // Garante autenticação primeiro
-                await window.initAuth();
-
-                // Remove flag de migração para forçar nova migração
-                if (window.cloudStorage) {
-                    await CloudStorage.remove('migrated_flag');
-                }
-
-                // Execute a migração
-                await migrateLocalStorage();
-
-                // Recarrega os dados para garantir que estão sincronizados
-                await loadInitialData();
-                displayOrders();
-                updateStats();
-
-                showNotification('✅ Migração para Firebase concluída!', 'success');
-                console.log('✅ Migração manual concluída');
-
-            } catch (error) {
-                console.error('❌ Erro na migração:', error);
-                showNotification(`❌ Erro na migração: ${error.message}`, 'error');
-            }
-        }        // Função para testar conexão Firebase
-        async function testFirebaseConnection() {
-            const testKey = 'firebase_test_' + Date.now();
-            const testValue = { test: true, timestamp: Date.now() };
-            
-            try {
-                console.log('🔥 Iniciando teste de conectividade Firebase...');
-                
-                // Verificações iniciais
-                console.log('Status do storage:', {
-                    useFirebase: storage.useFirebase,
-                    isFirebaseReady: storage.isFirebaseReady,
-                    hasCloudStorage: !!window.cloudStorage,
-                    hasDb: !!db,
-                    hasAuth: !!auth,
-                    dbInitialized: !!window.db
-                });
-                
-                if (!db) {
-                    throw new Error('Firestore não está inicializado. Verifique a configuração do Firebase.');
-                }
-                
-                if (!auth) {
-                    throw new Error('Firebase Auth não está inicializado.');
-                }
-                
-                // Teste de autenticação
-                console.log('🔥 Testando autenticação anônima...');
-                const user = await initAuth();
-                console.log('✅ Usuário autenticado:', user.uid);
-                
-                // Teste de escrita
-                console.log('🔥 Testando escrita...');
-                const writeSuccess = await CloudStorage.set(testKey, testValue);
-                if (!writeSuccess) {
-                    throw new Error('Falha na escrita');
-                }
-                console.log('✅ Escrita realizada com sucesso');
-                
-                // Teste de leitura
-                console.log('🔥 Testando leitura...');
-                const retrieved = await CloudStorage.get(testKey);
-                console.log('✅ Leitura realizada:', retrieved);
-                
-                // Teste de remoção
-                console.log('🔥 Testando remoção...');
-                await CloudStorage.remove(testKey);
-                console.log('✅ Remoção realizada com sucesso');
-                
-                // Verifica se foi removido
-                const shouldBeNull = await CloudStorage.get(testKey);
-                if (shouldBeNull === null) {
-                    console.log('✅ Confirmado: dados removidos');
-                    showNotification('🔥 Firebase funcionando perfeitamente!', 'success');
-                } else {
-                    console.log('⚠️ Dados não foram completamente removidos, mas Firebase está funcionando');
-                    showNotification('🔥 Firebase funcionando (com pequenas inconsistências)!', 'success');
-                }
-                
-            } catch (error) {
-                console.error('❌ Erro no teste Firebase:', error);
-                showNotification(`❌ Erro Firebase: ${error.message}`, 'error');
-            }
-        }            // Auto-salvar assíncrono
+        // Auto-salvar assíncrono
             setInterval(async ()=>{
                 try{
                     if(orders.length>0) await setJSON('productionOrders', orders);
@@ -2558,34 +1926,3 @@
         
     </body>
     </html>
-
-    <!--
-    ✅ FIREBASE CONFIGURADO COM AUTENTICAÇÃO ANÔNIMA!
-    
-    Use estas regras no Console Firebase > Firestore Database > Rules:
-
-    rules_version = '2';
-    service cloud.firestore {
-      match /databases/{database}/documents {
-        match /users/{userId}/kv/{docId} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-        }
-      }
-    }
-
-    STATUS DA CONFIGURAÇÃO:
-    ✅ Authentication > Anonymous ATIVADO
-    ✅ UID do usuário: CzMPNICV7pfc9s5TGt2tK99Y64l2
-    
-    PRÓXIMOS PASSOS:
-    1. Cole as regras acima no Firebase Console > Firestore Database > Rules
-    2. Clique em "Publicar"
-    3. Teste o botão "🔥 Testar Firebase"
-    4. Teste o botão "🔄 Migrar para Firebase"
-
-    ESTRUTURA DOS DADOS NO FIRESTORE:
-    users/CzMPNICV7pfc9s5TGt2tK99Y64l2/kv/productionOrders = array de ordens
-    users/CzMPNICV7pfc9s5TGt2tK99Y64l2/kv/productTemplates = array de templates  
-    users/CzMPNICV7pfc9s5TGt2tK99Y64l2/kv/orderIdCounter = número
-    users/CzMPNICV7pfc9s5TGt2tK99Y64l2/kv/migrated_flag = boolean (controle interno)
-    -->
