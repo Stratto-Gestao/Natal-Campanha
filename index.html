@@ -1176,11 +1176,135 @@
                     r.readAsText(file);
                     event.target.value = ''; // Limpa o input para permitir re-importar o mesmo arquivo
                 },
+
+                // Funções CRUD para Ordens de Produção
+                async addOrder(orderData) {
+                    const newOrder = {
+                        ...orderData,
+                        id: this.orderIdCounter++,
+                        status: 'Em Andamento',
+                        createdAt: new Date().toISOString()
+                    };
+                    this.productionOrders.unshift(newOrder);
+                    await this.setJSON('productionOrders', this.productionOrders);
+                    await this.setJSON('orderIdCounter', this.orderIdCounter);
+                    this.showToast('Ordem de produção criada com sucesso!', 'success');
+                },
+
+                async updateOrder(orderId, updatedData) {
+                    const index = this.productionOrders.findIndex(o => o.id === orderId);
+                    if (index !== -1) {
+                        this.productionOrders[index] = { ...this.productionOrders[index], ...updatedData };
+                        await this.setJSON('productionOrders', this.productionOrders);
+                        this.showToast(`Ordem #${orderId} atualizada.`, 'success');
+                    }
+                },
+
+                async deleteOrder(orderId) {
+                    this.productionOrders = this.productionOrders.filter(o => o.id !== orderId);
+                    await this.setJSON('productionOrders', this.productionOrders);
+                    this.showToast(`Ordem #${orderId} excluída.`, 'info');
+                },
             }));
         });
 
-        function handlePrint() {
+        // Funções globais que interagem com o Alpine.js
+        function getAlpineComponent() {
+            return document.querySelector('[x-data]').__x;
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const alpine = getAlpineComponent();
+            // Lógica para coletar dados do formulário e chamar alpine.addOrder(...)
+            // Esta parte precisa ser implementada para coletar os dados dos inputs do formulário principal
+            alpine.showToast('Função de criar ordem a ser implementada.', 'info');
+        }
+
+        function handleEditFormSubmit(event) {
+            event.preventDefault();
+            const alpine = getAlpineComponent();
+            const orderId = parseInt(document.getElementById('editOrderId').value);
+            // Lógica para coletar dados do formulário de edição e chamar alpine.updateOrder(...)
+            // Esta parte precisa ser implementada para coletar os dados dos inputs do formulário de edição
+            alpine.updateOrder(orderId, { /* ... dados atualizados ... */ });
+            closeEditModal();
+        }
+
+        function openEditModal(orderId) {
+            const alpine = getAlpineComponent();
+            const order = alpine.productionOrders.find(o => o.id === orderId);
+            if (order) {
+                // Preenche o formulário de edição
+                document.getElementById('editOrderId').value = order.id;
+                // ... preencher outros campos ...
+                document.getElementById('editModal').style.display = 'block';
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        function filterOrders() {
+            const alpine = getAlpineComponent();
+            alpine.searchTerm = document.getElementById('searchOrders').value;
+            // Adicionar lógica para filtros de status e prioridade se necessário
+        }
+
+        function setViewMode(mode) {
+            // Lógica para alternar a visualização
+            console.log(`Modo de visualização: ${mode}`);
+        }
+
+        function openSendToGraficaModal() {
+            getAlpineComponent().showToast('Função "Enviar à Gráfica" a ser implementada.', 'info');
+        }
+
+        function toggleSelectAll() {
+            getAlpineComponent().showToast('Função "Selecionar Todos" a ser implementada.', 'info');
+        }
+
+        function openPrintModal(orderId) {
+            // Lógica para preparar o conteúdo de impressão
+            document.getElementById('printModal').style.display = 'block';
+        }
+
+        function closePrintModal() {
+            document.getElementById('printModal').style.display = 'none';
+        }
+
+        function printOrder() {
             window.print();
+        }
+
+        function openTemplatesModal() {
+            document.getElementById('templatesModal').style.display = 'block';
+        }
+
+        function closeTemplatesModal() {
+            document.getElementById('templatesModal').style.display = 'none';
+        }
+
+        // A função handleImport já está no componente Alpine, mas se for chamada globalmente, precisa de um wrapper
+        function handleImport(event) {
+            getAlpineComponent().handleImport(event);
+        }
+
+        function handleExport() {
+            getAlpineComponent().handleExport();
+        }
+
+        function forceMigration() {
+            getAlpineComponent().forceMigration();
+        }
+
+        function testFirebaseConnection() {
+            getAlpineComponent().testFirebaseConnection();
+        }
+
+        function resetAllData() {
+            getAlpineComponent().confirmReset();
         }
     </script>
 </body>
