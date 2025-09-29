@@ -502,11 +502,7 @@
                     </select>
                     <select id="filterGrafica" onchange="filterOrders()">
                         <option value="">Todas as Gráficas</option>
-                        <option value="Gráfica São José">Gráfica São José</option>
-                        <option value="Gráfica Central">Gráfica Central</option>
-                        <option value="Gráfica Norte">Gráfica Norte</option>
-                        <option value="Gráfica Sul">Gráfica Sul</option>
-                        <option value="Gráfica Express">Gráfica Express</option>
+                        <!-- Opções serão preenchidas dinamicamente -->
                     </select>
                     <input type="text" id="searchOrders" placeholder="Buscar..." onkeyup="filterOrders()">
                 </div>
@@ -1326,6 +1322,36 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
         }
 
 
+        function updateGraficaFilter() {
+            // Extrair todas as gráficas únicas das ordens existentes
+            const graficasUnicas = [...new Set(orders
+                .map(order => order.grafica)
+                .filter(grafica => grafica && grafica.trim() !== '')
+            )].sort();
+            
+            const filterGrafica = document.getElementById('filterGrafica');
+            if (!filterGrafica) return;
+            
+            // Salvar valor selecionado atual
+            const currentValue = filterGrafica.value;
+            
+            // Limpar opções existentes (exceto "Todas as Gráficas")
+            filterGrafica.innerHTML = '<option value="">Todas as Gráficas</option>';
+            
+            // Adicionar gráficas encontradas
+            graficasUnicas.forEach(grafica => {
+                const option = document.createElement('option');
+                option.value = grafica;
+                option.textContent = grafica;
+                filterGrafica.appendChild(option);
+            });
+            
+            // Restaurar valor selecionado se ainda existir
+            if (currentValue && graficasUnicas.includes(currentValue)) {
+                filterGrafica.value = currentValue;
+            }
+        }
+
         function showNotification(message,type='success'){const n=document.getElementById('notification');n.textContent=message;n.className=`notification ${type}`;n.classList.add('show');setTimeout(()=>n.classList.remove('show'),3000);}
         async function generateOrderId(){const id=orderIdCounter;orderIdCounter++;await storage.setItem('orderIdCounter', orderIdCounter.toString());return `OP-${String(id).padStart(4,'0')}`;}
         function updateStats(){const total=orders.length;const emAndamento=orders.filter(o=>o.status==='Em Andamento').length;const finalizadas=orders.filter(o=>o.status==='Finalizado').length;const unicos=new Set(orders.map(o=>o.nomeTemplate)).size;document.getElementById('totalOrders').textContent=total;document.getElementById('inProgressOrders').textContent=emAndamento;document.getElementById('completedOrders').textContent=finalizadas;document.getElementById('totalProducts').textContent=unicos;}
@@ -1504,7 +1530,7 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
                 imagemArte:imgAData
             };
             let processed=0;const total=(imgF?1:0)+(imgA?1:0);
-            async function saveOrder(){orders.push(order);await setJSON('productionOrders', orders);await saveAsTemplate();displayOrders();updateStats();document.getElementById('orderForm').reset();document.getElementById('previewFaca').style.display='none';document.getElementById('previewArte').style.display='none';clearSelection();showNotification('✅ Ordem de produção criada com sucesso!','success');}
+            async function saveOrder(){orders.push(order);await setJSON('productionOrders', orders);await saveAsTemplate();displayOrders();updateStats();updateGraficaFilter();document.getElementById('orderForm').reset();document.getElementById('previewFaca').style.display='none';document.getElementById('previewArte').style.display='none';clearSelection();showNotification('✅ Ordem de produção criada com sucesso!','success');}
             if(total===0){await saveOrder();return;}
             if(imgF){imageToBase64(imgF,async b64=>{order.imagemFaca=b64;processed++;if(processed===total)await saveOrder();});}
             if(imgA){imageToBase64(imgA,async b64=>{order.imagemArte=b64;processed++;if(processed===total)await saveOrder();});}
@@ -1560,7 +1586,7 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
             order.lastModified=new Date().toLocaleDateString('pt-BR')+' às '+new Date().toLocaleTimeString('pt-BR');
 
             let processed=0;const total=(imgF?1:0)+(imgA?1:0);
-            async function finish(){orders[idx]=order;await setJSON('productionOrders', orders);displayOrders();updateStats();closeEditModal();showNotification(`✅ Ordem ${id} atualizada com sucesso!`,'success');}
+            async function finish(){orders[idx]=order;await setJSON('productionOrders', orders);displayOrders();updateStats();updateGraficaFilter();closeEditModal();showNotification(`✅ Ordem ${id} atualizada com sucesso!`,'success');}
             if(total===0){await finish();return;}
             if(imgF){imageToBase64(imgF,async b64=>{order.imagemFaca=b64;processed++;if(processed===total)await finish();});}
             if(imgA){imageToBase64(imgA,async b64=>{order.imagemArte=b64;processed++;if(processed===total)await finish();});}
@@ -1660,7 +1686,7 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
                 <div class="order-header">
                     <input type="checkbox" class="select-order" data-order-id="${order.id}" onchange="toggleSelectOrder('${order.id}', this.checked)" ${isSelected(order.id)?'checked':''} style="margin-right:8px;"> <span class="order-id">${order.id}</span>
                     ${order.nomeTemplate?`<span style="background:#e8f4fd;color:#2c3e50;padding:3px 8px;border-radius:12px;font-size:12px;margin-left:10px;">📦 ${order.nomeTemplate}</span>`:''}
-                    ${order.grafica?`<span style="background:#f0f8e8;color:#27ae60;padding:3px 8px;border-radius:12px;font-size:12px;margin-left:10px;">🏢 ${order.grafica}</span>`:''}
+                    ${order.grafica?`<span style="background:#ff6b6b;color:white;padding:4px 10px;border-radius:15px;font-size:11px;font-weight:bold;margin-left:8px;box-shadow:0 2px 4px rgba(255,107,107,0.3);">🏢 ${order.grafica}</span>`:''}
                     <span class="priority ${pClass}">${order.prioridade||'Média'}</span>
                     <span style="margin-left:15px;color:#6c757d;">${order.dataCreated} ${order.timeCreated?'às '+order.timeCreated:''}</span>
                     ${order.lastModified?`<span style="margin-left:10px;color:#e67e22;font-size:12px;">(Editado: ${order.lastModified})</span>`:''}
@@ -1733,7 +1759,7 @@ function buildCompactItem(order){
             const statusBadgeText = order.status === 'Finalizado' ? '✅ Finalizado' : '🔄 Em Andamento';
             
             // Tag da gráfica
-            const graficaTag = order.grafica ? `<span style="background:#e8f4fd;color:#2c3e50;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:8px;">🏢 ${order.grafica}</span>` : '';
+            const graficaTag = order.grafica ? `<span style="background:#ff6b6b;color:white;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:bold;margin-left:8px;box-shadow:0 2px 4px rgba(255,107,107,0.3);">🏢 ${order.grafica}</span>` : '';
             
             return `
             <div class="compact-item ${statusClass}" onclick="toggleExpand('${safeId}')" style="cursor:pointer;transition:all 0.3s ease;">
@@ -1790,7 +1816,10 @@ function buildCompactItem(order){
             el.scrollIntoView({behavior:'smooth',block:'center'});
         }
 
-        function displayOrders(){displayOrdersList(orders);}
+        function displayOrders(){
+            updateGraficaFilter(); // Atualizar opções de gráficas
+            displayOrdersList(orders);
+        }
         function displayOrdersList(list=orders){
             const el=document.getElementById('ordersList');
             if(list.length===0){
@@ -1848,7 +1877,7 @@ function buildCompactItem(order){
             if(confirm('Tem certeza que deseja excluir esta ordem de produção?')){
                 orders=orders.filter(o=>o.id!==orderId);
                 await setJSON('productionOrders', orders);
-                displayOrders();updateStats();
+                displayOrders();updateStats();updateGraficaFilter();
                 showNotification(`Ordem ${orderId} excluída com sucesso!`,'info');
             }
         }
@@ -1958,9 +1987,9 @@ function buildCompactItem(order){
                     if(imported.orders&&Array.isArray(imported.orders)){
                         orders=imported.orders;
                         if(imported.productTemplates&&Array.isArray(imported.productTemplates)){productTemplates=imported.productTemplates;await setJSON('productTemplates', productTemplates);}
-                        await setJSON('productionOrders', orders);displayOrders();updateStats();showNotification('Dados importados com sucesso!','success');
+                        await setJSON('productionOrders', orders);displayOrders();updateStats();updateGraficaFilter();showNotification('Dados importados com sucesso!','success');
                     }else if(Array.isArray(imported)){
-                        orders=imported;await setJSON('productionOrders', orders);displayOrders();updateStats();showNotification('Dados importados com sucesso!','success');
+                        orders=imported;await setJSON('productionOrders', orders);displayOrders();updateStats();updateGraficaFilter();showNotification('Dados importados com sucesso!','success');
                     }else{throw new Error('Formato inválido');}
                 }catch(err){showNotification('Erro ao importar dados. Verifique o formato do arquivo.','error');}
             };
@@ -1979,7 +2008,7 @@ function buildCompactItem(order){
                         await window.cloudStorage.remove('orderIdCounter');
                     }catch(e){console.warn('Erro limpando Firebase:', e);}
                 }
-                displayOrders();updateStats();showNotification('Todos os dados foram removidos.','info');
+                displayOrders();updateStats();updateGraficaFilter();showNotification('Todos os dados foram removidos.','info');
             }
         }
 
@@ -1990,6 +2019,7 @@ function buildCompactItem(order){
                 setViewMode(viewMode);
                 displayOrders();
                 updateStats();
+                updateGraficaFilter(); // Atualizar filtro de gráficas
                 await migrateAndCompactOrdersIfNeeded();
                 
                 // Habilita Firebase após carregamento inicial
