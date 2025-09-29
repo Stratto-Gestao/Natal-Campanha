@@ -397,7 +397,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="fornecedor">Fornecedor (Terceirização)</label>
+                                <label for="fornecedor">GRÁFICA</label>
                                 <input type="text" id="fornecedor" placeholder="Nome do fornecedor">
                             </div>
                         </div>
@@ -735,12 +735,22 @@
             appId: "1:681409177091:web:84fda4b78d4e4893dd9036"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        let app, auth, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (error) {
+            console.warn('Firebase initialization failed:', error);
+            // Continue sem Firebase se falhar
+        }
 
         // Cache offline (ignora se já estiver ativo em outro tab)
-        enableIndexedDbPersistence(db).catch(()=>{});
+        if (db) {
+            enableIndexedDbPersistence(db).catch((error) => {
+                console.warn('Firebase persistence not enabled:', error);
+            });
+        }
 
         // Controle de readiness
         let APP_READY = false;
@@ -758,9 +768,16 @@
         // Autenticação anônima
         function initAuth() {
             return new Promise((resolve, reject) => {
+                if (!auth) {
+                    reject(new Error('Firebase not initialized'));
+                    return;
+                }
                 onAuthStateChanged(auth, user => {
                     if (user) resolve(user);
-                    else signInAnonymously(auth).catch(reject);
+                    else signInAnonymously(auth).catch(error => {
+                        console.warn('Anonymous auth failed:', error);
+                        reject(error);
+                    });
                 }, reject);
             });
         }
@@ -773,12 +790,20 @@
 
             async function ensureAuth() {
                 if (uid) return uid;
-                const user = await initAuth();
-                uid = user.uid;
-                return uid;
+                try {
+                    const user = await initAuth();
+                    uid = user.uid;
+                    return uid;
+                } catch (error) {
+                    console.warn('Auth failed, using offline mode:', error);
+                    throw new Error('Firebase authentication failed');
+                }
             }
 
             function keyDoc(key) {
+                if (!db || !uid) {
+                    throw new Error('Firebase not properly initialized');
+                }
                 return doc(db, "users", uid, "kv", key);
             }
 
@@ -820,6 +845,10 @@
             }
 
             function onChange(key, cb) {
+                if (!db || !uid) {
+                    console.warn('Firebase not ready for onChange listener');
+                    return () => {}; // retorna função vazia para cleanup
+                }
                 if (listeners.has(key)) return listeners.get(key);
                 const unsub = onSnapshot(keyDoc(key), snap => {
                     if (snap.exists()) {
@@ -890,12 +919,14 @@
         // Função bootstrap
         async function bootstrapApplication() {
             try {
-                await initAuth();
-                await migrateLocalStorage();
+                if (auth && db) {
+                    await initAuth();
+                    await migrateLocalStorage();
+                }
                 fireReady();
                 console.log("[App] Firebase integrado e pronto.");
             } catch (e) {
-                console.error("[Bootstrap] Erro:", e);
+                console.warn("[Bootstrap] Firebase falhou, continuando em modo offline:", e);
                 // Fallback para localStorage se Firebase falhar
                 fireReady();
             }
@@ -1311,20 +1342,29 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
         }
         function selectTemplate(i){selectedTemplate=productTemplates[i];document.querySelectorAll('.product-item').forEach(it=>it.classList.remove('selected'));document.querySelectorAll('.product-item')[i].classList.add('selected');fillFormWithTemplate(selectedTemplate);showNotification(`Produto "${selectedTemplate.nomeTemplate}" carregado!`,'success');}
         function fillFormWithTemplate(t){
-            document.getElementById('medidasFolha').value=t.medidasFolha||'';
-            document.getElementById('fornecedor').value=t.fornecedor||'';
-            document.getElementById('tipoPapel').value=t.tipoPapel||'';
-            document.getElementById('gramatura').value=t.gramatura||'';
-            document.getElementById('impressao').value=t.impressao||'Frente 4x0';
-            document.getElementById('prioridade').value=t.prioridade||'Média';
-            document.getElementById('grafica').value=t.grafica||'';
-            document.getElementById('nomeTemplate').value=t.nomeTemplate||'';
-            document.getElementById('folhasResma').value=t.folhasResma||'';
-            document.getElementById('acabamento').value=t.acabamento||'';
-            document.getElementById('descricaoEmbalagens').value=t.descricaoEmbalagens||'';
-            document.getElementById('formato').value=t.formato||'';
-            document.getElementById('codigoFaca').value=t.codigoFaca||'';
-            document.getElementById('resmasUsadas').value=t.resmasUsadas||'';
+            const setValueSafely = (id, value) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.value = value || '';
+                } else {
+                    console.warn(`Element ${id} not found`);
+                }
+            };
+            
+            setValueSafely('medidasFolha', t.medidasFolha);
+            setValueSafely('fornecedor', t.fornecedor);
+            setValueSafely('tipoPapel', t.tipoPapel);
+            setValueSafely('gramatura', t.gramatura);
+            setValueSafely('impressao', t.impressao || 'Frente 4x0');
+            setValueSafely('prioridade', t.prioridade || 'Média');
+            setValueSafely('grafica', t.grafica);
+            setValueSafely('nomeTemplate', t.nomeTemplate);
+            setValueSafely('folhasResma', t.folhasResma);
+            setValueSafely('acabamento', t.acabamento);
+            setValueSafely('descricaoEmbalagens', t.descricaoEmbalagens);
+            setValueSafely('formato', t.formato);
+            setValueSafely('codigoFaca', t.codigoFaca);
+            setValueSafely('resmasUsadas', t.resmasUsadas);
             if(t.imagemFaca){const p=document.getElementById('previewFaca');p.src=t.imagemFaca;p.style.display='block';}
             if(t.imagemArte){const p=document.getElementById('previewArte');p.src=t.imagemArte;p.style.display='block';}
         }
@@ -1332,9 +1372,44 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
         function clearForm(){document.getElementById('orderForm').reset();document.getElementById('previewFaca').style.display='none';document.getElementById('previewArte').style.display='none';clearSelection();showNotification('Formulário limpo!','info');}
 
         async function saveAsTemplate(){
-            const nome=document.getElementById('nomeTemplate').value.trim();
+            const nomeElement = document.getElementById('nomeTemplate');
+            if (!nomeElement) {
+                showNotification('Erro: Elemento nome do template não encontrado!', 'error');
+                return;
+            }
+            const nome = nomeElement.value.trim();
             if(!nome){showNotification('Digite o nome do produto antes de salvar como modelo.','error');return;}
-            const t={nomeTemplate:nome,medidasFolha:document.getElementById('medidasFolha').value,fornecedor:document.getElementById('fornecedor').value,tipoPapel:document.getElementById('tipoPapel').value,gramatura:document.getElementById('gramatura').value,impressao:document.getElementById('impressao').value,prioridade:document.getElementById('prioridade').value,grafica:document.getElementById('grafica').value,folhasResma:document.getElementById('folhasResma').value,acabamento:document.getElementById('acabamento').value,descricaoEmbalagens:document.getElementById('descricaoEmbalagens').value,formato:document.getElementById('formato').value,codigoFaca:document.getElementById('codigoFaca').value,resmasUsadas:document.getElementById('resmasUsadas').value,imagemFaca:document.getElementById('previewFaca').src||null,imagemArte:document.getElementById('previewArte').src||null,dataCriacao:new Date().toLocaleDateString('pt-BR'),vezesCriado:1};
+            
+            const getTemplateValueSafely = (id, defaultValue = '') => {
+                const element = document.getElementById(id);
+                if (element) {
+                    return element.value || defaultValue;
+                } else {
+                    console.warn(`Template element ${id} not found`);
+                    return defaultValue;
+                }
+            };
+            
+            const t={
+                nomeTemplate:nome,
+                medidasFolha:getTemplateValueSafely('medidasFolha'),
+                fornecedor:getTemplateValueSafely('fornecedor'),
+                tipoPapel:getTemplateValueSafely('tipoPapel'),
+                gramatura:getTemplateValueSafely('gramatura'),
+                impressao:getTemplateValueSafely('impressao'),
+                prioridade:getTemplateValueSafely('prioridade'),
+                grafica:getTemplateValueSafely('grafica'),
+                folhasResma:getTemplateValueSafely('folhasResma'),
+                acabamento:getTemplateValueSafely('acabamento'),
+                descricaoEmbalagens:getTemplateValueSafely('descricaoEmbalagens'),
+                formato:getTemplateValueSafely('formato'),
+                codigoFaca:getTemplateValueSafely('codigoFaca'),
+                resmasUsadas:getTemplateValueSafely('resmasUsadas'),
+                imagemFaca:document.getElementById('previewFaca')?.src||null,
+                imagemArte:document.getElementById('previewArte')?.src||null,
+                dataCriacao:new Date().toLocaleDateString('pt-BR'),
+                vezesCriado:1
+            };
             const idx=productTemplates.findIndex(x=>x.nomeTemplate===nome);
             if(idx!==-1){if(confirm(`Já existe um modelo com o nome "${nome}". Deseja atualizar?`)){productTemplates[idx]={...t,vezesCriado:productTemplates[idx].vezesCriado+1};showNotification(`Modelo "${nome}" atualizado!`,'success');}}
             else{productTemplates.push(t);showNotification(`Modelo "${nome}" salvo no histórico!`,'success');}
@@ -1390,28 +1465,38 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
             let imgFData=null, imgAData=null;
             if(imgF){ try{ imgFData = await compressFileToDataURL(imgF, 1280, 0.8);}catch(_){ /* fallback handled below */ } }
             if(imgA){ try{ imgAData = await compressFileToDataURL(imgA, 1280, 0.8);}catch(_){ /* fallback handled below */ } }
+            const getValueSafely = (id, defaultValue = '') => {
+                const element = document.getElementById(id);
+                if (element) {
+                    return element.value || defaultValue;
+                } else {
+                    console.warn(`Element ${id} not found for order creation`);
+                    return defaultValue;
+                }
+            };
+            
             const order={
                 id:await generateOrderId(),
-                medidasFolha:document.getElementById('medidasFolha').value,
-                quantidade:document.getElementById('quantidade').value,
-                folhasResma:document.getElementById('folhasResma').value,
-                fornecedor:document.getElementById('fornecedor').value,
-                status:document.getElementById('status').value,
-                tipoPapel:document.getElementById('tipoPapel').value,
-                gramatura:document.getElementById('gramatura').value,
-                impressao:document.getElementById('impressao').value,
-                prioridade:document.getElementById('prioridade').value,
-                grafica:document.getElementById('grafica').value,
-                nomeTemplate:document.getElementById('nomeTemplate').value,
+                medidasFolha:getValueSafely('medidasFolha'),
+                quantidade:getValueSafely('quantidade'),
+                folhasResma:getValueSafely('folhasResma'),
+                fornecedor:getValueSafely('fornecedor'),
+                status:getValueSafely('status'),
+                tipoPapel:getValueSafely('tipoPapel'),
+                gramatura:getValueSafely('gramatura'),
+                impressao:getValueSafely('impressao'),
+                prioridade:getValueSafely('prioridade'),
+                grafica:getValueSafely('grafica'),
+                nomeTemplate:getValueSafely('nomeTemplate'),
                 
-                formato:document.getElementById('formato').value,
-                codigoFaca:document.getElementById('codigoFaca').value,
-                resmasUsadas:document.getElementById('resmasUsadas').value,
-        enviadoFaca:document.getElementById('enviadoFaca').checked,
-                enviadoChapa:document.getElementById('enviadoChapa').checked,
-                enviadoImpressao:document.getElementById('enviadoImpressao').checked,
-                acabamento:document.getElementById('acabamento').value,
-                descricaoEmbalagens:document.getElementById('descricaoEmbalagens').value,
+                formato:getValueSafely('formato'),
+                codigoFaca:getValueSafely('codigoFaca'),
+                resmasUsadas:getValueSafely('resmasUsadas'),
+                enviadoFaca:document.getElementById('enviadoFaca')?.checked || false,
+                enviadoChapa:document.getElementById('enviadoChapa')?.checked || false,
+                enviadoImpressao:document.getElementById('enviadoImpressao')?.checked || false,
+                acabamento:getValueSafely('acabamento'),
+                descricaoEmbalagens:getValueSafely('descricaoEmbalagens'),
                 dataCreated:new Date().toLocaleDateString('pt-BR'),
                 timeCreated:new Date().toLocaleTimeString('pt-BR'),
                 currentStep:0,
@@ -1428,32 +1513,50 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
         // Editar OP
         document.getElementById('editForm').addEventListener('submit', async function(e){
             e.preventDefault();
-            const id=document.getElementById('editOrderId').value;
+            const editOrderIdElement = document.getElementById('editOrderId');
+            if (!editOrderIdElement) {
+                showNotification('Erro: Formulário de edição não encontrado!', 'error');
+                return;
+            }
+            const id = editOrderIdElement.value;
             const idx=orders.findIndex(o=>o.id===id);
             if(idx===-1){showNotification('Erro: Ordem não encontrada!','error');return;}
             const order=orders[idx];
             const editImgFInput=document.getElementById('editImagemFaca'); const imgF=(editImgFInput && editImgFInput.files && editImgFInput.files[0])||null;
             const editImgAInput=document.getElementById('editImagemArte'); const imgA=(editImgAInput && editImgAInput.files && editImgAInput.files[0])||null;
 
-            order.medidasFolha=document.getElementById('editMedidasFolha').value;
-            order.quantidade=document.getElementById('editQuantidade').value;
-            order.folhasResma=document.getElementById('editFolhasResma').value;
-            order.fornecedor=document.getElementById('editFornecedor').value;
-            order.status=document.getElementById('editStatus').value;
-            order.tipoPapel=document.getElementById('editTipoPapel').value;
-            order.gramatura=document.getElementById('editGramatura').value;
-            order.impressao=document.getElementById('editImpressao').value;
-            order.prioridade=document.getElementById('editPrioridade').value;
-            order.grafica=document.getElementById('editGrafica').value;
-            order.nomeTemplate=document.getElementById('editNomeTemplate').value;
-            order.enviadoFaca=document.getElementById('editEnviadoFaca').checked;
-            order.enviadoChapa=document.getElementById('editEnviadoChapa').checked;
-            order.enviadoImpressao=document.getElementById('editEnviadoImpressao').checked;
-            order.acabamento=document.getElementById('editAcabamento').value;
-            order.descricaoEmbalagens=document.getElementById('editDescricaoEmbalagens').value;
-            order.formato=document.getElementById('editFormato').value;
-            order.codigoFaca=document.getElementById('editCodigoFaca').value;
-            order.resmasUsadas=document.getElementById('editResmasUsadas').value;
+            const getEditValueSafely = (id, defaultValue = '') => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (element.type === 'checkbox') {
+                        return element.checked;
+                    }
+                    return element.value || defaultValue;
+                } else {
+                    console.warn(`Edit element ${id} not found`);
+                    return defaultValue;
+                }
+            };
+
+            order.medidasFolha=getEditValueSafely('editMedidasFolha');
+            order.quantidade=getEditValueSafely('editQuantidade');
+            order.folhasResma=getEditValueSafely('editFolhasResma');
+            order.fornecedor=getEditValueSafely('editFornecedor');
+            order.status=getEditValueSafely('editStatus');
+            order.tipoPapel=getEditValueSafely('editTipoPapel');
+            order.gramatura=getEditValueSafely('editGramatura');
+            order.impressao=getEditValueSafely('editImpressao');
+            order.prioridade=getEditValueSafely('editPrioridade');
+            order.grafica=getEditValueSafely('editGrafica');
+            order.nomeTemplate=getEditValueSafely('editNomeTemplate');
+            order.enviadoFaca=getEditValueSafely('editEnviadoFaca', false);
+            order.enviadoChapa=getEditValueSafely('editEnviadoChapa', false);
+            order.enviadoImpressao=getEditValueSafely('editEnviadoImpressao', false);
+            order.acabamento=getEditValueSafely('editAcabamento');
+            order.descricaoEmbalagens=getEditValueSafely('editDescricaoEmbalagens');
+            order.formato=getEditValueSafely('editFormato');
+            order.codigoFaca=getEditValueSafely('editCodigoFaca');
+            order.resmasUsadas=getEditValueSafely('editResmasUsadas');
             order.lastModified=new Date().toLocaleDateString('pt-BR')+' às '+new Date().toLocaleTimeString('pt-BR');
 
             let processed=0;const total=(imgF?1:0)+(imgA?1:0);
@@ -1467,26 +1570,40 @@ async function migrateAndCompactOrdersIfNeeded(maxTotalBytes=4.5*1024*1024){
             const order=orders.find(o=>o.id===orderId);
             if(!order){showNotification('Erro: Ordem não encontrada!','error');return;}
             isEditing=true;
-            document.getElementById('editOrderId').value=order.id;
-            document.getElementById('editMedidasFolha').value=order.medidasFolha;
-            document.getElementById('editQuantidade').value=order.quantidade;
-            document.getElementById('editFornecedor').value=order.fornecedor||'';
-            document.getElementById('editStatus').value=order.status;
-            document.getElementById('editTipoPapel').value=order.tipoPapel;
-            document.getElementById('editGramatura').value=order.gramatura;
-            document.getElementById('editImpressao').value=order.impressao;
-            document.getElementById('editPrioridade').value=order.prioridade||'Média';
-            document.getElementById('editGrafica').value=order.grafica||'';
-            document.getElementById('editNomeTemplate').value=order.nomeTemplate||'';
-            document.getElementById('editAcabamento').value=order.acabamento;
-            document.getElementById('editDescricaoEmbalagens').value=order.descricaoEmbalagens;
-            document.getElementById('editFormato').value=order.formato||'';
-            document.getElementById('editCodigoFaca').value=order.codigoFaca||'';
-            document.getElementById('editResmasUsadas').value=order.resmasUsadas||'';
-            document.getElementById('editFolhasResma').value=order.folhasResma||'';
-            document.getElementById('editEnviadoFaca').checked=!!order.enviadoFaca;
-            document.getElementById('editEnviadoChapa').checked=!!order.enviadoChapa;
-            document.getElementById('editEnviadoImpressao').checked=!!order.enviadoImpressao;
+            
+            const setValueSafely = (id, value) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (element.type === 'checkbox') {
+                        element.checked = !!value;
+                    } else {
+                        element.value = value || '';
+                    }
+                } else {
+                    console.warn(`Edit element ${id} not found`);
+                }
+            };
+            
+            setValueSafely('editOrderId', order.id);
+            setValueSafely('editMedidasFolha', order.medidasFolha);
+            setValueSafely('editQuantidade', order.quantidade);
+            setValueSafely('editFornecedor', order.fornecedor);
+            setValueSafely('editStatus', order.status);
+            setValueSafely('editTipoPapel', order.tipoPapel);
+            setValueSafely('editGramatura', order.gramatura);
+            setValueSafely('editImpressao', order.impressao);
+            setValueSafely('editPrioridade', order.prioridade || 'Média');
+            setValueSafely('editGrafica', order.grafica);
+            setValueSafely('editNomeTemplate', order.nomeTemplate);
+            setValueSafely('editAcabamento', order.acabamento);
+            setValueSafely('editDescricaoEmbalagens', order.descricaoEmbalagens);
+            setValueSafely('editFormato', order.formato);
+            setValueSafely('editCodigoFaca', order.codigoFaca);
+            setValueSafely('editResmasUsadas', order.resmasUsadas);
+            setValueSafely('editFolhasResma', order.folhasResma);
+            setValueSafely('editEnviadoFaca', order.enviadoFaca);
+            setValueSafely('editEnviadoChapa', order.enviadoChapa);
+            setValueSafely('editEnviadoImpressao', order.enviadoImpressao);
 
             const ciF=document.getElementById('currentImageFaca');
             const ciA=document.getElementById('currentImageArte');
