@@ -121,8 +121,8 @@
             .process-step.current{background:#fff3cd;border-color:#ffeaa7;color:#856404}
 
             .order-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:15px 0}
-            .detail-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}
-            .detail-label{font-weight:600;color:#6c757d}
+            .detail-item{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #eee}
+            .detail-label{font-weight:600;color:#6c757d;margin-right:2px}
 
             .order-images{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:15px 0}
             .order-image{text-align:center}
@@ -164,6 +164,10 @@
             .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,.5)}
             .modal-content{background:#fff;margin:5% auto;padding:20px;border-radius:15px;width:90%;max-width:600px;max-height:80vh;overflow-y:auto}
             .modal-content.large{max-width:900px}
+            .modal-header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:20px;border-radius:15px 15px 0 0;margin:-20px -20px 20px -20px;}
+            .modal-header h2{margin:0;color:#fff;}
+            .modal-header .close{color:#fff;}
+            #bulkProductionStatusModal .modal-content{max-width:800px;}
             .close{color:#aaa;float:right;font-size:28px;font-weight:bold;cursor:pointer}
             .close:hover{color:#000}
 
@@ -485,6 +489,7 @@
                     </div>
                 <div class="template-actions">
                     <button class="btn btn-info btn-small" onclick="openSendToGraficaModal()">📦 Enviar à Gráfica</button>
+                    <button class="btn btn-warning btn-small" onclick="openBulkProductionStatusModal()">🔄 Status da Produção</button>
                     <button class="btn btn-secondary btn-small" onclick="toggleSelectAll()">☑️ Selecionar Todos</button>
                 </div>
             
@@ -707,6 +712,44 @@
             </div>
         </div>
 
+        <!-- Modal para edição em lote do Status da Produção -->
+        <div id="bulkProductionStatusModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="close" onclick="closeBulkProductionStatusModal()">&times;</span>
+                    <h2>🔄 Status da Produção - Edição em Lote</h2>
+                </div>
+                <div style="padding:20px;">
+                    <div id="bulkStatusMeta" style="text-align:center;margin-bottom:20px;color:#6c757d;"></div>
+                    
+                    <div style="background:#f8f9ff;border:2px solid #e8f2ff;border-radius:10px;padding:20px;margin-bottom:20px;">
+                        <h3 style="color:#2c3e50;margin-bottom:15px;">Atualizar Status para OPs Selecionadas:</h3>
+                        <div class="process-checkboxes">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="bulkEnviadoFaca">
+                                <span>Enviado para produção da faca</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="bulkEnviadoChapa">
+                                <span>Enviado para gravar chapa</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="bulkEnviadoImpressao">
+                                <span>Enviado para impressão</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="bulkStatusOrders" style="max-height:300px;overflow-y:auto;border:1px solid #e0e6ed;border-radius:8px;padding:15px;background:#f8f9fa;"></div>
+                    
+                    <div style="text-align:center;margin-top:20px;">
+                        <button class="btn btn-success" onclick="applyBulkProductionStatus()">✅ Aplicar Mudanças</button>
+                        <button class="btn btn-secondary" onclick="closeBulkProductionStatusModal()">❌ Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Notificações -->
         <div id="notification" class="notification"></div>
 
@@ -900,6 +943,69 @@
         w.document.write(content);
         w.document.write('</body></html>');
         w.document.close(); w.focus(); w.print(); w.close();
+    }
+
+    // === Funções para Status de Produção em Lote ===
+    function openBulkProductionStatusModal(){
+        if(selectedOrderIds.size===0){ showNotification('Selecione pelo menos uma OP.', 'error'); return; }
+        const selected = orders.filter(o => selectedOrderIds.has(o.id));
+        document.getElementById('bulkStatusMeta').textContent = `Total de ordens selecionadas: ${selected.length}`;
+        
+        // Limpar checkboxes
+        document.getElementById('bulkEnviadoFaca').checked = false;
+        document.getElementById('bulkEnviadoChapa').checked = false;
+        document.getElementById('bulkEnviadoImpressao').checked = false;
+        
+        // Listar ordens selecionadas
+        const ordersList = selected.map(o => {
+            const statusAtual = [
+                {ok: o.enviadoFaca, label:'Faca'},
+                {ok: o.enviadoChapa, label:'Chapa'},
+                {ok: o.enviadoImpressao, label:'Impressão'}
+            ];
+            const statusText = statusAtual.map(s => s.ok ? `✅ ${s.label}` : `⭕ ${s.label}`).join(' | ');
+            
+            return `
+                <div style="padding:8px;margin:4px 0;background:#fff;border-radius:6px;border-left:4px solid #667eea;">
+                    <div style="font-weight:600;color:#2c3e50;">${o.id} ${o.nomeTemplate ? `- ${o.nomeTemplate}` : ''}</div>
+                    <div style="font-size:12px;color:#6c757d;margin-top:2px;">Status atual: ${statusText}</div>
+                </div>
+            `;
+        }).join('');
+        
+        document.getElementById('bulkStatusOrders').innerHTML = ordersList;
+        document.getElementById('bulkProductionStatusModal').style.display='block';
+    }
+
+    function closeBulkProductionStatusModal(){ 
+        document.getElementById('bulkProductionStatusModal').style.display='none'; 
+    }
+
+    async function applyBulkProductionStatus(){
+        if(selectedOrderIds.size===0){ showNotification('Nenhuma OP selecionada.', 'error'); return; }
+        
+        const enviadoFaca = document.getElementById('bulkEnviadoFaca').checked;
+        const enviadoChapa = document.getElementById('bulkEnviadoChapa').checked;
+        const enviadoImpressao = document.getElementById('bulkEnviadoImpressao').checked;
+        
+        let updateCount = 0;
+        for(const orderId of selectedOrderIds){
+            const order = orders.find(o => o.id === orderId);
+            if(order){
+                if(enviadoFaca) order.enviadoFaca = true;
+                if(enviadoChapa) order.enviadoChapa = true;
+                if(enviadoImpressao) order.enviadoImpressao = true;
+                updateCount++;
+            }
+        }
+        
+        if(updateCount > 0){
+            await setJSON('productionOrders', orders);
+            displayOrders();
+            showNotification(`Status de produção atualizado para ${updateCount} OP(s)!`, 'success');
+        }
+        
+        closeBulkProductionStatusModal();
     }
 
 
@@ -1469,7 +1575,7 @@
                 <div class="order-item order-card ${statusClass} priority-${pClass==='média'?'medium':pClass==='alta'?'high':'low'}" style="position:relative;">
                     <div class="status-badge ${badgeClass}" style="position:absolute;top:15px;right:15px;">${statusBadgeText}</div>
                     <div class="order-header">
-                        <input type="checkbox" class="select-order" data-order-id="${order.id}" onchange="toggleSelectOrder('${order.id}', this.checked)" ${isSelected(order.id)?'checked':''} style="margin-right:8px;"> <span class="order-id">${order.id}</span>
+                        <input type="checkbox" class="select-order" data-order-id="${order.id}" onchange="event.stopPropagation();toggleSelectOrder('${order.id}', this.checked)" ${isSelected(order.id)?'checked':''} style="margin-right:8px;"> <span class="order-id">${order.id}</span>
                         ${order.nomeTemplate?`<span style="background:#e8f4fd;color:#2c3e50;padding:3px 8px;border-radius:12px;font-size:12px;margin-left:10px;">📦 ${order.nomeTemplate}</span>`:''}
                         ${order.fornecedor?`<span class="grafica-tag-detailed">🏢 ${order.fornecedor}</span>`:''}
                         <span class="priority ${pClass}">${order.prioridade||'Média'}</span>
@@ -1488,16 +1594,16 @@
                     </div>
 
                     <div class="order-details">
-                        ${order.formato?`<div class="detail-item"><span class="detail-label">Formato:</span><span>${order.formato}</span></div>`:""}
-                        ${order.codigoFaca?`<div class="detail-item"><span class="detail-label">Código da Faca:</span><span>${order.codigoFaca}</span></div>`:""}
-                        <div class="detail-item"><span class="detail-label">Medidas:</span><span>${order.medidasFolha}</span></div>
-                        <div class="detail-item"><span class="detail-label">Quantidade:</span><span>${parseInt(order.quantidade).toLocaleString()}</span></div>
-                        ${order.folhasResma?`<div class="detail-item"><span class="detail-label">Folhas/Resma:</span><span>${order.folhasResma}</span></div>`:''}
-                        ${order.resmasUsadas?`<div class="detail-item"><span class="detail-label">Resmas:</span><span>${order.resmasUsadas}</span></div>`:""}
-                        <div class="detail-item"><span class="detail-label">Papel:</span><span>${order.tipoPapel}</span></div>
-                        <div class="detail-item"><span class="detail-label">Gramatura:</span><span>${order.gramatura}</span></div>
-                        <div class="detail-item"><span class="detail-label">Impressão:</span><span>${order.impressao}</span></div>
-                        ${order.fornecedor?`<div class="detail-item"><span class="detail-label">Gráfica (Terceirização):</span><span>🏢 ${order.fornecedor}</span></div>`:''}
+                        ${order.formato?`<div class="detail-item"><span class="detail-label">Formato: </span><span>${order.formato}</span></div>`:""}
+                        ${order.codigoFaca?`<div class="detail-item"><span class="detail-label">Código da Faca: </span><span>${order.codigoFaca}</span></div>`:""}
+                        <div class="detail-item"><span class="detail-label">Medidas: </span><span>${order.medidasFolha}</span></div>
+                        <div class="detail-item"><span class="detail-label">Quantidade: </span><span>${parseInt(order.quantidade).toLocaleString()}</span></div>
+                        ${order.folhasResma?`<div class="detail-item"><span class="detail-label">Folhas/Resma: </span><span>${order.folhasResma}</span></div>`:''}
+                        ${order.resmasUsadas?`<div class="detail-item"><span class="detail-label">Resmas: </span><span>${order.resmasUsadas}</span></div>`:""}
+                        <div class="detail-item"><span class="detail-label">Papel: </span><span>${order.tipoPapel}</span></div>
+                        <div class="detail-item"><span class="detail-label">Gramatura: </span><span>${order.gramatura}</span></div>
+                        <div class="detail-item"><span class="detail-label">Impressão: </span><span>${order.impressao}</span></div>
+                        ${order.fornecedor?`<div class="detail-item"><span class="detail-label">Gráfica (Terceirização): </span><span>🏢 ${order.fornecedor}</span></div>`:''}
                     </div>
 
                     ${order.imagemFaca||order.imagemArte?`
