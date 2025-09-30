@@ -1575,7 +1575,10 @@
                 <div class="order-item order-card ${statusClass} priority-${pClass==='média'?'medium':pClass==='alta'?'high':'low'}" style="position:relative;">
                     <div class="status-badge ${badgeClass}" style="position:absolute;top:15px;right:15px;">${statusBadgeText}</div>
                     <div class="order-header">
-                        <input type="checkbox" class="select-order" data-order-id="${order.id}" onchange="event.stopPropagation();toggleSelectOrder('${order.id}', this.checked)" ${isSelected(order.id)?'checked':''} style="margin-right:8px;"> <span class="order-id">${order.id}</span>
+                        <div onclick="event.stopPropagation();" style="display:inline-block;cursor:default;margin-right:8px;">
+                            <input type="checkbox" class="select-order" data-order-id="${order.id}" onchange="event.stopPropagation();toggleSelectOrder('${order.id}', this.checked)" onclick="event.stopPropagation();" ${isSelected(order.id)?'checked':''}>
+                        </div>
+                        <span class="order-id">${order.id}</span>
                         ${order.nomeTemplate?`<span style="background:#e8f4fd;color:#2c3e50;padding:3px 8px;border-radius:12px;font-size:12px;margin-left:10px;">📦 ${order.nomeTemplate}</span>`:''}
                         ${order.fornecedor?`<span class="grafica-tag-detailed">🏢 ${order.fornecedor}</span>`:''}
                         <span class="priority ${pClass}">${order.prioridade||'Média'}</span>
@@ -1665,8 +1668,10 @@
                 <div class="compact-item ${statusClass}" onclick="toggleExpand('${safeId}')" style="cursor:pointer;transition:all 0.3s ease;">
                     <div class="status-badge ${badgeClass}">${statusBadgeText}</div>
                     <div style="display:flex;align-items:center;">
-                        <input type="checkbox" class="select-order" data-order-id="${order.id}" onchange="event.stopPropagation();toggleSelectOrder('${order.id}', this.checked)" ${isSelected(order.id)?'checked':''} style="margin-right:8px;">
-                        <div class="compact-title" style="flex:1;font-weight:600;color:#2c3e50;">${resumeLine}</div>
+                        <div onclick="event.stopPropagation();" style="cursor:default;margin-right:8px;">
+                            <input type="checkbox" class="select-order" data-order-id="${order.id}" onchange="event.stopPropagation();toggleSelectOrder('${order.id}', this.checked)" onclick="event.stopPropagation();" ${isSelected(order.id)?'checked':''}>
+                        </div>
+                        <div class="compact-title" style="flex:1;font-weight:600;color:#2c3e50;" onclick="toggleExpand('${safeId}')">${resumeLine}</div>
                         <div data-hint style="margin-left:10px;color:#6c757d;font-size:12px;">👆 Clique para expandir</div>
                     </div>
                     <div class="compact-meta" style="font-size:12px;margin-top:4px;margin-left:24px;">Status: <span class="status-text ${statusTextClass}">${statusIcon} ${order.status}</span>${graficaTag}</div>
