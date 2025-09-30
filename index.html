@@ -105,6 +105,17 @@
             .order-item.priority-high{border-left-color:#e74c3c}
             .order-item.priority-medium{border-left-color:#f39c12}
             .order-item.priority-low{border-left-color:#27ae60}
+            
+            /* Compact item styling */
+            .compact-item{background:#fff;padding:15px;margin-bottom:10px;border-radius:8px;box-shadow:0 3px 15px rgba(0,0,0,.08);border-left:4px solid #667eea;transition:all 0.3s ease;}
+            .compact-item:hover{box-shadow:0 5px 20px rgba(0,0,0,.12);}
+            
+            /* Indicadores visuais para status de produção */
+            .order-item.production-complete{border-left-color:#28a745 !important;background:#f8fff8 !important;}
+            .order-item.production-pending{border-left-color:#dc3545 !important;background:#fff8f8 !important;}
+            .compact-item.production-complete{border-left-color:#28a745 !important;background:#f8fff8 !important;}
+            .compact-item.production-pending{border-left-color:#dc3545 !important;background:#fff8f8 !important;}
+            
             .order-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px}
             .order-id{font-weight:bold;color:#2c3e50;font-size:1.2em}
             .status{padding:5px 15px;border-radius:20px;font-weight:600;text-transform:uppercase;font-size:12px}
@@ -504,6 +515,14 @@
                             <option value="Alta">Alta</option>
                             <option value="Média">Média</option>
                             <option value="Baixa">Baixa</option>
+                        </select>
+                        <select id="filterProductionStatus" onchange="filterOrders()">
+                            <option value="">Status da Produção</option>
+                            <option value="todas-completas">🟢 Todas Etapas Completas</option>
+                            <option value="falta-faca">🔴 Falta Produção da Faca</option>
+                            <option value="falta-chapa">🔴 Falta Gravar Chapa</option>
+                            <option value="falta-impressao">🔴 Falta Impressão</option>
+                            <option value="alguma-pendente">🟡 Alguma Etapa Pendente</option>
                         </select>
                         <select id="filterGrafica" onchange="filterOrders()">
                             <option value="">Todas as Gráficas</option>
@@ -1540,13 +1559,42 @@
                 const st=document.getElementById('filterStatus').value;
                 const pr=document.getElementById('filterPriority').value;
                 const gr=document.getElementById('filterGrafica').value;
+                const ps=document.getElementById('filterProductionStatus').value;
                 const q=document.getElementById('searchOrders').value.toLowerCase();
                 let filtered=orders.filter(order=>{
                     const sOK=!st||order.status===st;
                     const pOK=!pr||order.prioridade===pr;
                     const gOK=!gr||order.fornecedor===gr;
                     const qOK=!q||order.id.toLowerCase().includes(q)||order.tipoPapel.toLowerCase().includes(q)||order.acabamento.toLowerCase().includes(q)||order.descricaoEmbalagens.toLowerCase().includes(q)||(order.nomeTemplate&&order.nomeTemplate.toLowerCase().includes(q))||(order.fornecedor&&order.fornecedor.toLowerCase().includes(q));
-                    return sOK&&pOK&&gOK&&qOK;
+                    
+                    // Filtro por status de produção
+                    let psOK = true;
+                    if(ps){
+                        const faca = order.enviadoFaca;
+                        const chapa = order.enviadoChapa;
+                        const impressao = order.enviadoImpressao;
+                        const todasCompletas = faca && chapa && impressao;
+                        
+                        switch(ps){
+                            case 'todas-completas':
+                                psOK = todasCompletas;
+                                break;
+                            case 'falta-faca':
+                                psOK = !faca;
+                                break;
+                            case 'falta-chapa':
+                                psOK = !chapa;
+                                break;
+                            case 'falta-impressao':
+                                psOK = !impressao;
+                                break;
+                            case 'alguma-pendente':
+                                psOK = !todasCompletas;
+                                break;
+                        }
+                    }
+                    
+                    return sOK&&pOK&&gOK&&qOK&&psOK;
                 });
                 displayOrdersList(filtered);
             }
@@ -1565,6 +1613,10 @@
                 const processSteps=['Corte e Vinco','Desmolde','Acabamento','Selagem','Prateleira'];
                 const pClass=order.prioridade?order.prioridade.toLowerCase():'media';
                 
+                // Verificar status de produção
+                const isProductionComplete = order.enviadoFaca && order.enviadoChapa && order.enviadoImpressao;
+                const productionStatusClass = isProductionComplete ? 'production-complete' : 'production-pending';
+                
                 // Definir classes CSS baseadas no status
                 const statusClass = order.status === 'Finalizado' ? 'status-finalizado' : 'status-em-andamento';
                 const badgeClass = order.status === 'Finalizado' ? 'finalizado' : 'em-andamento';
@@ -1572,7 +1624,7 @@
                 const statusBadgeText = order.status === 'Finalizado' ? '✅ Finalizado' : '🔄 Em Andamento';
                 
                 return `
-                <div class="order-item order-card ${statusClass} priority-${pClass==='média'?'medium':pClass==='alta'?'high':'low'}" style="position:relative;">
+                <div class="order-item order-card ${statusClass} ${productionStatusClass} priority-${pClass==='média'?'medium':pClass==='alta'?'high':'low'}" style="position:relative;">
                     <div class="status-badge ${badgeClass}" style="position:absolute;top:15px;right:15px;">${statusBadgeText}</div>
                     <div class="order-header">
                         <div onclick="event.stopPropagation();" style="display:inline-block;cursor:default;margin-right:8px;">
@@ -1642,6 +1694,10 @@
                 const detailHtml = buildDetailedCard(order);
                 const safeId = `exp_${order.id.replace(/[^a-zA-Z0-9_-]/g,'')}`;
                 
+                // Verificar status de produção
+                const isProductionComplete = order.enviadoFaca && order.enviadoChapa && order.enviadoImpressao;
+                const productionStatusClass = isProductionComplete ? 'production-complete' : 'production-pending';
+                
                 // Definir classes CSS baseadas no status
                 const statusClass = order.status === 'Finalizado' ? 'status-finalizado' : 'status-em-andamento';
                 const badgeClass = order.status === 'Finalizado' ? 'finalizado' : 'em-andamento';
@@ -1665,7 +1721,7 @@
                 ).join('');
                 
                 return `
-                <div class="compact-item ${statusClass}" onclick="toggleExpand('${safeId}')" style="cursor:pointer;transition:all 0.3s ease;">
+                <div class="compact-item ${statusClass} ${productionStatusClass}" onclick="toggleExpand('${safeId}')" style="cursor:pointer;transition:all 0.3s ease;">
                     <div class="status-badge ${badgeClass}">${statusBadgeText}</div>
                     <div style="display:flex;align-items:center;">
                         <div onclick="event.stopPropagation();" style="cursor:default;margin-right:8px;">
@@ -1735,24 +1791,35 @@
                     return;
                 }
                 
-                // NOVA REGRA: OPs Em Andamento sempre primeiro, depois Finalizadas
+                // NOVA REGRA: Ordenação por status de produção e status geral
                 const sortedList = [...list].sort((a, b) => {
-                    // Se A é Em Andamento e B é Finalizado → A vem primeiro (retorna -1)
+                    // Função para verificar se todas as etapas de produção estão completas
+                    const isProductionComplete = (order) => {
+                        return order.enviadoFaca && order.enviadoChapa && order.enviadoImpressao;
+                    };
+                    
+                    const aComplete = isProductionComplete(a);
+                    const bComplete = isProductionComplete(b);
+                    
+                    // 1. OPs com etapas pendentes vêm primeiro
+                    if (!aComplete && bComplete) return -1;
+                    if (aComplete && !bComplete) return 1;
+                    
+                    // 2. Entre OPs com mesmo status de produção, priorizar "Em Andamento"
                     if (a.status === 'Em Andamento' && b.status === 'Finalizado') {
                         return -1;
                     }
-                    // Se A é Finalizado e B é Em Andamento → B vem primeiro (retorna 1)
                     if (a.status === 'Finalizado' && b.status === 'Em Andamento') {
                         return 1;
                     }
                     
-                    // Se ambos têm o mesmo status, ordenar por ID (mais recentes primeiro)
+                    // 3. Se tudo for igual, ordenar por ID (mais recentes primeiro)
                     return b.id.localeCompare(a.id, undefined, {numeric: true, sensitivity: 'base'});
                 });
                 
                 const modeDescription = window.viewMode === 'list' 
-                    ? '<div style="text-align:center;margin-bottom:20px;padding:12px;background:#e8f4fd;border-radius:8px;border-left:4px solid #74b9ff;"><p style="color:#2c3e50;margin:0;">💡 <strong>Modo Lista:</strong> Clique em qualquer OP para expandir os detalhes completos<br><small style="color:#fd7e14;">🟠 OPs Em Andamento aparecem primeiro | 🟢 OPs Finalizadas aparecem depois</small></p></div>'
-                    : '<div style="text-align:center;margin-bottom:20px;padding:12px;background:#f0f8e8;border-radius:8px;border-left:4px solid #27ae60;"><p style="color:#2c3e50;margin:0;">💡 <strong>Modo Detalhado:</strong> Todas as informações visíveis<br><small style="color:#fd7e14;">🟠 OPs Em Andamento aparecem primeiro | 🟢 OPs Finalizadas aparecem depois</small></p></div>';
+                    ? '<div style="text-align:center;margin-bottom:20px;padding:12px;background:#e8f4fd;border-radius:8px;border-left:4px solid #74b9ff;"><p style="color:#2c3e50;margin:0;">💡 <strong>Modo Lista:</strong> Clique em qualquer OP para expandir os detalhes completos<br><small style="color:#fd7e14;">� OPs com etapas pendentes aparecem primeiro | 🟢 OPs com produção completa aparecem depois</small></p></div>'
+                    : '<div style="text-align:center;margin-bottom:20px;padding:12px;background:#f0f8e8;border-radius:8px;border-left:4px solid #27ae60;"><p style="color:#2c3e50;margin:0;">💡 <strong>Modo Detalhado:</strong> Todas as informações visíveis<br><small style="color:#fd7e14;">� OPs com etapas pendentes aparecem primeiro | 🟢 OPs com produção completa aparecem depois</small></p></div>';
                 
                 if(window.viewMode==='list'){
                     el.innerHTML = modeDescription + sortedList.map(o=>buildCompactItem(o)).join('');
