@@ -207,11 +207,32 @@
                 .print-header h1,.print-header h2,.print-header p{color:#000 !important;margin:3px 0 !important}
                 #printModal .print-preview,#printModal .print-preview *{break-inside:avoid-page !important;page-break-inside:avoid !important}
                 #printModal .print-preview{font-size:12px !important;line-height:1.3 !important}
-                #printModal .print-images img{max-height:400px !important;max-width:100% !important}
-                #printModal .print-images{gap:15px !important;margin:15px 0 !important}
+                
+                /* Layout adaptativo para impressão */
+                .print-layout-adaptive{display:block !important;}
+                
+                /* Imagens na parte inferior por padrão */
+                #printModal .print-images-bottom img{max-height:280px !important;max-width:100% !important}
+                #printModal .print-images{gap:12px !important;margin:8px 0 !important}
+                
+                /* Se a página ficar muito cheia, usa layout lateral */
+                @media print and (max-height: 280mm) {
+                    .print-layout-adaptive{display:grid !important;grid-template-columns:1fr 1fr !important;gap:10px !important;}
+                    .print-images-container{grid-column:1 / -1 !important;}
+                    #printModal .print-images-bottom img{max-height:220px !important;}
+                }
+                
+                /* Para páginas muito compactas, força layout lateral */
+                @media print and (max-height: 250mm) {
+                    .print-layout-adaptive{display:grid !important;grid-template-columns:1fr 1fr !important;gap:8px !important;}
+                    .print-images-container{grid-column:2 !important;grid-row:1 / 3 !important;}
+                    #printModal .print-images-bottom{grid-template-columns:1fr !important;}
+                    #printModal .print-images-bottom img{max-height:180px !important;}
+                }
+                
                 .close{display:none !important}
                 #printModal .print-preview table{border-collapse:collapse !important;width:100% !important;max-width:600px !important;margin:0 auto !important}
-                #printModal .print-preview td{border-bottom:1px solid #ddd !important;padding:5px 0 !important}
+                #printModal .print-preview td{border-bottom:1px solid #ddd !important;padding:4px 0 !important}
             }
 
             @media (max-width:768px){
@@ -1879,26 +1900,47 @@
                         ${order.lastModified?`<p style="color:#e67e22;margin:2px 0;font-size:12px;">Última edição: ${order.lastModified}</p>`:''}
                     </div>
 
-                    <div style="margin:15px 0;">
-                        <h3 style="color:#2c3e50;margin-bottom:12px;font-size:16px;text-align:center;">📏 ESPECIFICAÇÕES</h3>
-                        <table style="width:100%;border-collapse:collapse;max-width:600px;margin:0 auto;">
-                            <tr style="border-bottom:1px solid #ddd;"><td style="padding:8px 0;font-weight:bold;color:#333;">Medidas da Folha Impressa:</td><td style="padding:8px 0;color:#333;">${order.medidasFolha}</td></tr>
-                            <tr style="border-bottom:1px solid #ddd;"><td style="padding:8px 0;font-weight:bold;color:#333;">Quantidade de impressão:</td><td style="padding:8px 0;color:#333;">${parseInt(order.quantidade).toLocaleString()}</td></tr>
-                            <tr style="border-bottom:1px solid #ddd;"><td style="padding:8px 0;font-weight:bold;color:#333;">Quantidade Folhas/Resma:</td><td style="padding:8px 0;color:#333;">${order.folhasResma||'-'}</td></tr>
-                            <tr style="border-bottom:1px solid #ddd;"><td style="padding:8px 0;font-weight:bold;color:#333;">Tipo de Papel:</td><td style="padding:8px 0;color:#333;">${order.tipoPapel}</td></tr>
-                            <tr style="border-bottom:1px solid #ddd;"><td style="padding:8px 0;font-weight:bold;color:#333;">Gramatura:</td><td style="padding:8px 0;color:#333;">${order.gramatura}</td></tr>
-                            <tr style="border-bottom:1px solid #ddd;"><td style="padding:8px 0;font-weight:bold;color:#333;">Impressão:</td><td style="padding:8px 0;color:#333;">${order.impressao}</td></tr>
-                        </table>
-                    </div>
-
-                    ${order.imagemFaca||order.imagemArte?`
-                    <div style="margin:25px 0;">
-                        <h3 style="color:#2c3e50;margin-bottom:15px;font-size:16px;text-align:center;">🖼️ IMAGENS</h3>
-                        <div class="print-images" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:0;">
-                            ${order.imagemFaca?`<div class="print-image" style="text-align:center;"><div style="font-size:14px;margin-bottom:8px;font-weight:bold;">🔧 Faca</div><img src="${order.imagemFaca}" alt="Faca" style="max-height:350px;max-width:100%;border:2px solid #ddd;border-radius:10px;"></div>`:''}
-                            ${order.imagemArte?`<div class="print-image" style="text-align:center;"><div style="font-size:14px;margin-bottom:8px;font-weight:bold;">🎨 Arte</div><img src="${order.imagemArte}" alt="Arte" style="max-height:350px;max-width:100%;border:2px solid #ddd;border-radius:10px;"></div>`:''}
+                    <!-- Layout adaptativo: tenta vertical primeiro, mas muda para lateral se necessário -->
+                    <div class="print-layout-adaptive">
+                        <div style="margin:10px 0;">
+                            <h3 style="color:#2c3e50;margin-bottom:8px;font-size:14px;">📏 ESPECIFICAÇÕES</h3>
+                            <table style="width:100%;border-collapse:collapse;max-width:600px;margin:0 auto;">
+                                <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Formato:</td><td style="padding:6px 0;color:#333;">${order.formato||'-'}</td></tr>
+                                <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Medidas da Folha Impressa:</td><td style="padding:6px 0;color:#333;">${order.medidasFolha}</td></tr>
+                                <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Quantidade de impressão:</td><td style="padding:6px 0;color:#333;">${parseInt(order.quantidade).toLocaleString()}</td></tr>
+                                <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Quantidade Folhas/Resma:</td><td style="padding:6px 0;color:#333;">${order.folhasResma||'-'}</td></tr>
+                                <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Tipo de Papel:</td><td style="padding:6px 0;color:#333;">${order.tipoPapel}</td></tr>
+                                <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Gramatura:</td><td style="padding:6px 0;color:#333;">${order.gramatura}</td></tr>
+                                <tr style="border-bottom:1px solid #ddd;"><td style="padding:6px 0;font-weight:bold;color:#333;">Impressão:</td><td style="padding:6px 0;color:#333;">${order.impressao}</td></tr>
+                            </table>
                         </div>
-                    </div>`:`<div></div>`}
+
+                        <!-- Seções de texto compactas -->
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0;">
+                            <div style="margin:0;">
+                                <h3 style="color:#2c3e50;margin-bottom:4px;font-size:13px;">🎨 Acabamento</h3>
+                                <div style="background:#f8f9fa;padding:6px;border-radius:6px;border-left:3px solid #667eea;max-height:80px;overflow:hidden;">
+                                    <pre style="white-space:pre-wrap;margin:0;font-size:11px;line-height:1.3;color:#333;">${order.acabamento||'N/A'}</pre>
+                                </div>
+                            </div>
+                            <div style="margin:0;">
+                                <h3 style="color:#2c3e50;margin-bottom:4px;font-size:13px;">📝 Observação</h3>
+                                <div style="background:#f8f9fa;padding:6px;border-radius:6px;border-left:3px solid #667eea;max-height:80px;overflow:hidden;">
+                                    <pre style="white-space:pre-wrap;margin:0;font-size:11px;line-height:1.3;color:#333;">${order.descricaoEmbalagens||'N/A'}</pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Imagens - layout adaptativo -->
+                        ${order.imagemFaca||order.imagemArte?`
+                        <div class="print-images-container" style="margin:10px 0;">
+                            <h3 style="color:#2c3e50;margin-bottom:8px;font-size:14px;text-align:center;">🖼️ IMAGENS</h3>
+                            <div class="print-images print-images-bottom" style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:0;">
+                                ${order.imagemFaca?`<div class="print-image" style="text-align:center;"><div style="font-size:12px;margin-bottom:6px;font-weight:bold;">🔧 Faca</div><img src="${order.imagemFaca}" alt="Faca" style="max-height:280px;max-width:100%;border:2px solid #ddd;border-radius:8px;"></div>`:''}
+                                ${order.imagemArte?`<div class="print-image" style="text-align:center;"><div style="font-size:12px;margin-bottom:6px;font-weight:bold;">🎨 Arte</div><img src="${order.imagemArte}" alt="Arte" style="max-height:280px;max-width:100%;border:2px solid #ddd;border-radius:8px;"></div>`:''}
+                            </div>
+                        </div>`:`<div></div>`}
+                    </div>
                 `;
                 document.getElementById('printContent').innerHTML=printHTML;
                 document.getElementById('printModal').style.display='block';
