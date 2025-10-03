@@ -59,6 +59,48 @@
                 .action-buttons .btn{flex:1;}
                 .process-checkboxes{grid-template-columns:1fr;}
             }
+
+            /* === Estilos da Barra de Navegação === */
+            .topbar{background:rgba(255,255,255,.95);padding:15px 20px;box-shadow:0 5px 20px rgba(0,0,0,.1);display:flex;gap:15px;justify-content:center;margin-bottom:20px;}
+            .topbar button{padding:12px 25px;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;transition:all .3s ease;text-transform:uppercase;letter-spacing:.5px;}
+            #go-op{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;}
+            #go-ficha{background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);color:#fff;}
+            #btnGoOrcamentos{background:linear-gradient(135deg,#fd79a8 0%,#e84393 100%);color:#fff;}
+            .topbar button:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(102,126,234,.3);}
+
+            /* === Estilos da Ficha Técnica === */
+            .ft .container{max-width:1400px;margin:0 auto;padding:20px}
+            .ft .header{background:rgba(255,255,255,.95);padding:20px;border-radius:15px;margin-bottom:30px;box-shadow:0 10px 30px rgba(0,0,0,.1);text-align:center}
+            .ft .header h1{color:#2c3e50;font-size:2.5em;margin-bottom:10px;font-weight:700}
+            .ft .header p{color:#7f8c8d;font-size:1.2em}
+            .ft .form-card{background:rgba(255,255,255,.95);padding:25px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+            .ft .section{margin-bottom:30px;border-bottom:2px solid #f1f3f4;padding-bottom:25px}
+            .ft .section:last-child{border-bottom:none;margin-bottom:0}
+            .ft .section h2{color:#2c3e50;margin-bottom:20px;font-size:1.8em;display:flex;align-items:center;gap:10px}
+            .ft .form-group{margin-bottom:20px}
+            .ft .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+            .ft .form-row.three-col{grid-template-columns:1fr 1fr 1fr}
+            .ft .form-group label{display:block;margin-bottom:8px;font-weight:600;color:#34495e}
+            .ft .form-group input,.ft .form-group textarea{width:100%;padding:12px 15px;border:2px solid #e0e6ed;border-radius:8px;font-size:16px;transition:all .3s ease;background:#f8f9fa}
+            .ft .form-group input:focus,.ft .form-group textarea:focus{outline:none;border-color:#667eea;background:#fff;box-shadow:0 0 0 3px rgba(102,126,234,.1)}
+            .ft .form-group textarea{height:100px;resize:vertical}
+            .ft .image-upload{border:3px dashed #ddd;border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .3s ease;background:#f8f9fa}
+            .ft .image-upload:hover{border-color:#667eea;background:#f0f4ff}
+            .ft .image-upload.dragover{border-color:#667eea;background:#e8f2ff}
+            .ft .image-preview{max-width:100%;max-height:200px;border-radius:8px;margin-top:10px;box-shadow:0 4px 15px rgba(0,0,0,.1)}
+            .ft .form-actions{display:flex;gap:15px;justify-content:center;margin-top:30px;padding-top:20px;border-top:2px solid #f1f3f4}
+            .ft .btn{padding:12px 25px;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;transition:all .3s ease;text-transform:uppercase;letter-spacing:.5px}
+            .ft .btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+            .ft .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(102,126,234,.3)}
+            .ft .btn-success{background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);color:#fff}
+            .ft .btn-secondary{background:linear-gradient(135deg,#636e72 0%,#2d3436 100%);color:#fff}
+
+            @media (max-width:768px){
+                .ft .form-row{grid-template-columns:1fr}
+                .ft .form-row.three-col{grid-template-columns:1fr}
+                .ft .form-actions{flex-direction:column}
+                .topbar{flex-direction:column;gap:10px}
+            }
             .card{background:rgba(255,255,255,.95);padding:25px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
             .card h2{color:#2c3e50;margin-bottom:20px;font-size:1.8em;display:flex;align-items:center;gap:10px}
 
@@ -200,6 +242,9 @@
                 .container,.header,.stats-row,.main-content,.orders-list,.modal-content>div:last-child{display:none !important}
                 /* Esconder completamente o modal de gráfica durante impressão de OP */
                 #graficaModal,#graficaModal *{display:none !important;visibility:hidden !important}
+                /* Estilos para navegação e páginas */
+                #topnav{display:none !important}
+                #page-op[hidden], #page-ficha[hidden]{display:none !important}
                 /* Mostrar apenas o modal de impressão individual */
                 #printModal{display:block !important;position:static !important;background:#fff !important;width:100% !important;height:auto !important}
                 #printModal .modal-content{margin:0 !important;padding:0 !important;width:100% !important;max-width:100% !important;max-height:none !important;background:#fff !important;box-shadow:none !important;border-radius:0 !important}
@@ -290,6 +335,15 @@
         </style>
     </head>
     <body>
+        <!-- Barra de Navegação -->
+        <nav id="topnav" class="topbar">
+            <button id="go-op" type="button">Ordem de Produção</button>
+            <button id="go-ficha" type="button">Ficha Técnica do Produto</button>
+            <button id="btnGoOrcamentos" type="button">Orçamentos</button>
+        </nav>
+
+        <!-- Página de Ordem de Produção -->
+        <main id="page-op" aria-label="Ordem de Produção">
         <div class="container">
             <div class="header">
                 <h1>🏭 Sistema de Ordem de Produção Gráfica</h1>
@@ -795,8 +849,8 @@
 
         <script>
             
-    // Storage simples com localStorage apenas
-    const storage = (function(){
+    // Storage simples com localStorage apenas (versão única)
+    const storage = window.appStorage || (window.appStorage = (function(){
         // Testa localStorage tradicional
         const localStorageWorks = (function(){
             try {
@@ -853,7 +907,7 @@
                 }
             }
         };
-    })();
+    })()) || storage;
 
     async function getJSON(key, fallback){
         try {
@@ -1839,8 +1893,8 @@
                 });
                 
                 const modeDescription = window.viewMode === 'list' 
-                    ? '<div style="text-align:center;margin-bottom:20px;padding:12px;background:#e8f4fd;border-radius:8px;border-left:4px solid #74b9ff;"><p style="color:#2c3e50;margin:0;">💡 <strong>Modo Lista:</strong> Clique em qualquer OP para expandir os detalhes completos<br><small style="color:#fd7e14;">� OPs com etapas pendentes aparecem primeiro | 🟢 OPs com produção completa aparecem depois</small></p></div>'
-                    : '<div style="text-align:center;margin-bottom:20px;padding:12px;background:#f0f8e8;border-radius:8px;border-left:4px solid #27ae60;"><p style="color:#2c3e50;margin:0;">💡 <strong>Modo Detalhado:</strong> Todas as informações visíveis<br><small style="color:#fd7e14;">� OPs com etapas pendentes aparecem primeiro | 🟢 OPs com produção completa aparecem depois</small></p></div>';
+                    ? '<div style="text-align:center;margin-bottom:20px;padding:12px;background:#e8f4fd;border-radius:8px;border-left:4px solid #74b9ff;"><p style="color:#2c3e50;margin:0;">💡 <strong>Modo Lista:</strong> Clique em qualquer OP para expandir os detalhes completos<br><small style="color:#fd7e14;">  OPs com etapas pendentes aparecem primeiro | 🟢 OPs com produção completa aparecem depois</small></p></div>'
+                    : '<div style="text-align:center;margin-bottom:20px;padding:12px;background:#f0f8e8;border-radius:8px;border-left:4px solid #27ae60;"><p style="color:#2c3e50;margin:0;">💡 <strong>Modo Detalhado:</strong> Todas as informações visíveis<br><small style="color:#fd7e14;">  OPs com etapas pendentes aparecem primeiro | 🟢 OPs com produção completa aparecem depois</small></p></div>';
                 
                 if(window.viewMode==='list'){
                     el.innerHTML = modeDescription + sortedList.map(o=>buildCompactItem(o)).join('');
@@ -2090,9 +2144,253 @@
             })();
     window.addEventListener('error', function(e){ try{ if(typeof showNotification==='function'){ showNotification('⚠️ Erro de script detectado. Verifique os dados/ações recentes.', 'warning'); } }catch(_){} });
     </script>
-
+        </main>
+        
+        <!-- Placeholder da página Orçamentos (fica oculto até montar) -->
+        <section id="orcamentos-host" style="display:none"></section>
+        
         <!-- Botão Flutuante: Topo / Ir para Ordens -->
         <button id="scrollFab" class="fab" aria-label="Ir para Ordens" title="Ir para Ordens">📋</button>
+
+        <!-- Página de Ficha Técnica do Produto -->
+        <main id="page-ficha" class="ft" aria-label="Ficha Técnica do Produto" hidden>
+            <div class="container">
+                <div class="header">
+                    <h1>📋 Ficha Técnica do Produto</h1>
+                    <p>Especificações Completas de Embalagens</p>
+                </div>
+
+                <div class="form-card">
+                    <form id="fichaTecnicaForm">
+                        <!-- Informações Básicas do Produto -->
+                        <div class="section">
+                            <h2>📦 Informações Básicas</h2>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="fotoProduto">Foto do Produto</label>
+                                    <div class="image-upload" onclick="document.getElementById('fotoProduto').click()">
+                                        <input type="file" id="fotoProduto" accept="image/*" style="display:none;">
+                                        <p>📸 Clique para adicionar foto do produto</p>
+                                    </div>
+                                    <img id="prevFoto" class="image-preview" style="display:none;">
+                                </div>
+                                <div class="form-group">
+                                    <label for="codigo">Código do Produto</label>
+                                    <input type="text" id="codigo" placeholder="Ex: EMB-001">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="nome">Nome do Produto</label>
+                                    <input type="text" id="nome" placeholder="Ex: Caixa Pizza Grande">
+                                </div>
+                                <div class="form-group">
+                                    <label for="tipoEmb">Tipo de Embalagem</label>
+                                    <input type="text" id="tipoEmb" placeholder="Ex: Caixa, Sacola, Envelope">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="data">Data de Criação</label>
+                                    <input type="date" id="data">
+                                </div>
+                                <div class="form-group">
+                                    <label for="versao">Versão</label>
+                                    <input type="text" id="versao" placeholder="Ex: v1.0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Especificações do Material -->
+                        <div class="section">
+                            <h2>📄 Especificações do Material</h2>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="material">Material</label>
+                                    <input type="text" id="material" placeholder="Ex: Papel Cartão, Kraft">
+                                </div>
+                                <div class="form-group">
+                                    <label for="gramatura">Gramatura (g/m²)</label>
+                                    <input type="number" id="gramatura" placeholder="Ex: 300">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dimensões Abertas -->
+                        <div class="section">
+                            <h2>📐 Dimensões Abertas (mm)</h2>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="compAberta">Comprimento</label>
+                                    <input type="number" id="compAberta" placeholder="mm">
+                                </div>
+                                <div class="form-group">
+                                    <label for="largAberta">Largura</label>
+                                    <input type="number" id="largAberta" placeholder="mm">
+                                </div>
+                                <div class="form-group">
+                                    <label for="altAberta">Altura</label>
+                                    <input type="number" id="altAberta" placeholder="mm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Faca e Montagem -->
+                        <div class="section">
+                            <h2>🔧 Faca e Montagem</h2>
+                            <div class="form-group">
+                                <label for="facaEMontada">Arquivo da Faca e Montagem</label>
+                                <div class="image-upload" onclick="document.getElementById('facaEMontada').click()">
+                                    <input type="file" id="facaEMontada" accept="image/*,application/pdf" style="display:none;">
+                                    <p>📄 Clique para adicionar arquivo da faca</p>
+                                </div>
+                                <img id="prevFaca" class="image-preview" style="display:none;">
+                            </div>
+                        </div>
+
+                        <!-- Dimensões Fechadas -->
+                        <div class="section">
+                            <h2>📦 Dimensões Fechadas (mm)</h2>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="compFechada">Comprimento</label>
+                                    <input type="number" id="compFechada" placeholder="mm">
+                                </div>
+                                <div class="form-group">
+                                    <label for="largFechada">Largura</label>
+                                    <input type="number" id="largFechada" placeholder="mm">
+                                </div>
+                                <div class="form-group">
+                                    <label for="altFechada">Altura</label>
+                                    <input type="number" id="altFechada" placeholder="mm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Observações -->
+                        <div class="section">
+                            <h2>📝 Observações</h2>
+                            <div class="form-group">
+                                <label for="obs">Observações Técnicas</label>
+                                <textarea id="obs" placeholder="Observações sobre montagem, acabamento, etc."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Processos de Produção -->
+                        <div class="section">
+                            <h2>🏭 Processos de Produção</h2>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="processoImpressao">Processo de Impressão</label>
+                                    <input type="text" id="processoImpressao" placeholder="Ex: Offset, Digital">
+                                </div>
+                                <div class="form-group">
+                                    <label for="acabamentos">Acabamentos</label>
+                                    <input type="text" id="acabamentos" placeholder="Ex: Verniz UV, Laminação">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informações Comerciais -->
+                        <div class="section">
+                            <h2>💼 Informações Comerciais</h2>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="marca">Marca</label>
+                                    <input type="text" id="marca" placeholder="Nome da marca">
+                                </div>
+                                <div class="form-group">
+                                    <label for="codigoBarras">Código de Barras</label>
+                                    <input type="text" id="codigoBarras" placeholder="Código de barras">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="peso">Peso (g)</label>
+                                    <input type="number" id="peso" placeholder="Peso em gramas">
+                                </div>
+                                <div class="form-group">
+                                    <label for="dimPac">Dimensões da Embalagem</label>
+                                    <input type="text" id="dimPac" placeholder="Ex: 20x15x10 cm">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="categoria">Categoria</label>
+                                    <input type="text" id="categoria" placeholder="Ex: Alimentício, Cosmético">
+                                </div>
+                                <div class="form-group">
+                                    <label for="descricao">Descrição</label>
+                                    <input type="text" id="descricao" placeholder="Descrição do produto">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="quantPac">Quantidade por Pacote</label>
+                                    <input type="number" id="quantPac" placeholder="Unidades por pacote">
+                                </div>
+                                <div class="form-group">
+                                    <label for="variacao">Variação</label>
+                                    <input type="text" id="variacao" placeholder="Ex: Tamanho P, M, G">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="preco">Preço Unitário (R$)</label>
+                                    <input type="number" id="preco" step="0.01" placeholder="0.00">
+                                </div>
+                                <div class="form-group">
+                                    <label for="ncm">NCM</label>
+                                    <input type="text" id="ncm" placeholder="Código NCM">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="sku">SKU</label>
+                                <input type="text" id="sku" placeholder="Código SKU">
+                            </div>
+                        </div>
+
+                        <!-- Arquivos Técnicos -->
+                        <div class="section">
+                            <h2>📎 Arquivos Técnicos</h2>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="arteFinal">Arte Final</label>
+                                    <div class="image-upload" onclick="document.getElementById('arteFinal').click()">
+                                        <input type="file" id="arteFinal" accept="image/*,application/pdf" style="display:none;">
+                                        <p>🎨 Clique para adicionar arte final</p>
+                                    </div>
+                                    <img id="prevArte" class="image-preview" style="display:none;">
+                                </div>
+                                <div class="form-group">
+                                    <label for="fotosProt">Fotos do Protótipo</label>
+                                    <div class="image-upload" onclick="document.getElementById('fotosProt').click()">
+                                        <input type="file" id="fotosProt" accept="image/*" multiple style="display:none;">
+                                        <p>📷 Clique para adicionar fotos do protótipo</p>
+                                    </div>
+                                    <img id="prevProt" class="image-preview" style="display:none;">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="fotoMontada">Foto do Produto Montado</label>
+                                <div class="image-upload" onclick="document.getElementById('fotoMontada').click()">
+                                    <input type="file" id="fotoMontada" accept="image/*" style="display:none;">
+                                    <p>📦 Clique para adicionar foto do produto montado</p>
+                                </div>
+                                <img id="prevMontada" class="image-preview" style="display:none;">
+                            </div>
+                        </div>
+
+                        <!-- Botões de Ação -->
+                        <div class="form-actions">
+                            <button type="button" id="limpar" class="btn btn-secondary">🗑️ Limpar</button>
+                            <button type="button" id="salvar" class="btn btn-primary">💾 Salvar</button>
+                            <button type="button" id="imprimir" class="btn btn-success">🖨️ Imprimir</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
 
 
         <!-- Modal Envio à Gráfica -->
@@ -2114,5 +2412,671 @@
             </div>
         </div>
         
+        <!-- JavaScript de Roteamento SPA -->
+        <script>
+        (function(){
+            const OP     = document.getElementById('page-op');
+            const FICHA  = document.getElementById('page-ficha');
+            const goOp   = document.getElementById('go-op');
+            const goFi   = document.getElementById('go-ficha');
+
+            function show(view){            // view: 'op' | 'ficha'
+                const isFicha = view === 'ficha';
+                OP.hidden    = isFicha;
+                FICHA.hidden = !isFicha;
+                // foco acessível
+                (isFicha ? FICHA : OP).setAttribute('tabindex','-1');
+                (isFicha ? FICHA : OP).focus({preventScroll:true});
+            }
+
+            function route(){
+                const hash = (location.hash || '#/op').toLowerCase();
+                if (hash.includes('/ficha')) show('ficha');
+                else show('op');
+            }
+
+            // botões
+            goOp  .addEventListener('click', () => { location.hash = '#/op';    });
+            goFi  .addEventListener('click', () => { location.hash = '#/ficha'; });
+
+            // escuta de rota
+            window.addEventListener('hashchange', route);
+            // rota inicial
+            route();
+        })();
+
+        // JavaScript da Ficha Técnica
+        if(document.getElementById('page-ficha')) {
+            const STORAGE_KEY = 'ficha-tecnica-simples-v1';
+
+            // IDs dos campos
+            const fieldIds = [
+                'codigo', 'nome', 'tipoEmb', 'data', 'versao',
+                'material', 'gramatura',
+                'compAberta', 'largAberta', 'altAberta',
+                'compFechada', 'largFechada', 'altFechada',
+                'obs', 'processoImpressao', 'acabamentos',
+                'marca', 'codigoBarras', 'peso', 'dimPac',
+                'categoria', 'descricao', 'quantPac', 'variacao',
+                'preco', 'ncm', 'sku'
+            ];
+
+            // Pré-visualização de imagens
+            function setupFilePreview(inputId, previewId) {
+                const input = document.getElementById(inputId);
+                const preview = document.getElementById(previewId);
+                
+                if(input && preview) {
+                    input.addEventListener('change', function(e) {
+                        const file = e.target.files[0];
+                        if(file && file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                preview.src = e.target.result;
+                                preview.style.display = 'block';
+                            };
+                            reader.readAsDataURL(file);
+                        } else {
+                            preview.style.display = 'none';
+                        }
+                    });
+                }
+            }
+
+            // Configurar pré-visualizações
+            setupFilePreview('fotoProduto', 'prevFoto');
+            setupFilePreview('facaEMontada', 'prevFaca');
+            setupFilePreview('arteFinal', 'prevArte');
+            setupFilePreview('fotosProt', 'prevProt');
+            setupFilePreview('fotoMontada', 'prevMontada');
+
+            // Salvar rascunho
+            function salvarRascunho() {
+                const data = {};
+                fieldIds.forEach(id => {
+                    const field = document.getElementById(id);
+                    if(field) data[id] = field.value;
+                });
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                alert('✅ Rascunho salvo com sucesso!');
+            }
+
+            // Carregar rascunho
+            function carregarRascunho() {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if(saved) {
+                    try {
+                        const data = JSON.parse(saved);
+                        fieldIds.forEach(id => {
+                            const field = document.getElementById(id);
+                            if(field && data[id]) field.value = data[id];
+                        });
+                    } catch(e) {
+                        console.error('Erro ao carregar rascunho:', e);
+                    }
+                }
+            }
+
+            // Limpar formulário
+            function limparFormulario() {
+                if(confirm('Deseja limpar todos os campos?')) {
+                    fieldIds.forEach(id => {
+                        const field = document.getElementById(id);
+                        if(field) field.value = '';
+                    });
+                    
+                    // Limpar pré-visualizações
+                    ['prevFoto', 'prevFaca', 'prevArte', 'prevProt', 'prevMontada'].forEach(id => {
+                        const preview = document.getElementById(id);
+                        if(preview) preview.style.display = 'none';
+                    });
+                    
+                    // Limpar arquivos
+                    ['fotoProduto', 'facaEMontada', 'arteFinal', 'fotosProt', 'fotoMontada'].forEach(id => {
+                        const input = document.getElementById(id);
+                        if(input) input.value = '';
+                    });
+                    
+                    localStorage.removeItem(STORAGE_KEY);
+                    alert('✅ Formulário limpo!');
+                }
+            }
+
+            // Imprimir
+            function imprimirFicha() {
+                window.print();
+            }
+
+            // Event listeners
+            document.getElementById('salvar').addEventListener('click', salvarRascunho);
+            document.getElementById('limpar').addEventListener('click', limparFormulario);
+            document.getElementById('imprimir').addEventListener('click', imprimirFicha);
+
+            // Carregar ao inicializar
+            carregarRascunho();
+
+            // Auto-salvar a cada 30 segundos
+            setInterval(() => {
+                const data = {};
+                fieldIds.forEach(id => {
+                    const field = document.getElementById(id);
+                    if(field && field.value.trim()) data[id] = field.value;
+                });
+                if(Object.keys(data).length > 0) {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                }
+            }, 30000);
+        }
+        </script>
+        
+<script>
+(() => {
+  // ========= Seletores da sua plataforma =========
+  // Ajuste o seletor do "contêiner principal" se necessário,
+  // para que possamos ocultá-lo ao abrir Orçamentos e reexibi-lo ao voltar.
+  const mainAppSelector = '#page-op, #page-ficha, #topnav, #scrollFab'; // tente na ordem
+  const mainElements = document.querySelectorAll(mainAppSelector);
+
+  // Botão do topo (já inserido em A)
+  const btnGo = document.getElementById('btnGoOrcamentos');
+  const host = document.getElementById('orcamentos-host');
+
+  // ========= Funções de navegação =========
+  function openOrcamentos(){
+    mainElements.forEach(el => el.style.display = 'none');
+    host.style.display = 'block';
+    // Monta o módulo apenas uma vez
+    if(!host._mounted) mountOrcamentos();
+  }
+  function closeOrcamentos(){
+    host.style.display = 'none';
+    mainElements.forEach(el => el.style.display = '');
+  }
+
+  if(btnGo){
+    btnGo.addEventListener('click', openOrcamentos);
+  }
+
+  // ========= Montagem do módulo em Shadow DOM =========
+  function mountOrcamentos(){
+    const shadow = host.attachShadow({mode:'open'});
+
+    // ---------- CSS do módulo (escopado) ----------
+    const style = document.createElement('style');
+    style.textContent = `
+      :host{all:initial;font-family:Segoe UI,Arial,Helvetica,sans-serif;color:#333}
+      .wrap{background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:16px}
+      .container{max-width:1300px;margin:0 auto}
+      .card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 6px 24px rgba(0,0,0,.08)}
+      .row{display:grid;gap:10px}
+      .row.two{grid-template-columns:1fr 1fr}
+      .row.three{grid-template-columns:repeat(3,1fr)}
+      .row.four{grid-template-columns:repeat(4,1fr)}
+      @media(max-width:900px){.row.two,.row.three,.row.four{grid-template-columns:1fr}}
+      label{display:block;font-weight:700;margin:6px 0}
+      input,select,textarea{width:100%;padding:10px 12px;border-radius:10px;border:2px solid #e0e6ed;background:#f8f9fa;font-size:14px}
+      table{width:100%;border-collapse:collapse}
+      th,td{padding:8px;border-bottom:1px solid #e0e6ed;font-size:14px;text-align:left}
+      th{background:#f6f7ff}
+      .btn{padding:10px 14px;border:0;border-radius:10px;cursor:pointer;font-weight:700}
+      .primary{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+      .success{background:linear-gradient(135deg,#28a745,#20c997);color:#fff}
+      .light{background:#eef1ff;color:#364fc7;border:2px solid #d9ddff}
+      .danger{background:linear-gradient(135deg,#fd79a8,#e84393);color:#fff}
+      .muted{color:#6b7280}
+      .topbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+      .tabs{display:flex;gap:6px;background:#f1f3f4;padding:6px;border-radius:12px}
+      .tab{border:0;background:transparent;padding:10px 14px;border-radius:10px;font-weight:700;color:#6c757d;cursor:pointer}
+      .tab.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+      .panel{display:none}
+      .panel.active{display:block}
+      .totals{display:grid;gap:6px}
+      .grid{display:grid;gap:10px}
+      .hist-item{background:#fff;border:1px solid #e5e7eb;border-left:6px solid #667eea;border-radius:12px;padding:10px}
+      .details{display:none;background:#f9fafb;border:1px dashed #d1d5db;border-radius:12px;padding:10px;margin-top:8px}
+      .tag{display:inline-block;padding:4px 8px;border-radius:999px;background:#eceff7;color:#334155;font-size:.8rem;font-weight:800}
+      .warn{background:#fff3cd;color:#b45309}
+      .dark{background:#eceff7;color:#334155}
+      .header h1{color:#2c3e50;font-size:1.6rem;margin:0 0 4px 0}
+      .right{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+    `;
+
+    // ---------- HTML estático ----------
+    const root = document.createElement('div');
+    root.className = 'wrap';
+    root.innerHTML = `
+      <div class="container">
+        <div class="card header" style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
+            <div>
+              <h1>🧾 Plataforma de Orçamentos — Embalagens Conceito</h1>
+              <div class="muted">Módulo completo embutido no index.html (Shadow DOM isolado)</div>
+            </div>
+            <button id="btnVoltar" class="btn light">⬅️ Voltar para a plataforma</button>
+          </div>
+        </div>
+
+        <div class="card topbar">
+          <button class="btn primary" id="btnNovo">➕ Novo Orçamento</button>
+          <button class="btn success" id="btnSalvar">💾 Salvar</button>
+          <button class="btn light" id="btnDuplicar">📄 Duplicar</button>
+          <button class="btn light" id="btnExportar">⬇️ Exportar JSON</button>
+          <input id="fileImport" type="file" style="display:none" accept=".json"/>
+          <button class="btn light" id="btnImportar">⬆️ Importar JSON</button>
+          <button class="btn primary" id="btnImprimir">🖨️ Imprimir</button>
+          <select id="status" class="btn light">
+            <option value="Rascunho">⬜ Rascunho</option>
+            <option value="Em negociação">🟧 Em negociação</option>
+            <option value="Aprovado">🟩 Aprovado</option>
+            <option value="Perdido">🟥 Perdido</option>
+          </select>
+          <button class="btn light" id="btnWhats">📲 WhatsApp</button>
+          <button class="btn danger" id="btnLimpar">🗑️ Limpar</button>
+        </div>
+
+        <div class="card">
+          <div class="tabs">
+            <button class="tab active" data-k="cliente">1. 👤 Cliente</button>
+            <button class="tab" data-k="itens">2. 📦 Itens</button>
+            <button class="tab" data-k="condicoes">3. 📑 Condições</button>
+            <button class="tab" data-k="resumo">4. 🧮 Resumo</button>
+          </div>
+
+          <div id="p-cliente" class="panel active">
+            <div class="row two" style="margin-top:10px">
+              <div><label>Cliente / Empresa *</label><input id="cliNome"/></div>
+              <div><label>CNPJ/CPF</label><input id="cliDoc"/></div>
+            </div>
+            <div class="row two">
+              <div><label>E-mail</label><input id="cliEmail"/></div>
+              <div><label>Telefone</label><input id="cliFone"/></div>
+            </div>
+            <div class="row two">
+              <div><label>Endereço</label><input id="cliEndereco"/></div>
+              <div><label>Contato</label><input id="cliContato"/></div>
+            </div>
+          </div>
+
+          <div id="p-itens" class="panel">
+            <div class="right" style="margin:10px 0"><button class="btn primary" id="btnAddItem">➕ Adicionar Item</button></div>
+            <div class="card">
+              <table id="tblItens">
+                <thead>
+                  <tr><th>#</th><th>Descrição</th><th>Material</th><th>Impressão</th><th>Acabamento</th><th>Qtd</th><th>Custo (R$)</th><th>Margem %</th><th>Unit (R$)</th><th>Total (R$)</th><th>Ações</th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="p-condicoes" class="panel">
+            <h3>Condições Comerciais</h3>
+            <div class="row three" style="margin-top:6px">
+              <div><label>Validade (dias)</label><input id="validade" type="number" value="7"/></div>
+              <div><label>Prazo de entrega (dias)</label><input id="prazoEntrega" type="number" value="15"/></div>
+              <div><label>Pagamento</label><input id="pagamento" value="30/60 dias"/></div>
+            </div>
+            <div class="row three">
+              <div><label>ICMS (%)</label><input id="icms" type="number" step="0.01" value="12"/></div>
+              <div><label>Frete</label>
+                <select id="frete">
+                  <option value="Incluso" selected>Incluso</option>
+                  <option value="FOB">FOB</option>
+                  <option value="A combinar">A combinar</option>
+                </select>
+              </div>
+              <div><label>Desconto Global (%)</label><input id="desconto" type="number" step="0.01" value="0"/></div>
+            </div>
+
+            <div class="card" style="margin-top:10px">
+              <h3>Base de Cálculo Interna (não imprime)</h3>
+              <div class="row four" style="margin-top:6px">
+                <div><label>Faca (R$)</label><input id="c_faca" type="number" step="0.01" value="0"/></div>
+                <div><label>Papel (R$)</label><input id="c_papel" type="number" step="0.01" value="0"/></div>
+                <div><label>Cola (R$)</label><input id="c_cola" type="number" step="0.01" value="0"/></div>
+                <div><label>Impressão (R$)</label><input id="c_impressao" type="number" step="0.01" value="0"/></div>
+              </div>
+              <div class="row four" style="margin-top:6px">
+                <div><label>Custo Fixo (R$)</label><input id="c_fixos" type="number" step="0.01" value="0"/></div>
+                <div><label>Visor (R$)</label><input id="c_visor" type="number" step="0.01" value="0"/></div>
+                <div><label>NF (R$)</label><input id="c_nf" type="number" step="0.01" value="0"/></div>
+                <div><label>IPI (R$)</label><input id="c_ipi" type="number" step="0.01" value="0"/></div>
+              </div>
+              <div class="row three" style="margin-top:6px">
+                <div><label>Margem de Lucro Global (%)</label><input id="c_margem_glob" type="number" step="0.01" value="0"/></div>
+                <div><label><strong>Soma Custos Internos</strong></label><input id="c_soma" readonly/></div>
+                <div><label><strong>Base (Itens + Custos)</strong></label><input id="c_base" readonly/></div>
+              </div>
+              <div class="row three" style="margin-top:6px">
+                <div><label><strong>Com Margem Global</strong></label><input id="c_com_margem" readonly/></div>
+              </div>
+              <div class="muted" style="margin-top:6px">Estes valores afetam apenas o cálculo e não aparecem no PDF.</div>
+            </div>
+
+            <label style="margin-top:10px">Observações (aparecem no PDF)</label>
+            <textarea id="obs"></textarea>
+          </div>
+
+          <div id="p-resumo" class="panel">
+            <h3>Resumo Financeiro</h3>
+            <div class="row two" style="margin:6px 0">
+              <div class="card">
+                <div class="totals">
+                  <div style="display:flex;justify-content:space-between"><span>Subtotal (itens)</span><span id="tSubtotal">R$ 0,00</span></div>
+                  <div style="display:flex;justify-content:space-between"><span>Desconto global</span><span id="tDesc">- R$ 0,00</span></div>
+                  <div style="display:flex;justify-content:space-between"><span>ICMS (informativo)</span><span id="tIcms">12%</span></div>
+                  <div style="display:flex;justify-content:space-between;font-size:1.1rem"><strong>Total Geral</strong><strong id="tGeral">R$ 0,00</strong></div>
+                </div>
+              </div>
+              <div class="card">
+                <label>Mensagem ao cliente (capa do PDF)</label>
+                <textarea id="mensagemCliente">Agradecemos sua consulta. Seguem valores e condições.</textarea>
+              </div>
+            </div>
+
+            <h3>Prévia para Impressão</h3>
+            <div class="card" id="printPreview"></div>
+            <div class="right" style="margin-top:8px">
+              <button class="btn primary" id="btnAtualizarPreview">🔄 Atualizar Prévia</button>
+              <button class="btn success" id="btnIrImprimir">🖨️ Imprimir agora</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:10px">
+          <h3>📜 Histórico de Orçamentos</h3>
+          <div id="listaHistorico" class="grid"></div>
+        </div>
+      </div>
+    `;
+
+        // ---------- JS do módulo ----------
+        // Criar uma função para inicializar o módulo
+        window.initOrcamentosModule = function(rootElement) {
+            const root = rootElement;
+            if (!root || !root.isConnected) {
+                console.error('Root element não disponível para o módulo de orçamentos');
+                return;
+            }
+
+            // Definir funções helper primeiro
+            const qS = (sel, ctx = root) => ctx.querySelector(sel);
+            const qSA = (sel, ctx = root) => Array.from(ctx.querySelectorAll(sel));
+      
+            // Função helper para definir propriedades aninhadas
+            function set(obj,path,val){const ks=path.split('.'); let r=obj; while(ks.length>1){const k=ks.shift(); if(!(k in r)) r[k]={}; r=r[k];} r[ks[0]]=val;}
+      
+            // Função para formatação de valores
+            function fmt(v, currency = false){
+                const num = Number(v||0);
+                if(currency) {
+                    return num.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+                }
+                return num.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+            }
+      
+            // Função para gerar ID único
+            function genId(){return 'ORC-'+Math.random().toString(36).slice(2,8).toUpperCase();}
+      
+            // Funções de cálculo
+            function unitario(it){return Math.max(0,(it.custo*(1+(Number(it.margem)||0)/100))/Math.max(1,Number(it.qtd)||1));}
+            function totalItem(it){return unitario(it)*Math.max(1,Number(it.qtd)||1);}
+      
+            // Funções de localStorage
+            function loadAll(){try{return JSON.parse(localStorage.getItem('conceito_orc_v4')||'[]')}catch(_){return[]}}
+            function saveAll(l){localStorage.setItem('conceito_orc_v4',JSON.stringify(l))}
+
+            const state={
+        id:genId(),status:'Rascunho',
+        cliente:{nome:'',doc:'',email:'',fone:'',endereco:'',contato:''},
+        itens:[],
+        condicoes:{validade:7,prazoEntrega:15,pagamento:'30/60 dias',icms:12,frete:'Incluso',desconto:0,obs:''},
+        custos:{faca:0,papel:0,cola:0,impressao:0,fixos:0,visor:0,nf:0,ipi:0,margemGlob:0},
+        mensagemCliente:'Agradecemos sua consulta. Seguem valores e condições.',
+        criadoEm:Date.now(),atualizadoEm:Date.now()
+      };
+
+      const storageKey='conceito_orc_v4';
+
+      function saveCurrent(){
+        const l=loadAll(); const i=l.findIndex(x=>x.id===state.id);
+        state.atualizadoEm=Date.now();
+        if(i>=0) l[i]=structuredClone(state); else l.unshift(structuredClone(state));
+        saveAll(l); renderHistorico();
+      }
+
+      // Funções para manipulação de itens
+      const tbody=qS('#tblItens tbody',root);
+      function addItem(d={}){const it=Object.assign({id:'I'+Math.random().toString(36).slice(2,8),descricao:'',material:'',impressao:'4x0',acabamento:'',qtd:1000,custo:0,margem:30},d); state.itens.push(it); drawItens(); saveCurrent();}
+      function removeItem(id){state.itens=state.itens.filter(i=>i.id!==id); drawItens(); saveCurrent(); calcAll();}
+      function drawItens(){
+        tbody.innerHTML='';
+        state.itens.forEach((it,idx)=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML='<td>'+(idx+1)+'</td><td><input value="'+it.descricao+'" data-k="descricao" data-id="'+it.id+'"/></td><td><input value="'+it.material+'" data-k="material" data-id="'+it.id+'"/></td><td><select data-k="impressao" data-id="'+it.id+'"><option '+(it.impressao==='4x0'?'selected':'')+' value="4x0">4x0</option><option '+(it.impressao==='4x4'?'selected':'')+' value="4x4">4x4</option></select></td><td><input value="'+it.acabamento+'" data-k="acabamento" data-id="'+it.id+'"/></td><td><input type="number" min="1" value="'+it.qtd+'" data-k="qtd" data-id="'+it.id+'"/></td><td><input type="number" min="0" step="0.01" value="'+it.custo+'" data-k="custo" data-id="'+it.id+'"/></td><td><input type="number" min="0" step="0.01" value="'+it.margem+'" data-k="margem" data-id="'+it.id+'"/></td><td>'+fmt(unitario(it), true)+'</td><td>'+fmt(totalItem(it), true)+'</td><td><button class="btn danger" data-del="'+it.id+'">Excluir</button></td>';
+          tbody.appendChild(tr);
+        });
+        qSA('input,select',tbody).forEach(inp=>{
+          if(inp.dataset.k){
+            inp.addEventListener('input',e=>{
+              const id=e.target.dataset.id; const k=e.target.dataset.k; const it=state.itens.find(x=>x.id===id);
+              let v=e.target.value; if(['qtd','custo','margem'].includes(k)) v=Number(v||0);
+              it[k]=v; drawItens(); saveCurrent(); calcAll();
+            });
+          }
+          if(inp.dataset.del) inp.addEventListener('click',()=>removeItem(inp.dataset.del));
+        });
+      }
+
+      // Tabs
+      qSA('.tab',root).forEach(b=>{
+        b.addEventListener('click',()=>{
+          qSA('.tab',root).forEach(x=>x.classList.remove('active')); b.classList.add('active');
+          qSA('.panel',root).forEach(p=>p.classList.remove('active'));
+          const id=b.dataset.k;
+          qS(id==='cliente'?'#p-cliente':id==='itens'?'#p-itens':id==='condicoes'?'#p-condicoes':'#p-resumo',root).classList.add('active');
+          if(id==='resumo'){calcAll();renderPreview();}
+        });
+      });
+
+      // Bind cliente
+      const bindC={'cliNome':'cliente.nome','cliDoc':'cliente.doc','cliEmail':'cliente.email','cliFone':'cliente.fone','cliEndereco':'cliente.endereco','cliContato':'cliente.contato'};
+      Object.entries(bindC).forEach(([id,path])=>{
+        qS('#'+id,root).addEventListener('input',e=>{set(state,path,e.target.value);saveCurrent();});
+      });
+
+      // Condições
+      const bindCond={validade:'condicoes.validade',prazoEntrega:'condicoes.prazoEntrega',pagamento:'condicoes.pagamento',icms:'condicoes.icms',frete:'condicoes.frete',desconto:'condicoes.desconto',obs:'condicoes.obs'};
+      Object.entries(bindCond).forEach(([id,path])=>{
+        const el=qS('#'+id,root); el.addEventListener('input',()=>{const v=(id==='icms'||id==='desconto'||id==='validade'||id==='prazoEntrega')?Number(el.value||0):el.value; set(state,path,v); saveCurrent(); calcAll();});
+      });
+
+      // Custos internos
+      const bindCost={'c_faca':'custos.faca','c_papel':'custos.papel','c_cola':'custos.cola','c_impressao':'custos.impressao','c_fixos':'custos.fixos','c_visor':'custos.visor','c_nf':'custos.nf','c_ipi':'custos.ipi','c_margem_glob':'custos.margemGlob'};
+      Object.entries(bindCost).forEach(([id,path])=>{
+        qS('#'+id,root).addEventListener('input',e=>{set(state,path,Number(e.target.value||0)); saveCurrent(); calcAll();});
+      });
+
+      qS('#mensagemCliente',root).addEventListener('input',e=>{state.mensagemCliente=e.target.value; saveCurrent();});
+
+      // Resumo
+      function calcAll(){
+        const subtotalItens=state.itens.reduce((s,i)=>s+totalItem(i),0);
+        const c=state.custos;
+        const soma=(c.faca||0)+(c.papel||0)+(c.cola||0)+(c.impressao||0)+(c.fixos||0)+(c.visor||0)+(c.nf||0)+(c.ipi||0);
+        const base=subtotalItens+soma;
+        const comMargem=base*(1+((c.margemGlob||0)/100));
+        const desc=comMargem*((state.condicoes.desconto||0)/100);
+        const total=Math.max(0,comMargem-desc);
+        qS('#tSubtotal',root).textContent=fmt(subtotalItens, true);
+        qS('#tDesc',root).textContent='- '+fmt(desc, true);
+        qS('#tIcms',root).textContent=(Number(state.condicoes.icms)||0).toFixed(2)+'%';
+        qS('#tGeral',root).textContent=fmt(total, true);
+        setRead('c_soma',soma); setRead('c_base',base); setRead('c_com_margem',comMargem);
+        return {subtotalItens,desc,total};
+      }
+      function setRead(id,val){const el=qS('#'+id,root); if(el) el.value=fmt(val);}
+
+      function renderPreview(){
+        const {subtotalItens,desc,total}=calcAll();
+        const ESC=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+        const NL=s=>String(s||'').replace(/\\n/g,'<br/>');
+        let h='<div style="text-align:center;padding-bottom:10px;margin-bottom:12px;border-bottom:3px solid #667eea"><div style="font-size:1.3rem;font-weight:800;color:#111">Embalagens Conceito</div><div style="color:#444;margin-top:6px">'+ESC(state.mensagemCliente||'')+'</div></div>';
+        h+='<div style="margin-bottom:12px"><div style="font-weight:800;margin-bottom:6px">Resumo Financeiro</div>';
+        h+='<div style="display:grid;gap:6px"><div style="display:flex;justify-content:space-between"><span>Subtotal (itens)</span><strong>'+fmt(subtotalItens)+'</strong></div>';
+        h+='<div style="display:flex;justify-content:space-between"><span>Desconto global</span><strong>- '+fmt(desc)+'</strong></div>';
+        h+='<div style="display:flex;justify-content:space-between"><span>ICMS (informativo)</span><strong>'+((Number(state.condicoes.icms)||0).toFixed(2))+'%</strong></div>';
+        h+='<div style="display:flex;justify-content:space-between;font-size:1.05rem"><span>Total Geral</span><strong>'+fmt(total)+'</strong></div></div></div>';
+        h+='<div style="border-top:1px solid #e5e7eb;padding-top:8px;margin-top:4px"><div style="font-weight:800;margin-bottom:6px">Proposta Comercial</div>';
+        h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">';
+        h+='<div><strong>Cliente:</strong> '+ESC(state.cliente.nome)+'<br/><strong>Documento:</strong> '+ESC(state.cliente.doc)+'<br/><strong>Contato:</strong> '+ESC(state.cliente.contato)+'<br/><strong>Telefone:</strong> '+ESC(state.cliente.fone)+'</div>';
+        h+='<div><strong>E-mail:</strong> '+ESC(state.cliente.email)+'<br/><strong>Endereço:</strong> '+ESC(state.cliente.endereco)+'<br/><strong>Orçamento:</strong> '+state.id+'<br/><strong>Status:</strong> '+state.status+'</div></div></div>';
+        h+='<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f6f7ff"><th style="padding:8px;border-bottom:1px solid #e5e7eb">#</th><th style="padding:8px;border-bottom:1px solid #e5e7eb">Descrição</th><th style="padding:8px;border-bottom:1px solid #e5e7eb">Material</th><th style="padding:8px;border-bottom:1px solid #e5e7eb">Impressão</th><th style="padding:8px;border-bottom:1px solid #e5e7eb">Acabamento</th><th style="padding:8px;border-bottom:1px solid #e5e7eb">Qtd</th><th style="padding:8px;border-bottom:1px solid #e5e7eb">Unit</th><th style="padding:8px;border-bottom:1px solid #e5e7eb">Total</th></tr></thead><tbody>';
+        state.itens.forEach((it,i)=>{
+          const unit=fmt((it.custo*(1+(Number(it.margem)||0)/100))/Math.max(1,Number(it.qtd)||1));
+          const tot=fmt((it.custo*(1+(Number(it.margem)||0)/100)));
+          h+='<tr><td style="padding:8px;border-bottom:1px solid #e5e7eb">'+(i+1)+'</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">'+ESC(it.descricao)+'</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">'+ESC(it.material)+'</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">'+ESC(it.impressao)+'</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">'+ESC(it.acabamento)+'</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">'+(Number(it.qtd)||0)+'</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">'+unit+'</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">'+tot+'</td></tr>';
+        });
+        h+='</tbody></table><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px"><div>';
+        h+='<div><strong>Pagamento:</strong> '+ESC(state.condicoes.pagamento)+'</div>';
+        h+='<div><strong>Prazo de entrega:</strong> '+(Number(state.condicoes.prazoEntrega)||0)+' dias</div>';
+        h+='<div><strong>Validade da proposta:</strong> '+(Number(state.condicoes.validade)||0)+' dias</div>';
+        h+='<div><strong>ICMS:</strong> '+(Number(state.condicoes.icms)||0)+'% (informativo)</div>';
+        h+='<div><strong>Frete:</strong> '+ESC(state.condicoes.frete)+'</div></div>';
+        h+='<div style="background:#f8f9ff;border:1px dashed #dbe1ff;padding:8px;border-radius:10px">';
+        h+='<div style="display:flex;justify-content:space-between"><strong>Subtotal</strong><span>'+fmt(subtotalItens)+'</span></div>';
+        h+='<div style="display:flex;justify-content:space-between"><strong>Desconto</strong><span>- '+fmt(desc)+'</span></div>';
+        h+='<div style="display:flex;justify-content:space-between;font-size:1.05rem"><strong>Total</strong><span><strong>'+fmt(total)+'</strong></span></div></div></div>';
+        h+='<div style="margin-top:8px;font-size:.95rem;color:#374151"><strong>Observações:</strong><br/>'+NL(state.condicoes.obs||'* Quantidades confirmadas podem variar em até 10% (para mais ou menos), sendo excedentes faturados.\\n* Tributação ICMS 12% (informe se diferente para recálculo).\\n* Conferir mercadoria no ato do recebimento; não aceitamos reclamações posteriores por avarias/faltas.\\n* Arquivos fornecidos pelo cliente: nos isentamos de erros.')+'</div>';
+        h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px"><div><span class="tag warn">⚠️ Tolerância de quantidade: ±10%</span> <span class="tag dark">📌 Conferir mercadoria no recebimento</span></div>';
+        h+='<div style="text-align:right"><div style="display:inline-block;padding:10px 12px;border:2px solid #e5e7eb;border-radius:10px">';
+        h+='<div style="font-size:.9rem;color:#6b7280">Autorizo a confecção dos itens acima assinalados:</div>';
+        h+='<div style="height:40px"></div><div style="border-top:1px solid #cbd5e1;padding-top:4px">Assinatura e carimbo</div></div></div></div>';
+        qS('#printPreview',root).innerHTML=h;
+      }
+
+      function printInPopup(){
+        const html=qS('#printPreview',root).innerHTML;
+        const w=window.open('','printwin','width=900,height=1000');
+        if(!w){alert('Permita pop-ups para imprimir.');return;}
+        w.document.open();
+        w.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Orçamento '+state.id+'</title><style>body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:24px}table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid #e5e7eb}th{background:#f6f7ff;text-align:left}</style></head><body>'+html+'</body></html>');
+        w.document.close(); w.focus(); w.print(); w.close();
+      }
+
+      // Histórico
+      function renderHistorico(){
+        const list=loadAll(); const box=qS('#listaHistorico',root); box.innerHTML='';
+        if(!list.length){box.innerHTML='<div class="muted">Sem orçamentos salvos.</div>'; return;}
+        list.forEach(or=>{
+          const el=document.createElement('div'); el.className='hist-item';
+          const dt=new Date(or.atualizadoEm||or.criadoEm);
+          const detId='d'+or.id;
+          el.innerHTML='<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><strong>'+or.id+'</strong> — '+esc(or.cliente?.nome||'(sem cliente)')+'</div><div class="tag">'+or.status+'</div></div><div class="muted">'+(or.itens?.length||0)+' item(ns) • Atualizado em '+dt.toLocaleString('pt-BR')+'</div><div class="right" style="margin-top:6px"><button class="btn light" data-open="'+or.id+'">Abrir</button><button class="btn light" data-dup="'+or.id+'">Duplicar</button><button class="btn danger" data-del="'+or.id+'">Excluir</button></div><div class="details" id="'+detId+'"></div>';
+          box.appendChild(el);
+        });
+        qSA('[data-open]',root).forEach(b=> b.onclick=()=>toggleDetalhes(b.dataset.open));
+        qSA('[data-dup]',root).forEach(b=> b.onclick=()=>dupId(b.dataset.dup));
+        qSA('[data-del]',root).forEach(b=> b.onclick=()=>delId(b.dataset.del));
+      }
+      function toggleDetalhes(id){
+        const list=loadAll(); const or=list.find(x=>x.id===id); if(!or) return;
+        const det=qS('#d'+id,root); const opened=det.style.display==='block';
+        if(opened){det.style.display='none'; det.innerHTML=''; return;}
+        const linhas=(or.itens||[]).map((it,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(it.descricao||'')+'</td><td>'+esc(it.material||'')+'</td><td>'+esc(it.impressao||'')+'</td><td>'+esc(it.acabamento||'')+'</td><td>'+(Number(it.qtd)||0)+'</td><td>'+fmt(it.custo||0)+'</td><td>'+(Number(it.margem||0))+'%</td></tr>').join('');
+        det.innerHTML='<div class="grid"><div><strong>Cliente:</strong> '+esc(or.cliente?.nome||'')+' • <strong>Doc:</strong> '+esc(or.cliente?.doc||'')+'</div><div><strong>Contato:</strong> '+esc(or.cliente?.contato||'')+' • <strong>Fone:</strong> '+esc(or.cliente?.fone||'')+'</div><div><strong>Email:</strong> '+esc(or.cliente?.email||'')+' • <strong>Endereço:</strong> '+esc(or.cliente?.endereco||'')+'</div><div><strong>Pagamento:</strong> '+esc(or.condicoes?.pagamento||'')+' • <strong>Entrega:</strong> '+(or.condicoes?.prazoEntrega||0)+'d • <strong>Validade:</strong> '+(or.condicoes?.validade||0)+'d • <strong>ICMS:</strong> '+(or.condicoes?.icms||0)+'% • <strong>Frete:</strong> '+esc(or.condicoes?.frete||'')+'</div><div class="card" style="padding:8px"><table style="width:100%"><thead><tr><th>#</th><th>Descrição</th><th>Material</th><th>Impressão</th><th>Acabamento</th><th>Qtd</th><th>Custo</th><th>Margem</th></tr></thead><tbody>'+(linhas||'<tr><td colspan="8" class="muted">Sem itens</td></tr>')+'</tbody></table></div><div class="right"><button class="btn light" data-load="'+or.id+'">Carregar no editor</button><button class="btn success" data-print="'+or.id+'">Imprimir este</button></div></div>';
+        det.style.display='block';
+        qS('[data-load="'+or.id+'"]',det).onclick=()=>openId(or.id);
+        qS('[data-print="'+or.id+'"]',det).onclick=()=>{openId(or.id); renderPreview(); printInPopup();};
+      }
+
+      function openId(id){const l=loadAll(); const or=l.find(x=>x.id===id); if(!or) return alert('Não encontrado.'); Object.assign(state,structuredClone(or)); rebindAll();}
+      function dupId(id){const l=loadAll(); const or=l.find(x=>x.id===id); if(!or) return; const cp=structuredClone(or); cp.id=genId(); cp.status='Rascunho'; cp.criadoEm=Date.now(); cp.atualizadoEm=Date.now(); l.unshift(cp); saveAll(l); renderHistorico(); alert('📄 Duplicado!');}
+      function delId(id){if(!confirm('Excluir este orçamento?')) return; let l=loadAll(); l=l.filter(x=>x.id!==id); saveAll(l); renderHistorico();}
+
+      // Botões topo do módulo
+      qS('#btnVoltar',root).onclick=()=>window.__closeOrcamentos && window.__closeOrcamentos();
+      qS('#btnAddItem',root).onclick=()=>addItem({});
+      qS('#btnNovo',root).onclick=()=>{Object.assign(state,{id:genId(),status:'Rascunho',cliente:{nome:'',doc:'',email:'',fone:'',endereco:'',contato:''},itens:[],condicoes:{validade:7,prazoEntrega:15,pagamento:'30/60 dias',icms:12,frete:'Incluso',desconto:0,obs:''},custos:{faca:0,papel:0,cola:0,impressao:0,fixos:0,visor:0,nf:0,ipi:0,margemGlob:0},mensagemCliente:'Agradecemos sua consulta. Seguem valores e condições.',criadoEm:Date.now(),atualizadoEm:Date.now()}); drawItens(); calcAll(); renderPreview(); saveCurrent();};
+      qS('#btnSalvar',root).onclick=()=>{saveCurrent(); alert('✅ Orçamento salvo.');};
+      qS('#btnDuplicar',root).onclick=()=>{const cp=structuredClone(state); cp.id=genId(); cp.status='Rascunho'; cp.criadoEm=Date.now(); cp.atualizadoEm=Date.now(); const l=loadAll(); l.unshift(cp); saveAll(l); renderHistorico(); alert('📄 Duplicado!');};
+      qS('#btnExportar',root).onclick=()=>{const blob=new Blob([JSON.stringify(loadAll(),null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='orcamentos_conceito.json'; a.click(); URL.revokeObjectURL(a.href);};
+      qS('#btnImportar',root).onclick=()=>qS('#fileImport',root).click();
+      qS('#fileImport',root).addEventListener('change',e=>{const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=()=>{try{const arr=JSON.parse(r.result); if(Array.isArray(arr)){saveAll(arr); renderHistorico(); alert('⬆️ Importado!');}}catch{alert('Arquivo inválido.')}}; r.readAsText(f);});
+      const goPrint=()=>{renderPreview(); printInPopup();};
+      qS('#btnImprimir',root).onclick=goPrint;
+      qS('#btnIrImprimir',root).onclick=goPrint;
+      qS('#btnLimpar',root).onclick=()=>{if(confirm('Limpar todos os orçamentos do navegador?')){localStorage.removeItem(storageKey); renderHistorico(); alert('🗑️ Limpo.');}};
+      qS('#status',root).onchange=(e)=>{state.status=e.target.value; saveCurrent(); renderHistorico();};
+      qS('#btnWhats',root).onclick=()=>{const {total}=calcAll(); const itensTxt=state.itens.map((it,i)=>(i+1)+'. '+it.descricao+' ('+it.qtd+' un) — Unit '+fmt(unitario(it))).join('\\n'); const url='https://wa.me/?text='+encodeURIComponent('Olá! Segue proposta '+state.id+':\\n\\nCliente: '+state.cliente.nome+'\\n\\nItens:\\n'+itensTxt+'\\n\\nTotal: '+fmt(total)+'\\nPagamento: '+state.condicoes.pagamento+'\\nEntrega: '+state.condicoes.prazoEntrega+' dias\\nValidade: '+state.condicoes.validade+' dias\\nFrete: '+state.condicoes.frete+'\\n\\n'+state.mensagemCliente); window.open(url,'_blank');};
+
+      // Helpers
+      function rebindAll(){
+        qS('#cliNome',root).value=state.cliente.nome||''; qS('#cliDoc',root).value=state.cliente.doc||'';
+        qS('#cliEmail',root).value=state.cliente.email||''; qS('#cliFone',root).value=state.cliente.fone||'';
+        qS('#cliEndereco',root).value=state.cliente.endereco||''; qS('#cliContato',root).value=state.cliente.contato||'';
+        drawItens();
+        qS('#validade',root).value=state.condicoes.validade||7; qS('#prazoEntrega',root).value=state.condicoes.prazoEntrega||15;
+        qS('#pagamento',root).value=state.condicoes.pagamento||'30/60 dias'; qS('#icms',root).value=state.condicoes.icms||12;
+        qS('#frete',root).value=state.condicoes.frete||'Incluso'; qS('#desconto',root).value=state.condicoes.desconto||0; qS('#obs',root).value=state.condicoes.obs||'';
+        qS('#c_faca',root).value=state.custos.faca||0; qS('#c_papel',root).value=state.custos.papel||0; qS('#c_cola',root).value=state.custos.cola||0; qS('#c_impressao',root).value=state.custos.impressao||0;
+        qS('#c_fixos',root).value=state.custos.fixos||0; qS('#c_visor',root).value=state.custos.visor||0; qS('#c_nf',root).value=state.custos.nf||0; qS('#c_ipi',root).value=state.custos.ipi||0; qS('#c_margem_glob',root).value=state.custos.margemGlob||0;
+        qS('#mensagemCliente',root).value=state.mensagemCliente||''; qS('#status',root).value=state.status||'Rascunho';
+        calcAll(); renderPreview();
+      }
+
+      // Inicialização
+      addItem({});
+      renderHistorico();
+      rebindAll();
+
+      // Expor para botão "Voltar"
+      window.__closeOrcamentos = () => {
+        // volta para página principal (fora do shadow)
+        const ev = new CustomEvent('orcamentos:close', {bubbles:true});
+        root.dispatchEvent(ev);
+      };
+
+            function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+    };
+
+        // Append e wire "voltar"
+        shadow.appendChild(style);
+        shadow.appendChild(root);
+
+        if (typeof window.initOrcamentosModule === 'function') {
+            try {
+                window.initOrcamentosModule(root);
+            } catch (err) {
+                console.error('Falha ao iniciar o módulo de orçamentos:', err);
+            }
+        } else {
+            console.error('initOrcamentosModule não está disponível para inicialização');
+        }
+
+    root.addEventListener('orcamentos:close', () => {
+      if(window.closeOrcamentos) window.closeOrcamentos();
+    });
+
+    // Expor handlers no window para a página mãe
+    window.closeOrcamentos = () => {
+      if(typeof window.__orcembe_close === 'function') { window.__orcembe_close(); }
+      // a página mãe escuta e oculta/mostra containers
+      const ev = new CustomEvent('parent:close-orcamentos');
+      window.dispatchEvent(ev);
+    };
+
+    host._mounted = true;
+  }
+
+  // Listener do botão "Voltar" (emitido de dentro do Shadow)
+  window.addEventListener('parent:close-orcamentos', closeOrcamentos);
+
+  // Disponibiliza globalmente (útil caso precise chamar por console)
+  window.openOrcamentos = openOrcamentos;
+  window.closeOrcamentos = closeOrcamentos;
+})();
+</script>
+
     </body>
     </html>
